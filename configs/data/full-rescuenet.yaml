@@ -1,0 +1,66 @@
+profile: full-rescuenet
+data_root: data
+rescuenet_selection_count: 30
+selection_seed: 20260910
+box_size_m: 2000.0
+artifacts:
+  - source_id: topology-zoo
+    dataset_family: topology-zoo
+    kind: git
+    url: https://github.com/sk2/topologyzoo.git
+    revision: e278b1bdaafea5dac33883bf9c97401db4cd7347
+    landing_page: https://github.com/sk2/topologyzoo
+  - source_id: sndlib-networks-xml
+    dataset_family: sndlib
+    kind: http
+    url: https://sndlib.put.poznan.pl/download/sndlib-networks-xml.zip
+    filename: sndlib-networks-xml.zip
+    upstream_version: archive:2014-07-07
+    upstream_checksum: sha256:1490c86061503f4160efaa6eed3bf4a0b314cc5257bc37169c3d6c4e1e96f
+    landing_page: https://sndlib.put.poznan.pl/download.action
+  - source_id: rescuenet-descriptor
+    dataset_family: rescuenet
+    kind: http
+    url: https://ndownloader.figshare.com/files/40583321
+    filename: RescueNet-Segmentation-Dataset-Note.txt
+    upstream_version: article:22826606
+    expected_size: 330
+    upstream_checksum: md5:82c158ff471b67f73f60c5213ec84251
+    landing_page: https://springernature.figshare.com/articles/dataset/22826606
+    license_review_required: true
+    license_evidence:
+      - Figshare article metadata reports CC0.
+      - Author repository README reports CC BY-NC-ND for dataset content.
+  - source_id: rescuenet-validation
+    dataset_family: rescuenet
+    kind: http
+    url: https://ndownloader.figshare.com/files/40582916
+    filename: segmentation-validationset.zip
+    upstream_version: article:22826369
+    expected_size: 2373908074
+    upstream_checksum: md5:51360be8ea3f73233605a767801c9d1c
+    landing_page: https://springernature.figshare.com/articles/dataset/22826369
+    license_review_required: true
+    license_evidence:
+      - Figshare article metadata reports CC0.
+      - Author repository README reports CC BY-NC-ND for dataset content.
+  - source_id: rescuenet-training
+    dataset_family: rescuenet
+    kind: http
+    url: https://ndownloader.figshare.com/files/40581458
+    filename: segmentation-trainset.zip
+    upstream_version: article:22825511
+    expected_size: 18699171789
+    upstream_checksum: md5:7ab79503e940de6301098a01a035a62f
+    landing_page: https://springernature.figshare.com/articles/dataset/22825511
+    license_review_required: true
+  - source_id: rescuenet-test
+    dataset_family: rescuenet
+    kind: http
+    url: https://ndownloader.figshare.com/files/40583084
+    filename: segmentation-testset.zip
+    upstream_version: article:22826459
+    expected_size: 2387196841
+    upstream_checksum: md5:6dbd095cf14d9ddfdf1312d5f1949aeb
+    landing_page: https://springernature.figshare.com/articles/dataset/22826459
+    license_review_required: true
