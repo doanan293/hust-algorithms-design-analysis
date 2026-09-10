@@ -47,8 +47,8 @@ def inventory_topology(path: Path) -> TopologyRecord:
     raw = nx.read_graphml(path)
     graph = _simple_graph(raw)
     coordinate_count = sum(
-        _coordinate(attrs, "Latitude") is not None
-        and _coordinate(attrs, "Longitude") is not None
+        ((_coordinate(attrs, "Latitude") is not None and _coordinate(attrs, "Longitude") is not None)
+         or (_coordinate(attrs, "x") is not None and _coordinate(attrs, "y") is not None))
         for _, attrs in graph.nodes(data=True)
     )
     connected = graph.number_of_nodes() > 0 and nx.is_connected(graph)
@@ -77,17 +77,15 @@ def normalize_topology(path: Path, box_size_m: float) -> dict[str, object]:
         raise ValueError(f"ineligible topology {record.topology_id}: {record.exclusion_reason}")
     graph = _simple_graph(nx.read_graphml(path))
     ordered = sorted(graph.nodes(data=True), key=lambda item: str(item[0]))
-    latitudes = [float(attrs["Latitude"]) for _, attrs in ordered]
-    longitudes = [float(attrs["Longitude"]) for _, attrs in ordered]
-    local = CRS.from_proj4(
-        f"+proj=aeqd +lat_0={sum(latitudes) / len(latitudes)} "
-        f"+lon_0={sum(longitudes) / len(longitudes)} +datum=WGS84 +units=m"
-    )
-    transformer = Transformer.from_crs("EPSG:4326", local, always_xy=True)
-    projected = [
-        transformer.transform(lon, lat)
-        for lon, lat in zip(longitudes, latitudes, strict=True)
-    ]
+    geographic = all(_coordinate(attrs, "Latitude") is not None and _coordinate(attrs, "Longitude") is not None for _, attrs in ordered)
+    if geographic:
+        latitudes = [float(attrs["Latitude"]) for _, attrs in ordered]
+        longitudes = [float(attrs["Longitude"]) for _, attrs in ordered]
+        local = CRS.from_proj4(f"+proj=aeqd +lat_0={sum(latitudes)/len(latitudes)} +lon_0={sum(longitudes)/len(longitudes)} +datum=WGS84 +units=m")
+        transformer = Transformer.from_crs("EPSG:4326", local, always_xy=True)
+        projected = [transformer.transform(lon, lat) for lon, lat in zip(longitudes, latitudes, strict=True)]
+    else:
+        projected = [(float(attrs["x"]), float(attrs["y"])) for _, attrs in ordered]
     min_x = min(x for x, _ in projected)
     min_y = min(y for _, y in projected)
     span = max(
