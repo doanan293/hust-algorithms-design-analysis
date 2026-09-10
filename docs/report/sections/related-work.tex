@@ -1,0 +1,26 @@
+\section{Nghiên cứu liên quan}
+\label{sec:related}
+
+\paragraph{UAV relay và tối ưu quỹ đạo.}
+[Tổng quan các công trình về UAV relay: hai chiều, full-duplex, PrLoS.] Công trình~\cite{huang2025ddatsap} là điểm xuất phát trực tiếp của đề tài.
+
+\paragraph{Lựa chọn relay và phân bổ băng thông với deadline.}
+[Tổng quan các công trình về relay selection, time-expanded network, lập lịch với deadline.]
+
+\paragraph{Phương pháp tối ưu không lồi.}
+Các bài toán trên thường không lồi; hướng phổ biến là phân rã theo khối (BCD) kết hợp xấp xỉ lồi liên tiếp (SCA)~\cite{huang2025ddatsap}, dựa trên nền tảng tối ưu lồi~\cite{boyd2004convex}.
+
+% Bảng so sánh Related Work theo objective, số UAV, relay selection, deadline, channel uncertainty...
+\begin{table}[htbp]
+\centering
+\caption{So sánh với các công trình liên quan (điền sau khi tổng quan).}
+\label{tab:related}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Công trình} & \textbf{Objective} & \textbf{Relay sel.} & \textbf{Deadline} & \textbf{Kênh} & \textbf{Phương pháp} \\
+\midrule
+\cite{huang2025ddatsap} & Max--min rate & Không & Không & PrLoS & BCD--SCA \\
+Đề tài này & Tỷ lệ đúng hạn & Có & Có & PrLoS & Phân rã + repair \\
+\bottomrule
+\end{tabular}
+\end{table}

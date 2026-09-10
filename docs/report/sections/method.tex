@@ -1,0 +1,81 @@
+\section{Phương pháp đề xuất}
+\label{sec:method}
+
+\subsection{Mô hình hệ thống}
+\label{sec:model}
+
+Xét mạng relay mặt đất $G=(V,E)$ với trung tâm cứu hộ $c\in V$, tập nguồn cảnh báo $S$ và một UAV bay ở độ cao cố định $H$. Thời gian nhiệm vụ $T=N\Delta$ được chia thành $N$ khe; $q[n]\in\R^2$ là toạ độ ngang của UAV ở cuối khe $n$. Mỗi cảnh báo $a\in A$ có nguồn $s_a$, thời điểm phát sinh $r_a$, hạn $d_a$ và kích thước $L_a$ bit.
+
+\begin{definition}[Cảnh báo đúng hạn]
+\label{def:timely}
+Cảnh báo $a$ được gọi là \emph{đúng hạn} trong realization $\omega$ nếu toàn bộ $L_a$ bit tới trung tâm $c$ không muộn hơn $d_a$; ký hiệu $z_{a,\omega}=1$, ngược lại $z_{a,\omega}=0$.
+\end{definition}
+
+Kênh không--đất kế thừa mô hình PrLoS của~\cite{huang2025ddatsap}. Với nút mặt đất $k$ ở toạ độ $w_k$, khoảng cách và góc ngẩng tại khe $n$ là
+\begin{equation}
+\label{eq:geometry}
+d_k[n]=\sqrt{\norm{\bar q[n]-w_k}^2+H^2},\qquad
+\theta_k[n]=\frac{180}{\pi}\operatorname{atan2}\bigl(H,\norm{\bar q[n]-w_k}\bigr),
+\end{equation}
+và xác suất tầm nhìn thẳng là
+\begin{equation}
+\label{eq:plos}
+P_k^{L}[n]=\frac{1}{1+a\exp\bigl[-b(\theta_k[n]-a)\bigr]}.
+\end{equation}
+\noindent trong đó $a,b$ là tham số môi trường. Dung lượng của liên kết vô tuyến $e$ với băng thông $b_e[n]$ và công suất cố định $p_e$ là
+\begin{equation}
+\label{eq:capacity}
+R_{e,n,\omega}=b_e[n]\log_2\!\left(1+\frac{p_e\,g_{e,n,\omega}(q)}{N_0\,b_e[n]}\right).
+\end{equation}
+
+\subsection{Phát biểu bài toán}
+\label{sec:problem}
+
+Bài toán thiết kế trong Pha~1 dùng tốc độ kỳ vọng nên $z_a$ xác định:
+\begin{equation}
+\label{eq:objective}
+\max_{q,\,x,\,b,\,f}\ \hat P_{\mathrm{timely}}=\frac{1}{\abs{A}}\sum_{a\in A} z_a
+\end{equation}
+với các ràng buộc di chuyển, phổ hai pha, dung lượng, bảo toàn luồng và nhân quả. [Liệt kê ràng buộc đầy đủ theo \texttt{docs/issue.md}, Mục~8.] Connectivity theo thời gian là mục tiêu phụ theo thứ tự từ điển.
+
+\subsection{Thuật toán}
+\label{sec:algorithm}
+
+\Cref{alg:bcd-repair} tóm tắt phương pháp đề xuất: phân rã theo ba khối như cấu trúc BCD của~\cite{huang2025ddatsap}, sau đó áp dụng hai thao tác sửa lịch cho các cảnh báo có slack thấp.
+
+\begin{algorithm}[htbp]
+\caption{Phân rã theo khối kết hợp sửa lịch theo slack}
+\label{alg:bcd-repair}
+\begin{algorithmic}[1]
+\Require Kịch bản $(G, A, \text{tham số kênh})$, số vòng tối đa $I_{\max}$
+\Ensure Quỹ đạo $q$, lựa chọn path $x$, băng thông $b$
+\State Khởi tạo quỹ đạo khả thi $q^{(0)}$ và path $x^{(0)}$
+\For{$i = 1, \dots, I_{\max}$}
+    \State Cập nhật $b$ với $(q, x)$ cố định \Comment{bài toán lồi}
+    \State Cập nhật $x$ với $(q, b)$ cố định \Comment{hoán đổi trong candidate set}
+    \State Cập nhật $q$ với $(x, b)$ cố định \Comment{local search}
+    \State Tính slack của từng cảnh báo; chọn tập nguy cơ $A_{\mathrm{risk}}$
+    \ForAll{$a \in A_{\mathrm{risk}}$}
+        \State Thử chuyển băng thông từ luồng dư slack sang $a$
+        \State Thử đổi path của $a$ trong candidate set
+        \State Nhận thay đổi nếu objective từ điển không giảm
+    \EndFor
+    \If{không cải thiện trong $\kappa$ vòng liên tiếp} \textbf{break} \EndIf
+\EndFor
+\State \Return $(q, x, b)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Phân tích}
+\label{sec:analysis}
+
+\begin{proposition}[Cận trên]
+\label{prop:ub}
+Với quỹ đạo $q$ và tập candidate path cố định, giá trị tối ưu của bài nới lỏng tuyến tính $\mathrm{UB}(q)$ là cận trên của \cref{eq:objective} trên cùng $q$.
+\end{proposition}
+\begin{proof}
+Phác thảo: [nới lỏng $x,z\in[0,1]$ và thay hàm dung lượng lõm bằng các tiếp tuyến chỉ mở rộng miền khả thi].
+% Lưu ý: không bắt đầu nội dung proof/theorem bằng "[" vì LaTeX hiểu là tuỳ chọn tên.
+\end{proof}
+
+Độ phức tạp mỗi vòng của \cref{alg:bcd-repair} là [phân tích theo $\abs{A}$, $\abs{V}$, $\abs{E}$, $N$, $K$].

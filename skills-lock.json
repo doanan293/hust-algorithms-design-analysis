@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "latex-document-skill": {
+      "source": "ndpvt-web/latex-document-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "6cf41868e7221a6ab19dc184edcca663e0bbf48bef0025d82a986cc5aa9e1ee2"
+    }
+  }
+}

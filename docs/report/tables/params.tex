@@ -1,0 +1,22 @@
+% Bảng tham số mô phỏng — được \input từ sections/experiments.tex
+\begin{table}[htbp]
+\centering
+\caption{Tham số mô phỏng chính. [Giá trị minh hoạ, cập nhật theo cấu hình thật.]}
+\label{tab:params}
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{Tham số} & \textbf{Ký hiệu} & \textbf{Giá trị} \\
+\midrule
+Độ cao UAV              & $H$              & \qty{100}{\metre} \\
+Tốc độ tối đa           & $V_{\max}$       & \qty{20}{\metre\per\second} \\
+Thời gian nhiệm vụ      & $T$              & \qty{300}{\second} \\
+Độ dài khe              & $\Delta$         & \qty{1}{\second} \\
+Tổng băng thông         & $B_{\mathrm{tot}}$ & \qty{10}{\mega\hertz} \\
+Công suất liên kết      & $p_e$            & \qty{0.1}{\watt} \\
+Mật độ phổ nhiễu        & $N_0$            & \qty{-174}{\dBm\per\hertz} \\
+Tham số môi trường      & $(a, b)$         & $(9.61,\ 0.16)$ \\
+Số candidate path       & $K$              & 3 \\
+Số seed đánh giá        & ---              & 30 \\
+\bottomrule
+\end{tabular}
+\end{table}
