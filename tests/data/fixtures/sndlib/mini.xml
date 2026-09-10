@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<network xmlns="http://sndlib.zib.de/network" version="1.0">
+  <meta><unit>MBITPERSEC</unit></meta>
+  <networkStructure>
+    <nodes coordinatesType="geographical">
+      <node id="A"><coordinates><x>10.0</x><y>20.0</y></coordinates></node>
+      <node id="B"><coordinates><x>11.0</x><y>21.0</y></coordinates></node>
+    </nodes>
+    <links>
+      <link id="A_B"><source>A</source><target>B</target>
+        <preInstalledModule><capacity>100.0</capacity></preInstalledModule>
+      </link>
+    </links>
+    <demands>
+      <demand id="A_B_d"><source>A</source><target>B</target><demandValue>12.5</demandValue></demand>
+    </demands>
+  </networkStructure>
+</network>
