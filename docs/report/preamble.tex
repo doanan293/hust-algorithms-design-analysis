@@ -1,0 +1,126 @@
+% =============================================================================
+% preamble.tex — gói và cấu hình dùng chung cho report
+% Engine: pdflatex. Tiếng Việt qua babel + mã font T5.
+% =============================================================================
+
+% --- Lọc warning vô hại (phải nạp trước các gói phát ra warning) ---------------
+\usepackage{silence}
+\WarningFilter{csquotes}{No space factor codes}          % csquotes chưa biết mã T5
+\WarningFilter{microtype}{I cannot find a protrusion list} % font \texttt ở mã T5
+
+% --- Mã hoá và font -----------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}          % T5 có đủ chữ Việt có dấu (T1 thì không)
+\usepackage{lmodern}              % Latin Modern: hỗ trợ T5 đầy đủ
+\usepackage[vietnamese]{babel}    % Tên tự động: Hình, Bảng, Tài liệu, Chứng minh...
+
+% --- Bố cục trang -------------------------------------------------------------
+\usepackage[a4paper, margin=2.5cm, headheight=14pt]{geometry} % headheight theo yêu cầu fancyhdr ở cỡ chữ 12pt
+\usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.15}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Chống dòng mồ côi/goá (long-form best practices)
+\widowpenalty=10000
+\clubpenalty=10000
+
+% --- Toán ---------------------------------------------------------------------
+\usepackage{mathtools}            % nạp amsmath
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Định lý}[section]
+\newtheorem{lemma}[theorem]{Bổ đề}
+\newtheorem{proposition}[theorem]{Mệnh đề}
+\newtheorem{corollary}[theorem]{Hệ quả}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Định nghĩa}
+\newtheorem{example}[theorem]{Ví dụ}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Nhận xét}
+
+% Lệnh toán dùng nhiều
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\ind}{\mathbf{1}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\set}{\{}{\}}
+
+% --- Hình và bảng -------------------------------------------------------------
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage[font=small,labelfont=bf,format=hang]{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage[table]{xcolor}
+
+% --- Danh sách (nén khoảng cách) ----------------------------------------------
+\usepackage{enumitem}
+\setlist[itemize]{nosep, leftmargin=*, topsep=2pt, partopsep=0pt}
+\setlist[enumerate]{nosep, leftmargin=*, topsep=2pt, partopsep=0pt}
+
+% --- Giả mã -------------------------------------------------------------------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\floatname{algorithm}{Thuật toán}
+\renewcommand{\listalgorithmname}{Danh sách thuật toán}
+\algrenewcommand\algorithmicrequire{\textbf{Đầu vào:}}
+\algrenewcommand\algorithmicensure{\textbf{Đầu ra:}}
+
+% --- Đơn vị và số -------------------------------------------------------------
+\usepackage{siunitx}
+\sisetup{detect-all}
+\DeclareSIUnit{\dBm}{dBm}         % siunitx không có sẵn dBm
+\DeclareSIUnit{\dB}{dB}
+
+% --- Tài liệu tham khảo -------------------------------------------------------
+\usepackage{csquotes}
+\DeclareQuoteAlias{english}{vietnamese}   % csquotes chưa có kiểu ngoặc kép tiếng Việt
+% biblatex chưa có chuỗi tiếng Việt ("vol.", "no.", "pp.") nên ánh xạ sang chuỗi tiếng Anh theo chuẩn IEEE
+\usepackage[backend=biber, style=ieee, sorting=none, maxbibnames=6, autolang=none]{biblatex}
+\DeclareLanguageMapping{vietnamese}{english}
+% \addbibresource nằm trong main.tex để script compile_latex.sh của skill nhận ra cần chạy biber
+
+% --- Liên kết và tham chiếu chéo (nạp gần cuối) -------------------------------
+\usepackage[unicode, colorlinks=true, linkcolor=blue!60!black,
+            citecolor=blue!60!black, urlcolor=blue!60!black]{hyperref}
+\usepackage[nameinlink]{cleveref}
+% cleveref chưa có tiếng Việt, đặt tên bằng tay
+\crefname{figure}{Hình}{Hình}
+\Crefname{figure}{Hình}{Hình}
+\crefname{table}{Bảng}{Bảng}
+\Crefname{table}{Bảng}{Bảng}
+\crefname{equation}{công thức}{các công thức}
+\Crefname{equation}{Công thức}{Các công thức}
+\crefname{section}{Mục}{Mục}
+\Crefname{section}{Mục}{Mục}
+\crefname{subsection}{Mục}{Mục}
+\Crefname{subsection}{Mục}{Mục}
+\crefname{algorithm}{Thuật toán}{Thuật toán}
+\Crefname{algorithm}{Thuật toán}{Thuật toán}
+\crefname{theorem}{Định lý}{Định lý}
+\Crefname{theorem}{Định lý}{Định lý}
+\crefname{lemma}{Bổ đề}{Bổ đề}
+\Crefname{lemma}{Bổ đề}{Bổ đề}
+\crefname{definition}{Định nghĩa}{Định nghĩa}
+\Crefname{definition}{Định nghĩa}{Định nghĩa}
+\crefname{proposition}{Mệnh đề}{Mệnh đề}
+\Crefname{proposition}{Mệnh đề}{Mệnh đề}

@@ -1,0 +1,48 @@
+\section{Kết quả thực nghiệm}
+\label{sec:experiments}
+
+\subsection{Thiết lập}
+\label{sec:setup}
+
+Kịch bản được xây từ Topology Zoo~\cite{knight2011zoo} và SNDlib~\cite{orlowski2010sndlib}; case study dùng mặt nạ hư hại từ RescueNet~\cite{rahnemoonfar2023rescuenet}. Vùng mô phỏng được chuẩn hoá về \qty{2}{\kilo\metre}~$\times$~\qty{2}{\kilo\metre}. Mỗi cấu hình chạy với 30 seed; kết quả báo trung bình và khoảng tin cậy 95\%. \Cref{tab:params} liệt kê tham số chính.
+
+\input{tables/params}
+
+\subsection{So sánh với baseline}
+\label{sec:results-main}
+
+\Cref{tab:main} so sánh phương pháp đề xuất (P) với các baseline B0--B3 và cận trên LP.
+
+\begin{table}[htbp]
+\centering
+\caption{Tỷ lệ cảnh báo đúng hạn (\%) và thời gian chạy. Giá trị tốt nhất in \textbf{đậm}. [Số liệu minh hoạ.]}
+\label{tab:main}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Phương pháp} & \textbf{Đúng hạn (\%)} & \textbf{Conn (\%)} & \textbf{Gap (\%)} & \textbf{Runtime (s)} \\
+\midrule
+B0 --- không UAV          & 41,2 & 58,0 & 38,5 & 0,4 \\
+B1 --- quỹ đạo cố định    & 55,7 & 71,3 & 16,9 & 3,1 \\
+B2 --- BCD kiểu Huang     & 61,4 & 75,0 & 8,4  & 22,5 \\
+B3 --- objective Huang    & 52,9 & 74,1 & 21,1 & 23,0 \\
+P --- đề xuất             & \textbf{65,8} & \textbf{76,2} & \textbf{1,8} & 27,9 \\
+\midrule
+UB --- cận trên LP        & 67,0 & --- & 0 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{placeholder}
+\caption{Tỷ lệ đúng hạn theo số vòng lặp BCD. [Thay bằng hình thật từ \texttt{results/}.]}
+\label{fig:convergence}
+\end{figure}
+
+Như \cref{fig:convergence} cho thấy, [nhận xét về hội tụ].
+
+\subsection{Ablation và sensitivity}
+\label{sec:ablation}
+
+[Bảng ablation: bỏ repair, chỉ một thao tác, relay cố định, quỹ đạo cố định, chia đều băng thông.]
+[Hình sensitivity: số alert, deadline slack, tỷ lệ hỏng mạng, $L_{\mathrm{box}}$, tham số PrLoS.]

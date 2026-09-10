@@ -1,0 +1,38 @@
+% =============================================================================
+% main.tex — file gốc, chỉ ghép các phần. Build: xem README.md (compile_latex.sh của skill)
+% =============================================================================
+\documentclass[12pt,a4paper]{article}
+\input{preamble}
+\addbibresource{references.bib}
+
+\hypersetup{
+  pdftitle={Đồng tối ưu quỹ đạo UAV, lựa chọn relay và phân bổ băng thông cho cảnh báo đúng hạn trong mạng cứu hộ},
+  pdfauthor={Tên sinh viên},
+  pdfsubject={Design and Analysis of Algorithms},
+}
+
+\title{\textbf{Đồng tối ưu quỹ đạo UAV, lựa chọn relay và phân bổ băng thông\\
+  nhằm nâng cao xác suất truyền cảnh báo đúng hạn trong mạng cứu hộ}\\[0.5em]
+  \large Joint UAV Trajectory, Relay Selection, and Bandwidth Allocation\\
+  for Deadline-Aware Alert Delivery in Disaster Networks}
+\author{Tên sinh viên \\
+  \small Học phần Design and Analysis of Algorithms --- Đề số 5 \\
+  \small \texttt{email@example.com}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\printbibliography[title={Tài liệu tham khảo}]
+
+\end{document}
