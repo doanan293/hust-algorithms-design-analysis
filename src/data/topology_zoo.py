@@ -139,24 +139,33 @@ def fetch_pinned_repo(
 ) -> SourceRecord:
     if not spec.revision or len(spec.revision) != 40:
         raise ValueError("a full 40-character Git revision is required")
-    if target.exists():
-        shutil.rmtree(target)
-    subprocess.run(["git", "init", str(target)], check=True, capture_output=True)
-    subprocess.run(
-        ["git", "-C", str(target), "remote", "add", "origin", spec.url],
-        check=True,
-        capture_output=True,
-    )
-    subprocess.run(
-        ["git", "-C", str(target), "fetch", "--depth", "1", "origin", spec.revision],
-        check=True,
-        capture_output=True,
-    )
-    subprocess.run(
-        ["git", "-C", str(target), "checkout", "--detach", "FETCH_HEAD"],
-        check=True,
-        capture_output=True,
-    )
+    current = None
+    if (target / ".git").exists():
+        try:
+            current = subprocess.check_output(
+                ["git", "-C", str(target), "rev-parse", "HEAD"], text=True
+            ).strip()
+        except subprocess.CalledProcessError:
+            current = None
+    if current != spec.revision:
+        if target.exists():
+            shutil.rmtree(target)
+        subprocess.run(["git", "init", str(target)], check=True, capture_output=True)
+        subprocess.run(
+            ["git", "-C", str(target), "remote", "add", "origin", spec.url],
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(target), "fetch", "--depth", "1", "origin", spec.revision],
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(target), "checkout", "--detach", "FETCH_HEAD"],
+            check=True,
+            capture_output=True,
+        )
     actual = subprocess.check_output(
         ["git", "-C", str(target), "rev-parse", "HEAD"], text=True
     ).strip()
