@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="lat" for="node" attr.name="Latitude" attr.type="double"/>
+  <key id="lon" for="node" attr.name="Longitude" attr.type="double"/>
+  <graph id="missing" edgedefault="undirected">
+    <node id="n00"><data key="lat">40.000</data><data key="lon">-74.000</data></node>
+    <node id="n01"><data key="lat">40.001</data><data key="lon">-73.999</data></node>
+    <node id="n02"><data key="lat">40.002</data><data key="lon">-73.998</data></node>
+    <node id="n03"><data key="lat">40.003</data><data key="lon">-73.997</data></node>
+    <node id="n04"><data key="lat">40.004</data><data key="lon">-73.996</data></node>
+    <node id="n05"><data key="lat">40.005</data><data key="lon">-73.995</data></node>
+    <node id="n06"><data key="lat">40.006</data><data key="lon">-73.994</data></node>
+    <node id="n07"><data key="lat">40.007</data><data key="lon">-73.993</data></node>
+    <node id="n08"><data key="lat">40.008</data><data key="lon">-73.992</data></node>
+    <node id="n09"><data key="lat">40.009</data><data key="lon">-73.991</data></node>
+    <node id="n10"><data key="lat">40.010</data><data key="lon">-73.990</data></node>
+    <node id="n11"><data key="lat">40.011</data><data key="lon">-73.989</data></node>
+    <node id="n12"><data key="lat">40.012</data><data key="lon">-73.988</data></node>
+    <node id="n13"><data key="lat">40.013</data><data key="lon">-73.987</data></node>
+    <node id="n14"><data key="lat">40.014</data></node>
+    <edge source="n00" target="n01"/><edge source="n01" target="n02"/>
+    <edge source="n02" target="n03"/><edge source="n03" target="n04"/>
+    <edge source="n04" target="n05"/><edge source="n05" target="n06"/>
+    <edge source="n06" target="n07"/><edge source="n07" target="n08"/>
+    <edge source="n08" target="n09"/><edge source="n09" target="n10"/>
+    <edge source="n10" target="n11"/><edge source="n11" target="n12"/>
+    <edge source="n12" target="n13"/><edge source="n13" target="n14"/>
+  </graph>
+</graphml>
