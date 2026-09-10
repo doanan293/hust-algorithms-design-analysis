@@ -95,6 +95,7 @@ def run_inventory(context: PipelineContext) -> None:
         safe_extract_zip(rescue_archive, rescue_root)
     descriptor = context.data_root / "raw" / "rescuenet-descriptor" / "RescueNet-Segmentation-Dataset-Note.txt"
     rescue_rows = []
+    rescue_records = []
     if rescue_root.exists() and descriptor.exists():
         pair_root = _find_pair_root(rescue_root)
         labels = load_label_map(descriptor)
@@ -110,7 +111,37 @@ def run_inventory(context: PipelineContext) -> None:
                     "presence_vector": json.dumps(presence),
                 }
             )
+            rescue_records.append(
+                RescueRecord(
+                    pair_id=pair.pair_id,
+                    image=pair.image,
+                    mask=pair.mask,
+                    class_counts=tuple(sorted((int(k), int(v)) for k, v in counts.items())),
+                    presence_vector=presence,
+                )
+            )
     _write_csv(manifest_root / "rescuenet_inventory.csv", rescue_rows)
+    if rescue_records:
+        selected = select_pairs(
+            rescue_records,
+            count=min(context.config.rescuenet_selection_count, len(rescue_records)),
+            seed=context.config.selection_seed,
+        )
+        _write_csv(
+            manifest_root / "rescuenet_selection.csv",
+            [
+                {
+                    "rank": rank,
+                    "pair_id": record.pair_id,
+                    "image": str(record.image.relative_to(rescue_root)),
+                    "mask": str(record.mask.relative_to(rescue_root)),
+                    "class_counts": json.dumps(dict(record.class_counts), sort_keys=True),
+                    "presence_vector": json.dumps(record.presence_vector),
+                    "selection_seed": context.config.selection_seed,
+                }
+                for rank, record in enumerate(selected, start=1)
+            ],
+        )
 
 
 def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
