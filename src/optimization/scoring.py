@@ -37,6 +37,7 @@ class DesignScorer:
         self.budget = budget
         self.objective = objective
         self.calls = 0
+        self._connectivity: dict = {}
 
     @property
     def remaining(self) -> int:
@@ -60,6 +61,8 @@ class DesignScorer:
             candidates=self.candidates,
             keep_ledger=keep_ledger,
             channel_namespace=DESIGN_NAMESPACE,
+            check=False,
+            connectivity_cache=self._connectivity,
         )
         key = self.objective(self.scenario, result) if result.feasible else INFEASIBLE_SCORE
         return key, result

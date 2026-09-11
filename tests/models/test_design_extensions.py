@@ -4,7 +4,9 @@ import numpy as np
 import pytest
 
 from channel_builders import constant_channels
+from models import evaluate as evaluate_module
 from models.channel import ACCESS, channel_uniforms
+from models.checker import SimulatorInvariantError
 from models.evaluate import REALIZED, evaluate
 from models.paths import candidate_paths, radio_links
 from models.plan import EqualSplitBacklogged, Plan, WeightedBacklogged, stationary_trajectory, validate_plan
@@ -98,3 +100,29 @@ def test_random_weighted_plans_pass_the_ledger_checker():
         plan = Plan(stationary_trajectory(scenario), choice, WeightedBacklogged(weights))
         result = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, channel_namespace="design")
         assert result.feasible
+
+
+def test_unchecked_cached_evaluation_matches_the_checked_result(monkeypatch):
+    scenario = _scenario([make_alert("alert-0000", "s00", 0, 12, 400000), make_alert("alert-0001", "s01", 1, 18, 50000)])
+    candidates = candidate_paths(scenario)
+    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0, "alert-0001": 0}, EqualSplitBacklogged())
+    checked = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates)
+    real, calls = evaluate_module.connectivity, []
+    monkeypatch.setattr(evaluate_module, "connectivity", lambda scenario, channels: calls.append(channels is None) or real(scenario, channels))
+    cache = {}
+    first = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, check=False, connectivity_cache=cache)
+    second = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, check=False, connectivity_cache=cache)
+    assert first.key == second.key == checked.key
+    assert [item.connected for item in second.realizations] == [item.connected for item in checked.realizations]
+    assert [item.delivered_bits for item in second.realizations] == [item.delivered_bits for item in checked.realizations]
+    assert calls == [True, False, False] and len(cache) == 3
+
+
+def test_check_false_skips_only_the_ledger_checker(monkeypatch):
+    scenario = _scenario([make_alert("alert-0000", "s00", 0, 12, 400000)])
+    candidates = candidate_paths(scenario)
+    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0}, EqualSplitBacklogged())
+    monkeypatch.setattr(evaluate_module, "check_ledger", lambda *args: ["forced problem"])
+    with pytest.raises(SimulatorInvariantError, match="forced problem"):
+        evaluate(scenario, plan, REALIZED, (0,), candidates=candidates)
+    assert evaluate(scenario, plan, REALIZED, (0,), candidates=candidates, check=False).feasible

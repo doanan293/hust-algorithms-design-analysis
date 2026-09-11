@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 import math
 import time
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence, TypeVar
+
+import numpy as np
 
 from .channel import all_uav_links, build_link_channels, channel_uniforms
 from .checker import SimulatorInvariantError, check_ledger
@@ -15,6 +17,17 @@ from .simulator import simulate
 EXPECTED = "expected"
 REALIZED = "realized"
 INFEASIBLE_KEY = (-1, -1, -math.inf)
+
+
+T = TypeVar("T")
+
+
+def _memoized(cache: dict | None, key: tuple, compute: Callable[[], T]) -> T:
+    if cache is None:
+        return compute()
+    if key not in cache:
+        cache[key] = compute()
+    return cache[key]
 
 
 @dataclass
@@ -60,7 +73,10 @@ def evaluate(
     candidates: Mapping[str, tuple[CandidatePath, ...]] | None = None,
     keep_ledger: bool = False,
     channel_namespace: str = "eval",
+    check: bool = True,
+    connectivity_cache: dict | None = None,
 ) -> EvaluationResult:
+    """Score a plan; `check=False` skips the ledger checker and `connectivity_cache` memoizes connectivity per trajectory and draw."""
     started = time.perf_counter()
     if mode not in (EXPECTED, REALIZED):
         raise ValueError(f"unknown evaluation mode {mode!r}")
@@ -90,16 +106,18 @@ def evaluate(
         )
 
     links = set(radio_links(candidates)) | set(all_uav_links(scenario))
-    without_uav = connectivity(scenario, None)
+    without_uav = _memoized(connectivity_cache, ("without-uav",), lambda: connectivity(scenario, None))
     results = []
     for realization_id in realization_ids if mode == REALIZED else (None,):
         uniforms = None if realization_id is None else channel_uniforms(scenario, realization_id, channel_namespace)
         channels = build_link_channels(scenario, links, plan.trajectory, uniforms)
         outcome = simulate(scenario, candidates, plan, channels, realization_id)
-        problems = check_ledger(scenario, candidates, plan, channels, outcome.ledger, outcome.delivered_bits)
-        if problems:
-            raise SimulatorInvariantError(problems)
-        reach = connectivity(scenario, channels)
+        if check:
+            problems = check_ledger(scenario, candidates, plan, channels, outcome.ledger, outcome.delivered_bits)
+            if problems:
+                raise SimulatorInvariantError(problems)
+        key = (np.asarray(plan.trajectory, dtype=float).tobytes(), realization_id, channel_namespace)
+        reach = _memoized(connectivity_cache, key, lambda: connectivity(scenario, channels))
         results.append(
             RealizationResult(
                 realization_id=realization_id,
