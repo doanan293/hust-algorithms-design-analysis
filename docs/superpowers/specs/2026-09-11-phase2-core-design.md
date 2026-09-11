@@ -31,6 +31,7 @@ Implementation and evaluation of the literature baseline, SAA beyond the design-
 
 - **Plan C.1 — Methods:** Sections 5–10 and the development-set pilot (Section 17.1).
 - **Plan C.2 — Experiments, statistics, literature, report:** Sections 11–14, written after the C.1 pilot numbers exist. Experiment sizes, budgets, and figure choices may be adjusted in C.2 from pilot evidence; every adjustment is recorded in Section 18.
+- **Plan C.3 — Report (added by plan C.2, see Section 18):** Section 14 and acceptance criterion 17.2.6, written after the C.2 results exist.
 
 ## 3. Evidence and Considered Approaches
 
@@ -355,3 +356,13 @@ The Phase 1 content stays; new numbers come from `docs/report/data/phase2_result
 - Two plans (C.1 methods, C.2 experiments) under one spec, chosen by the user.
 
 Adjustments made by plan C.2 from pilot evidence, the literature-baseline decision, and any change to budgets or families are appended here with date and reason.
+
+### Plan C.2 adjustments (2026-09-11)
+
+- **Report in plan C.3.** A plan cannot state results that do not exist yet, so the report work of Section 14, including `experiments/report_tables_phase2.py`, moves to plan C.3, written after the C.2 results exist. Plan C.2 covers Sections 11–13 and acceptance criteria 17.2.1–17.2.5; plan C.3 covers criterion 17.2.6. The method and related-work sections move with the rest of the report, so the report is edited in one plan.
+- **Faster design scoring.** The C.1 pilot planned for 367–476 s per search task. Profiling put 41% of evaluation time in the ledger checker and 26% in connectivity, which depends only on the trajectory and the channel draw. `evaluate` gains `check=True` and `connectivity_cache=None`; `DesignScorer` scores without the checker and with one connectivity cache. On two development scenarios B2 and P return identical plans and keys and run 2.9 times faster. The runner's final evaluation still runs the checker.
+- **Replicate filter.** A scenario set in an experiment configuration may list `replicates`; only those replicate numbers of the split are run.
+- **Sensitivity and design-realization count on one replicate per topology.** Both run on replicate 0 of the ten evaluation topologies (ten scenarios, 30 realizations each) instead of all 30 scenarios, which keeps the C.2 compute near 3.5 hours with 12 workers; these results stay descriptive (Section 12). `phase2_sensitivity.yaml` also runs `v0` and `v0-bh50` as reference points. The design-realization variants (expected rates, 1, 10) run in `phase2_design.yaml`, because a configuration applies every method to every set; the five-realization point is P on `v0` in `phase2_sensitivity.yaml`.
+- **Budget experiment.** `phase2_budget.yaml` includes budget 2000, so the quality–runtime curve comes from one run; its method ids are `B2_b<budget>` and `P_b<budget>`. In the smoke run, B2 and P with budget 4000 stopped after 2372 and 2136 calls because an iteration accepted nothing.
+- **Degenerate family.** In `sens-physical` every source is ground-connected (mean ground-connected source fraction 1.0 against 0.506 in the other families), so the family is reported as degenerate for the role of the UAV.
+- **Literature baseline.** The review in `docs/literature/review.md` (16 included papers) confirms Tran et al. (half-duplex variant) as the strong literature baseline; Samir et al. is the fallback because an implementation is available. Adaptation and implementation stay in sub-project D.
