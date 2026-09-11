@@ -14,7 +14,6 @@ from .config import load_config
 from .manifests import write_source_ledger
 from .models import ArtifactSpec, PipelineConfig, SourceRecord
 from .rescuenet import count_mask_classes, load_label_map, pair_images_and_masks, RescueRecord, select_pairs
-from .scenarios import ScenarioInputs, canonical_hash, generate_scenario
 from .sndlib import inventory_sndlib, parse_sndlib_xml
 from .topology_zoo import fetch_pinned_repo, inventory_topology, normalize_topology
 
@@ -174,46 +173,12 @@ def run_preprocess(context: PipelineContext) -> None:
     network_dir = processed / "networks"
     network_dir.mkdir(parents=True, exist_ok=True)
     topology_root = context.data_root / "raw" / "topology-zoo"
-    normalized = []
     for path in sorted(topology_root.rglob("*.graphml")) if topology_root.exists() else []:
         record = inventory_topology(path)
         if record.eligible:
             network = normalize_topology(path, context.config.box_size_m)
             output = network_dir / f"{record.topology_id}.json"
             output.write_text(json.dumps(network, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            normalized.append(network)
-    if not normalized:
-        return
-    sndlib_root = context.data_root / "raw" / "sndlib-networks-xml" / "extracted"
-    demand_records = []
-    first_xml = next(iter(sorted(sndlib_root.rglob("*.xml"))), None) if sndlib_root.exists() else None
-    if first_xml:
-        demand_records = tuple(
-            {"original_value": str(demand.value)}
-            for demand in parse_sndlib_xml(first_xml).demands
-        )
-    if not demand_records:
-        demand_records = ({"original_value": "1"},)
-    config_hash = hashlib.sha256(
-        json.dumps(asdict(context.config), default=str, sort_keys=True).encode()
-    ).hexdigest()
-    scenario = generate_scenario(
-        ScenarioInputs(
-            network=normalized[0],
-            demands=demand_records,
-            targets=(),
-            raw_sha256=tuple(sorted(record.sha256 for record in context.records)),
-            config_hash=config_hash,
-            seed=context.config.selection_seed,
-            alert_count=30,
-            failure_probability=0.2,
-        )
-    )
-    scenario_dir = processed / "scenarios"
-    scenario_dir.mkdir(parents=True, exist_ok=True)
-    (scenario_dir / f"scenario-{canonical_hash(scenario)[:12]}.json").write_text(
-        json.dumps(scenario, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
 
 
 STAGES = ("download", "verify", "inventory", "preprocess")
