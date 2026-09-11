@@ -46,3 +46,9 @@ def test_calibration_plans_evaluate_feasibly(raw_scenario):
     for build in calibrate.PLANS.values():
         result = evaluate(scenario, build(scenario, candidates), REALIZED, (0,), candidates=candidates)
         assert result.feasible
+
+
+def test_calibration_uses_the_baseline_zone_tour():
+    from baselines import trajectories
+
+    assert calibrate.zone_tour_trajectory is trajectories.zone_tour_trajectory
