@@ -50,3 +50,27 @@ def test_rerun_skips_current_shards_and_recomputes_stale_ones(tmp_path: Path, ca
     shard.write_text(json.dumps(payload), encoding="utf-8")
     assert run_experiment(config, Path("tiny.yaml")) == 0
     assert json.loads(capsys.readouterr().out.strip().splitlines()[-1])["executed_task_count"] == 1
+
+
+def test_search_methods_bound_their_own_trajectories_and_join_the_union_bound(tmp_path: Path):
+    methods = [
+        "B1",
+        {"id": "S", "base": "search", "params": {"budget": 20, "design_ids": [0]}, "bounds": True},
+        {"id": "T", "base": "search", "params": {"budget": 10, "trajectory_block": False}},
+    ]
+    config = load_experiment_config(write_tiny_experiment(tmp_path, tmp_path / "out", methods=methods, crosscheck=False))
+    assert run_experiment(config, Path("tiny.yaml"), workers=2) == 0
+    output = tmp_path / "out"
+    assert not (output / "milp_crosscheck.csv").exists()
+    bounds = _rows_without_runtime(output / "bounds.csv")
+    assert sorted({(row["variant"], row["trajectory_method"]) for row in bounds}) == [("trajectory", "B1"), ("trajectory", "S")]
+    assert len([row for row in bounds if row["trajectory_method"] == "S"]) == 2 * 2
+    assert not list((output / "shards").glob("bound__*__S__*.json"))
+    calls = {row["method"]: int(row["evaluate_calls"]) for row in _rows_without_runtime(output / "method_realizations.csv")}
+    assert calls["B1"] == 1 and 2 <= calls["S"] <= 21 and 2 <= calls["T"] <= 11
+    with (output / "summary.csv").open(newline="", encoding="utf-8") as stream:
+        summary = {row["method"]: row for row in csv.DictReader(stream)}
+    assert summary["T"]["bound_ratio_mean"] == "nan" and summary["S"]["bound_ratio_mean"] != "nan"
+    for method in ("B1", "S", "T"):
+        assert float(summary[method]["union_bound_ratio_mean"]) >= float(summary["B1"]["bound_ratio_mean"]) - 1e-12
+        assert float(summary[method]["union_bound_ratio_mean"]) >= float(summary["S"]["bound_ratio_mean"]) - 1e-12

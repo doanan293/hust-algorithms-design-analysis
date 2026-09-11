@@ -13,18 +13,10 @@ from models.paths import candidate_paths
 from models.scenario import load_scenario
 
 from .aggregate import crosscheck_violations, summarize, validity_violations
-from .config import ExperimentConfig
+from .config import SEARCH_BASE, ExperimentConfig
+from .methods import bound_owner
 from .provenance import environment, file_sha256, git_state, source_hash
-from .tasks import (
-    CROSSCHECK_TRAJECTORY_METHOD,
-    BoundTask,
-    CrosscheckTask,
-    MethodTask,
-    Task,
-    bound_variant,
-    execute,
-    task_hash,
-)
+from .tasks import CROSSCHECK_TRAJECTORY_METHOD, BoundTask, CrosscheckTask, MethodTask, Task, execute, task_hash
 
 METHOD_COLUMNS = (
     "set_id", "scenario_id", "topology_id", "method", "realization_id", "alert_count", "timely_count",
@@ -44,6 +36,7 @@ SUMMARY_COLUMNS = (
     "set_id", "method", "scenario_count", "timely_ratio_mean", "timely_ratio_ci_low", "timely_ratio_ci_high",
     "conn_ratio_mean", "bound_ratio_mean", "gap_mean", "gap_undefined_count", "shortfall_mean",
     "planning_runtime_s_mean", "evaluation_runtime_s_per_realization_mean", "bound_runtime_s_mean",
+    "union_bound_ratio_mean", "union_gap_mean", "evaluate_calls_mean",
 )
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -75,17 +68,20 @@ def scenario_refs(config: ExperimentConfig) -> list[ScenarioRef]:
 
 
 def build_tasks(config: ExperimentConfig, refs: Sequence[ScenarioRef]) -> list[Task]:
+    """Method tasks for every spec; bound tasks for B0/B1 trajectories (search methods bound inside their tasks)."""
     tasks: list[Task] = []
-    variants = sorted({bound_variant(method) for method in config.methods})
+    variants = sorted({bound_owner(spec) for spec in config.methods if spec.base != SEARCH_BASE})
     for ref in refs:
-        for method in config.methods:
-            tasks.append(MethodTask(ref.set_id, ref.scenario_id, str(ref.path), method, config.realization_ids))
+        for spec in config.methods:
+            tasks.append(MethodTask(ref.set_id, ref.scenario_id, str(ref.path), spec, config.realization_ids, config.tangents))
         for variant, owner in variants:
             for realization_id in config.realization_ids:
                 tasks.append(
                     BoundTask(ref.set_id, ref.scenario_id, str(ref.path), variant, owner, realization_id, config.tangents)
                 )
     cross = config.crosscheck
+    if cross is None:
+        return tasks
     candidates_refs = [ref for ref in refs if ref.set_id == cross.set_id]
     scored = []
     for ref in candidates_refs:
@@ -101,6 +97,12 @@ def build_tasks(config: ExperimentConfig, refs: Sequence[ScenarioRef]) -> list[T
                 )
             )
     return tasks
+
+
+def _bound_rows(task: Task, shard: dict[str, object]) -> list[dict[str, object]]:
+    if isinstance(task, BoundTask):
+        return shard["rows"]
+    return shard.get("bound_rows", []) if isinstance(task, MethodTask) else []
 
 
 def _shard_is_current(path: Path, expected_hash: str) -> bool:
@@ -160,24 +162,26 @@ def run_experiment(
         key=lambda row: (row["set_id"], row["scenario_id"], row["method"], row["realization_id"]),
     )
     bound_rows = sorted(
-        (row for task in tasks if isinstance(task, BoundTask) for row in shards[task.key]["rows"]),
+        (row for task in tasks for row in _bound_rows(task, shards[task.key])),
         key=lambda row: (row["set_id"], row["scenario_id"], row["variant"], row["trajectory_method"], row["realization_id"]),
     )
     crosscheck_rows = sorted(
         (row for task in tasks if isinstance(task, CrosscheckTask) for row in shards[task.key]["rows"]),
         key=lambda row: (row["set_id"], row["scenario_id"]),
     )
+    owners = {spec.id: bound_owner(spec) for spec in config.methods}
     _write_rows(output / "method_realizations.csv", METHOD_COLUMNS, method_rows)
     _write_rows(output / "bounds.csv", BOUND_COLUMNS, bound_rows)
-    _write_rows(output / "milp_crosscheck.csv", CROSSCHECK_COLUMNS, crosscheck_rows)
+    if config.crosscheck is not None:
+        _write_rows(output / "milp_crosscheck.csv", CROSSCHECK_COLUMNS, crosscheck_rows)
     if not failures:
-        failures += validity_violations(method_rows, bound_rows)
+        failures += validity_violations(method_rows, bound_rows, owners)
         failures += crosscheck_violations(crosscheck_rows)
     summary_path = output / "summary.csv"
     if failures:
         summary_path.unlink(missing_ok=True)
     else:
-        _write_rows(summary_path, SUMMARY_COLUMNS, summarize(method_rows, bound_rows, config.bootstrap))
+        _write_rows(summary_path, SUMMARY_COLUMNS, summarize(method_rows, bound_rows, config.bootstrap, owners))
 
     commit, dirty = git_state(REPO_ROOT)
     manifest = {
