@@ -8,12 +8,15 @@ from pathlib import Path
 import sys
 
 import httpx
+from models.paths import ground_connected_source_fraction
+from models.scenario import scenario_from_dict
 
 from .acquisition import download_http, safe_extract_zip, verify_file
 from .config import load_config
 from .manifests import write_source_ledger
 from .models import ArtifactSpec, PipelineConfig, SourceRecord
 from .rescuenet import count_mask_classes, load_label_map, pair_images_and_masks, RescueRecord, select_pairs
+from .scenarios import build_scenario_set, load_scenario_set_config
 from .sndlib import inventory_sndlib, parse_sndlib_xml
 from .topology_zoo import fetch_pinned_repo, inventory_topology, normalize_topology
 
@@ -33,6 +36,9 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--profile", type=Path, required=True)
         command.add_argument("--data-root", type=Path)
         command.add_argument("--dry-run", action="store_true")
+    scenarios = subparsers.add_parser("scenarios")
+    scenarios.add_argument("--config", type=Path, required=True)
+    scenarios.add_argument("--data-root", type=Path)
     return parser
 
 
@@ -181,6 +187,61 @@ def run_preprocess(context: PipelineContext) -> None:
             output.write_text(json.dumps(network, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def run_scenarios(config_path: Path, data_root: Path | None) -> int:
+    config = load_scenario_set_config(config_path)
+    root = data_root or config.data_root
+    with (root / "manifests" / "topology_inventory.csv").open(newline="", encoding="utf-8") as stream:
+        eligible_ids = sorted(row["topology_id"] for row in csv.DictReader(stream) if row["eligible"] == "True")
+    networks, network_sha256 = {}, {}
+    for topology_id in eligible_ids:
+        path = root / "processed" / "networks" / f"{topology_id}.json"
+        if path.exists():
+            payload = path.read_bytes()
+            networks[topology_id] = json.loads(payload)
+            network_sha256[topology_id] = hashlib.sha256(payload).hexdigest()
+    sndlib_matches = sorted((root / "raw" / "sndlib-networks-xml" / "extracted").rglob(f"{config.sndlib_instance}.xml"))
+    if not sndlib_matches:
+        raise FileNotFoundError(f"missing SNDlib instance {config.sndlib_instance}.xml under {root / 'raw'}")
+    demand_values = [float(demand.value) for demand in parse_sndlib_xml(sndlib_matches[0]).demands]
+    ledger = json.loads((root / "manifests" / "sources.json").read_text(encoding="utf-8"))
+    raw_sha256 = [
+        record["sha256"] for record in ledger if record["source_id"] in ("topology-zoo", "sndlib-networks-xml")
+    ]
+    scenarios = build_scenario_set(
+        networks,
+        network_sha256,
+        demand_values,
+        config,
+        raw_sha256,
+        hashlib.sha256(config_path.read_bytes()).hexdigest(),
+    )
+    output_dir = root / "processed" / "scenarios" / config.set_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for stale in output_dir.glob("*.json"):
+        stale.unlink()
+    rows = []
+    for raw in scenarios:
+        scenario = scenario_from_dict(raw)
+        (output_dir / f"{scenario.scenario_id}.json").write_text(
+            json.dumps(raw, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        rows.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "split": scenario.split,
+                "topology_id": scenario.network_id,
+                "replicate": int(scenario.scenario_id.rsplit("-r", 1)[1]),
+                "scenario_seed": scenario.scenario_seed,
+                "sha256": scenario.sha256,
+                "node_count": len(scenario.nodes),
+                "alert_count": len(scenario.alerts),
+                "failed_edge_count": sum(1 for edge in scenario.edges if edge.failed),
+                "ground_connected_source_fraction": round(ground_connected_source_fraction(scenario), 6),
+            }
+        )
+    _write_csv(root / "manifests" / f"scenarios_{config.set_id}.csv", rows)
+    return 0
+
 STAGES = ("download", "verify", "inventory", "preprocess")
 
 
@@ -215,6 +276,8 @@ def run_stage(command: str, config: PipelineConfig, data_root: Path, dry_run: bo
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "scenarios":
+        return run_scenarios(args.config, args.data_root)
     config = load_config(args.profile)
     data_root = args.data_root or config.data_root
     return run_stage(args.command, config, data_root, args.dry_run)
