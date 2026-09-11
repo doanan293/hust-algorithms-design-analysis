@@ -2,25 +2,28 @@
 \label{sec:related}
 
 \paragraph{UAV relay và tối ưu quỹ đạo.}
-[Tổng quan các công trình về UAV relay: hai chiều, full-duplex, PrLoS.] Công trình~\cite{huang2025ddatsap} là điểm xuất phát trực tiếp của đề tài.
+Huang và cộng sự~\cite{huang2025ddatsap} nghiên cứu hệ relay hai chiều dùng UAV cho nhiều cặp người dùng mặt đất dưới mô hình kênh PrLoS, đề xuất giao thức cấp phát khe thời gian hai ăng-ten động (DDATSAP) và tối đa tốc độ trung bình nhỏ nhất bằng cách tối ưu đồng thời hệ số lập lịch tài nguyên, công suất phát và quỹ đạo, với ràng buộc vùng cấm bay. Bài toán không lồi được giải bằng thuật toán lặp kết hợp phân rã theo khối (BCD) và xấp xỉ lồi liên tiếp (SCA). Đề tài này kế thừa mô hình kênh PrLoS và cấu trúc phân rã đó, nhưng thay mục tiêu bằng tỷ lệ cảnh báo giao đúng hạn, bổ sung lựa chọn relay trên mạng mặt đất có dung lượng backhaul hữu hạn, và dùng giao thức hai nửa slot bán song công thay cho DDATSAP.
 
-\paragraph{Lựa chọn relay và phân bổ băng thông với deadline.}
-[Tổng quan các công trình về relay selection, time-expanded network, lập lịch với deadline.]
+\paragraph{Lập lịch với thời điểm phát sinh và hạn.}
+Khi chỉ xét một liên kết, việc chọn tập cảnh báo giao đúng hạn gần với bài toán lập lịch một máy tối thiểu số công việc trễ. Phiên bản không ngắt quãng $1\,|\,r_j\,|\,\sum U_j$ là NP-khó mạnh~\cite{lenstra2020elements}, còn phiên bản có ngắt quãng $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$ giải được bằng quy hoạch động trong thời gian đa thức~\cite{lawler1990preemptive}. Mô hình ở \cref{sec:method} cho phép chia dữ liệu theo slot, gần với trường hợp có ngắt quãng; độ khó của nó đến từ ràng buộc mỗi cảnh báo đi theo đúng một đường (\cref{sec:hardness}).
 
-\paragraph{Phương pháp tối ưu không lồi.}
-Các bài toán trên thường không lồi; hướng phổ biến là phân rã theo khối (BCD) kết hợp xấp xỉ lồi liên tiếp (SCA)~\cite{huang2025ddatsap}, dựa trên nền tảng tối ưu lồi~\cite{boyd2004convex}.
+\paragraph{Tối ưu không lồi và cận trên.}
+Cận trên ở \cref{sec:bound} dựa trên tính lõm của hàm tốc độ theo băng thông và việc thay hàm lõm bằng bao các tiếp tuyến, là các công cụ chuẩn của tối ưu lồi~\cite{boyd2004convex}.
 
-% Bảng so sánh Related Work theo objective, số UAV, relay selection, deadline, channel uncertainty...
+\paragraph{Phạm vi của phần này.}
+Tổng quan có hệ thống về UAV relay có hạn giao, lựa chọn relay với backhaul, luồng trên đồ thị mở rộng theo thời gian và phân bổ băng thông, cùng việc chọn một phương pháp mạnh từ tài liệu để so sánh, thuộc Pha 2 và chưa được thực hiện trong báo cáo Pha 1.
+
 \begin{table}[htbp]
 \centering
-\caption{So sánh với các công trình liên quan (điền sau khi tổng quan).}
+\small
+\caption{So sánh với công trình tham chiếu.}
 \label{tab:related}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
-\textbf{Công trình} & \textbf{Objective} & \textbf{Relay sel.} & \textbf{Deadline} & \textbf{Kênh} & \textbf{Phương pháp} \\
+\textbf{Công trình} & \textbf{Mục tiêu} & \textbf{Chọn relay} & \textbf{Hạn giao} & \textbf{Kênh} & \textbf{Phương pháp} \\
 \midrule
-\cite{huang2025ddatsap} & Max--min rate & Không & Không & PrLoS & BCD--SCA \\
-Đề tài này & Tỷ lệ đúng hạn & Có & Có & PrLoS & Phân rã + repair \\
+\cite{huang2025ddatsap} & Max--min tốc độ & Không & Không & PrLoS & BCD--SCA \\
+Đề tài này & Tỷ lệ đúng hạn & Có & Có & PrLoS & B0, B1, cận LP (Pha 1) \\
 \bottomrule
 \end{tabular}
 \end{table}

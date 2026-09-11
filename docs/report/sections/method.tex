@@ -1,81 +1,166 @@
-\section{Phương pháp đề xuất}
+\section{Mô hình và phương pháp}
 \label{sec:method}
 
 \subsection{Mô hình hệ thống}
 \label{sec:model}
 
-Xét mạng relay mặt đất $G=(V,E)$ với trung tâm cứu hộ $c\in V$, tập nguồn cảnh báo $S$ và một UAV bay ở độ cao cố định $H$. Thời gian nhiệm vụ $T=N\Delta$ được chia thành $N$ khe; $q[n]\in\R^2$ là toạ độ ngang của UAV ở cuối khe $n$. Mỗi cảnh báo $a\in A$ có nguồn $s_a$, thời điểm phát sinh $r_a$, hạn $d_a$ và kích thước $L_a$ bit.
+Mạng relay mặt đất sau thiên tai được biểu diễn bằng đồ thị $G=(V,E)$ lấy từ Topology Zoo~\cite{knight2011zoo} và chuẩn hoá vào vùng vuông cạnh $L_{\mathrm{box}}$ với cùng một hệ số tỷ lệ trên hai trục. Nút $c\in V$ là trung tâm cứu hộ, mọi nút còn lại là relay. Cạnh $e\in E$ còn hoạt động có dung lượng backhaul $C_e$; cạnh hỏng có dung lượng bằng $0$. Các điểm phát cảnh báo tạo thành tập $S$; chúng không thuộc $G$ và chỉ truyền được bằng vô tuyến. Mỗi cảnh báo $a\in A$ có nguồn $s_a\in S$, slot phát sinh $r_a$, hạn $d_a$ và kích thước $L_a$ bit. Nhiệm vụ gồm $N$ slot độ dài $\Delta$; mỗi slot chia thành nửa \emph{truy nhập} dài $\tau\Delta$, trong đó nguồn gửi tới relay hoặc UAV, và nửa \emph{downlink} dài $(1-\tau)\Delta$, trong đó UAV gửi xuống một nút của $G$.
 
-\begin{definition}[Cảnh báo đúng hạn]
-\label{def:timely}
-Cảnh báo $a$ được gọi là \emph{đúng hạn} trong realization $\omega$ nếu toàn bộ $L_a$ bit tới trung tâm $c$ không muộn hơn $d_a$; ký hiệu $z_{a,\omega}=1$, ngược lại $z_{a,\omega}=0$.
-\end{definition}
+UAV bay ở độ cao cố định $H$ theo quỹ đạo $q[0],\dots,q[N]\in\R^2$ thoả
+\begin{equation}
+\label{eq:mobility}
+q[0]=q_s,\qquad q[N]=q_t,\qquad \norm{q[n+1]-q[n]}\le V_{\max}\Delta,\quad n=0,\dots,N-1,
+\end{equation}
+và vị trí đại diện của slot $n$ là trung điểm $\bar q[n]=\bigl(q[n]+q[n+1]\bigr)/2$.
 
-Kênh không--đất kế thừa mô hình PrLoS của~\cite{huang2025ddatsap}. Với nút mặt đất $k$ ở toạ độ $w_k$, khoảng cách và góc ngẩng tại khe $n$ là
+\paragraph{Kênh.}
+Liên kết giữa UAV và điểm mặt đất $k$ ở toạ độ $w_k$ dùng mô hình xác suất tầm nhìn thẳng (PrLoS) của~\cite{huang2025ddatsap}:
 \begin{equation}
 \label{eq:geometry}
-d_k[n]=\sqrt{\norm{\bar q[n]-w_k}^2+H^2},\qquad
-\theta_k[n]=\frac{180}{\pi}\operatorname{atan2}\bigl(H,\norm{\bar q[n]-w_k}\bigr),
+\begin{aligned}
+d_k[n]&=\sqrt{\norm{\bar q[n]-w_k}^2+H^2},\qquad
+\theta_k[n]=\frac{180}{\pi}\operatorname{atan2}\bigl(H,\norm{\bar q[n]-w_k}\bigr),\\
+P_k^{L}[n]&=\frac{1}{1+a\exp\bigl[-b(\theta_k[n]-a)\bigr]},
+\end{aligned}
 \end{equation}
-và xác suất tầm nhìn thẳng là
+với độ lợi $g^{L}=\beta_0 d^{-\alpha_L}$ khi có tầm nhìn thẳng và $g^{N}=\mu\beta_0 d^{-\alpha_N}$ khi không. Với công suất phát $p$ và mật độ phổ nhiễu $N_0$, đặt $s=pg/N_0$ (đơn vị Hz); tốc độ khi cấp băng thông $b$ là
 \begin{equation}
-\label{eq:plos}
-P_k^{L}[n]=\frac{1}{1+a\exp\bigl[-b(\theta_k[n]-a)\bigr]}.
+\label{eq:rate}
+R(b,s)=b\log_2\!\Bigl(1+\frac{s}{b}\Bigr),\qquad R(0,s)=0.
 \end{equation}
-\noindent trong đó $a,b$ là tham số môi trường. Dung lượng của liên kết vô tuyến $e$ với băng thông $b_e[n]$ và công suất cố định $p_e$ là
-\begin{equation}
-\label{eq:capacity}
-R_{e,n,\omega}=b_e[n]\log_2\!\left(1+\frac{p_e\,g_{e,n,\omega}(q)}{N_0\,b_e[n]}\right).
-\end{equation}
+Trong realization $\omega$, trạng thái LoS/NLoS của liên kết tới điểm $k$ ở slot $n$ được lấy mẫu độc lập với xác suất $P_k^{L}[n]$ tính trên chính quỹ đạo đang xét; mọi kế hoạch được so sánh trên cùng các số ngẫu nhiên. Liên kết từ nguồn tới relay mặt đất có độ lợi tất định $\beta_0 d^{-\alpha_G}$ và chỉ tồn tại khi $R(B_{\mathrm{tot}},s)\ge R_{\min}$. Nguồn phát công suất $p_s$; UAV có tổng công suất $P_U$ chia đều cho tối đa hai downlink hoạt động trong một slot, nên ngân sách công suất không tăng theo quy mô.
+
+\paragraph{Đường chuyển tiếp.}
+Mỗi cảnh báo có tối đa $K$ candidate path thuộc hai loại: đường \emph{mặt đất} $s_a\to v\leadsto c$ qua một relay $v$ trong tầm, và đường \emph{UAV} $s_a\to\text{UAV}\to u\leadsto c$ với nút thả $u\in V$. Đoạn $v\leadsto c$ là đường backhaul ít chặng nhất trên các cạnh còn hoạt động. Tập candidate gồm tối đa hai đường mặt đất có chi phí ước lượng thấp nhất, bổ sung bằng các đường UAV có chi phí thấp nhất; tập này cố định trước khi lập kế hoạch và mọi phương pháp dùng chung.
 
 \subsection{Phát biểu bài toán}
 \label{sec:problem}
 
-Bài toán thiết kế trong Pha~1 dùng tốc độ kỳ vọng nên $z_a$ xác định:
+Một kế hoạch gồm quỹ đạo $q$ thoả \eqref{eq:mobility}, lựa chọn đường $x_{a,p}\in\set{0,1}$ với $\sum_p x_{a,p}\le 1$ (cho phép không phục vụ cảnh báo), và băng thông $b_{e,n}\ge 0$ trên các liên kết vô tuyến. Kế hoạch được lập trước nhiệm vụ chỉ từ tốc độ kỳ vọng và được đánh giá trên các realization kênh độc lập. Khi thực thi, trong mỗi slot $n$:
+\begin{enumerate}
+\item \emph{Phổ:} tổng băng thông của các liên kết truy nhập và của các downlink đều không vượt $B_{\mathrm{tot}}$; có tối đa hai downlink hoạt động.
+\item \emph{Dung lượng:} liên kết vô tuyến $e$ mang tối đa $t_e\Delta\,R(b_{e,n},s_{e,n})$ bit, với $t_e=\tau$ cho truy nhập và $t_e=1-\tau$ cho downlink; cạnh backhaul mang tối đa $\Delta C_e$ bit, chia chung cho mọi cảnh báo đi qua.
+\item \emph{Nhân quả:} bit của $a$ có mặt ở nguồn từ đầu slot $r_a$; truyền trong slot $n$ chỉ dùng dữ liệu có trong buffer ở đầu slot $n$, nên bit nhận trong slot $n$ chỉ được chuyển tiếp từ slot $n+1$; bit chỉ đi trên đường đã chọn và buffer không âm.
+\item \emph{Hạn:} ở đầu slot $d_a$, mọi bit còn lại của $a$ bị huỷ.
+\end{enumerate}
+Mọi phương pháp dùng chung bộ điều phối phục vụ mỗi hàng đợi theo thứ tự hạn sớm nhất (EDF).
+
+\begin{definition}[Cảnh báo đúng hạn]
+\label[definition]{def:timely}
+Cảnh báo $a$ \emph{đúng hạn} trong realization $\omega$, ký hiệu $z_{a,\omega}=1$, nếu ít nhất $L_a$ bit của nó tới trung tâm $c$ không muộn hơn cuối slot $d_a-1$; ngược lại $z_{a,\omega}=0$.
+\end{definition}
+
+Gọi $D_{a,\omega}$ là số bit của $a$ tới $c$ trước hạn. Các kế hoạch được so sánh theo thứ tự từ điển của
 \begin{equation}
 \label{eq:objective}
-\max_{q,\,x,\,b,\,f}\ \hat P_{\mathrm{timely}}=\frac{1}{\abs{A}}\sum_{a\in A} z_a
+\Bigl(\hat P_{\mathrm{timely}},\ \mathrm{Conn},\ -\sum_{\omega}\sum_{a}\frac{L_a-D_{a,\omega}}{L_a}\Bigr),
+\qquad
+\hat P_{\mathrm{timely}}=\frac{1}{M\abs{A}}\sum_{\omega=1}^{M}\sum_{a\in A}z_{a,\omega},
 \end{equation}
-với các ràng buộc di chuyển, phổ hai pha, dung lượng, bảo toàn luồng và nhân quả. [Liệt kê ràng buộc đầy đủ theo \texttt{docs/issue.md}, Mục~8.] Connectivity theo thời gian là mục tiêu phụ theo thứ tự từ điển.
+trong đó $\mathrm{Conn}$ là tỷ lệ nguồn có đường theo thời gian tới $c$ trên đồ thị mở rộng theo thời gian: mỗi bước truyền tốn một slot, được phép chờ trong buffer, và liên kết UAV dùng được ở slot $n$ khi $R(B_{\mathrm{tot}},s_{e,n})\ge R_{\min}$.
 
-\subsection{Thuật toán}
+\begin{remark}
+Thành phần thứ ba là tỷ lệ dữ liệu còn thiếu tại hạn (shortfall), thay cho tổng độ trễ: vì cảnh báo quá hạn bị huỷ, cảnh báo trễ không có thời điểm hoàn thành để tính độ trễ.
+\end{remark}
+
+\subsection{Phương pháp cơ sở}
+\label{sec:baselines}
+
+Hai phương pháp cơ sở dùng chung tập candidate, bộ điều phối EDF và quy tắc chia đều $B_{\mathrm{tot}}$ cho các liên kết đang có dữ liệu chờ trong mỗi nửa slot; chúng chỉ khác nhau ở vai trò của UAV. Cả hai lập kế hoạch từ tốc độ kỳ vọng và không dùng các realization đánh giá.
+
+\paragraph{B0 --- không có UAV.}
+UAV đứng yên tại điểm xuất phát và không được giao cảnh báo nào. Mỗi cảnh báo đi theo đường mặt đất có chi phí ước lượng thấp nhất; nguồn không có relay nào trong tầm thì cảnh báo không được phục vụ. Với B0, $\mathrm{Conn}$ được tính trên đồ thị không có liên kết UAV. Chi phí lập kế hoạch là $O(\abs{A}K)$.
+
+\paragraph{B1 --- UAV bay theo quỹ đạo cố định.}
+UAV xuất phát từ trung tâm, lần lượt bay tới tâm các vùng hư hại theo thứ tự láng giềng gần nhất với tốc độ $V_{\max}$, chia đều thời gian còn lại để lơ lửng tại các vùng, rồi trở về; vùng được thêm sau cùng bị bỏ nếu hành trình không vừa $N$ slot. Với mỗi cảnh báo, mọi candidate được mô phỏng riêng cho cảnh báo đó trên quỹ đạo này với tốc độ kỳ vọng và toàn bộ băng thông; B1 chọn candidate giao xong sớm nhất (hoà thì lấy chỉ số nhỏ hơn) và không phục vụ cảnh báo nếu không candidate nào kịp hạn. Chi phí lập kế hoạch là $O(\abs{A}KNH_{\max})$, với $H_{\max}$ là số chặng lớn nhất của một candidate.
+
+\subsection{Cận trên theo từng realization}
+\label{sec:bound}
+
+Cố định quỹ đạo $q$, tập candidate và realization $\omega$; khi đó $s_{e,n}$ đã biết. Với chặng $h$ của candidate $p$ và slot $n\in[r_a+h,\,d_a-1]$, gọi $f_{a,p,h,n}$ là số bit đi qua chặng và $B_{a,p,h,n}$ là buffer ở đầu slot. Chọn các điểm tiếp tuyến $b_k=B_{\mathrm{tot}}2^{-k}$, $k=0,\dots,9$, và xét bài toán quy hoạch tuyến tính
+\begin{subequations}
+\label{eq:lp}
+\begin{align}
+\max\quad & \textstyle\sum_{a\in A} z_a \label{eq:lp-objective}\\
+\text{s.t.}\quad
+& \textstyle\sum_{p} x_{a,p}\le 1, \label{eq:lp-choice}\\
+& B_{a,p,0,r_a}=L_a x_{a,p},\qquad B_{a,p,h,r_a+h}=f_{a,p,h-1,r_a+h-1}\ (h\ge 1), \label{eq:lp-init}\\
+& B_{a,p,h,n+1}=B_{a,p,h,n}-f_{a,p,h,n}+f_{a,p,h-1,n},\qquad f_{a,p,h,n}\le B_{a,p,h,n}, \label{eq:lp-buffer}\\
+& L_a z_a\le \textstyle\sum_{p}\sum_{n} f_{a,p,H_p-1,n}, \label{eq:lp-deadline}\\
+& \textstyle\sum_{(a,p,h)\,\text{qua}\,e} f_{a,p,h,n}\le t_e\Delta\bigl(R(b_k,s_{e,n})+R'(b_k,s_{e,n})(b_{e,n}-b_k)\bigr)\quad \forall k, \label{eq:lp-radio}\\
+& \textstyle\sum_{(a,p,h)\,\text{qua}\,e} f_{a,p,h,n}\le \Delta C_e, \label{eq:lp-backhaul}\\
+& \textstyle\sum_{e\,\text{truy nhập}} b_{e,n}\le B_{\mathrm{tot}},\qquad \sum_{e\,\text{downlink}} b_{e,n}\le B_{\mathrm{tot}}, \label{eq:lp-spectrum}\\
+& x,z\in[0,1],\qquad f,B,b\ge 0, \label{eq:lp-domain}
+\end{align}
+\end{subequations}
+trong đó $f_{a,p,-1,n}\equiv 0$, $H_p$ là số chặng của candidate $p$, \eqref{eq:lp-buffer} áp dụng khi $n+1\le d_a-1$, \eqref{eq:lp-radio} áp dụng cho liên kết vô tuyến có $s_{e,n}>0$ (nếu $s_{e,n}=0$ thì luồng qua liên kết bằng $0$) và \eqref{eq:lp-backhaul} cho cạnh backhaul. Gọi $\mathrm{UB}_\omega(q)$ là giá trị tối ưu.
+
+\begin{proposition}[Cận trên]
+\label[proposition]{prop:ub}
+Với quỹ đạo $q$, tập candidate và realization $\omega$ cố định, $\mathrm{UB}_\omega(q)$ không nhỏ hơn số cảnh báo đúng hạn của mọi kế hoạch có quỹ đạo $q$ khi thực thi trên $\omega$.
+\end{proposition}
+
+\begin{proof}
+Với $s>0$ cố định, $R(b,s)=b\,\phi(1/b)$ với $\phi(t)=\log_2(1+st)$ lõm, nên $R(\cdot,s)$ là phép phối cảnh của một hàm lõm và do đó lõm trên $b>0$~\cite{boyd2004convex}. Một hàm lõm nằm dưới mọi tiếp tuyến, nên $R(b,s)\le R(b_k,s)+R'(b_k,s)(b-b_k)$ với mọi $k$.
+Xét một kế hoạch bất kỳ có quỹ đạo $q$ và quá trình thực thi của nó trên $\omega$. Đặt $x_{a,p}=1$ cho đường được chọn, $z_a=z_{a,\omega}$, $f_{a,p,h,n}$ bằng số bit truyền qua chặng $h$ trong slot $n$, $B_{a,p,h,n}$ bằng buffer ở đầu slot và $b_{e,n}$ bằng băng thông được cấp. Ràng buộc nhân quả và buffer cho \eqref{eq:lp-init}--\eqref{eq:lp-buffer}; \cref{def:timely} cho \eqref{eq:lp-deadline}; ràng buộc phổ và dung lượng cho \eqref{eq:lp-spectrum} và \eqref{eq:lp-backhaul}; bất đẳng thức tiếp tuyến cho \eqref{eq:lp-radio}. Điểm này khả thi và có giá trị mục tiêu bằng số cảnh báo đúng hạn, nên không vượt $\mathrm{UB}_\omega(q)$.
+\end{proof}
+
+Bài toán \eqref{eq:lp} còn nới lỏng tính nguyên của $x,z$, thứ tự EDF, giới hạn hai downlink và biết trước kênh; mỗi nới lỏng chỉ làm miền khả thi rộng thêm. Cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho, không phải cận toàn cục trên mọi quỹ đạo. Với mỗi scenario, cận được lấy trung bình trên các realization và chia cho $\abs{A}$; gap của một phương pháp là $(\overline{\mathrm{UB}}-\overline{P})/\overline{\mathrm{UB}}$. B1 được so với cận trên quỹ đạo B1; B0 được so với cận của cùng bài toán khi chỉ giữ các candidate mặt đất.
+
+Để đo độ chặt, trên các instance thu nhỏ bài toán \eqref{eq:lp} được giải lại với $x,z$ nhị phân (MILP). Kế hoạch dựng từ nghiệm MILP --- đường đã chọn và băng thông của nghiệm, giữ hai downlink lớn nhất nếu vượt giới hạn --- được thực thi trên cùng $\omega$, cho chuỗi
+\begin{equation}
+\label{eq:sandwich}
+P_\omega(\text{kế hoạch MILP})\ \le\ \mathrm{OPT}_\omega(q)\ \le\ \mathrm{UB}^{\mathrm{MILP}}_\omega(q)\ \le\ \mathrm{UB}_\omega(q).
+\end{equation}
+Kế hoạch MILP biết trước kênh nên chỉ dùng để đo độ chặt của cận, không dùng để so sánh phương pháp.
+
+\subsection{Độ khó của bài toán}
+\label{sec:hardness}
+
+\begin{proposition}
+\label[proposition]{prop:hardness}
+Ngay cả khi quỹ đạo cố định, dữ liệu được chia nhỏ tuỳ ý giữa các slot, mạng chỉ có hai relay và mỗi cảnh báo có hai candidate path, bài toán tối đa số cảnh báo đúng hạn là NP-khó.
+\end{proposition}
+
+\begin{proof}
+Quy dẫn từ PARTITION: cho các số nguyên dương $s_1,\dots,s_m$ có tổng $2Q$, hỏi có tập con có tổng $Q$ hay không. Dựng mạng gồm trung tâm $c$, hai relay $v_1,v_2$ và hai cạnh backhaul $(v_j,c)$ có $\Delta C_{(v_j,c)}=Q$ bit. Một nguồn nằm trong tầm của cả hai relay, với độ lợi đủ lớn để $\tau\Delta\,R(B_{\mathrm{tot}}/2,s)\ge 2Q$. Cảnh báo $i$ có $L_i=s_i$, $r_i=0$, $d_i=2$ và hai candidate: qua $v_1$ hoặc qua $v_2$. Theo quy ước nhân quả, bit của cảnh báo đúng hạn phải được gửi lên relay trong slot $0$ và đi qua backhaul trong slot $1$.
+Nếu tồn tại tập con có tổng $Q$, cho các cảnh báo tương ứng đi qua $v_1$, phần còn lại qua $v_2$, và cấp $B_{\mathrm{tot}}/2$ cho mỗi liên kết truy nhập trong slot $0$: mỗi liên kết truy nhập mang được $2Q$ bit và mỗi cạnh backhaul mang đúng $Q$ bit trong slot $1$, nên cả $m$ cảnh báo đúng hạn.
+Ngược lại, nếu cả $m$ cảnh báo đúng hạn thì tổng kích thước các cảnh báo qua $v_j$ không vượt $Q$ với $j=1,2$, trong khi tổng hai phần bằng $2Q$; vậy mỗi phần bằng $Q$ và PARTITION có lời giải. Phép dựng thực hiện trong thời gian đa thức, nên quyết định ``có ít nhất $m$ cảnh báo đúng hạn hay không'' là NP-khó.
+\end{proof}
+
+\begin{remark}
+\Cref{prop:hardness} chỉ khẳng định NP-khó theo nghĩa yếu; báo cáo không khẳng định bài toán thuộc NP (băng thông là biến liên tục) và không xét trường hợp $K=1$. Độ khó đến từ ràng buộc mỗi cảnh báo đi theo đúng một đường, không đến từ việc lập lịch trên một liên kết: khi chỉ có một liên kết và dữ liệu được chia nhỏ theo slot, bài toán tương ứng với lập lịch một máy có ngắt quãng $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$, vốn giải được trong thời gian đa thức~\cite{lawler1990preemptive}. Phiên bản không ngắt quãng $1\,|\,r_j\,|\,\sum U_j$ là NP-khó mạnh~\cite{lenstra2020elements}, nhưng mô hình ở đây cho phép chia bit theo slot nên kết quả đó không áp dụng trực tiếp.
+\end{remark}
+
+\subsection{Độ phức tạp tính toán}
+\label{sec:complexity}
+
+Sinh candidate path tốn $O(\abs{V}+\abs{E})$ cho một lần tìm kiếm theo chiều rộng từ $c$ và $O(\abs{A}\abs{V}\log\abs{V})$ cho việc xếp hạng. Đánh giá một kế hoạch trên $M$ realization tốn $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, với $\mathcal L$ là tập liên kết; bộ kiểm tra độc lập có cùng bậc, còn $\mathrm{Conn}$ tốn $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. B0 lập kế hoạch trong $O(\abs{A}K)$ và B1 trong $O(\abs{A}KNH_{\max})$. Bài toán \eqref{eq:lp} có $\sum_a\sum_p H_p(d_a-r_a)$ biến luồng và cùng số biến buffer, tối đa $\abs{\mathcal L_{\mathrm{vt}}}N$ biến băng thông và tối đa $10\abs{\mathcal L_{\mathrm{vt}}}N$ ràng buộc tiếp tuyến, với $\mathcal L_{\mathrm{vt}}$ là các liên kết vô tuyến của tập candidate. Cận được giải bằng HiGHS qua \texttt{scipy}; báo cáo không đưa ra cận thời gian đa thức cho bộ giải mà đo thời gian thực của mọi bài toán LP (\cref{sec:experiments}).
+
+\subsection{Phương pháp đề xuất cho Pha 2}
 \label{sec:algorithm}
 
-\Cref{alg:bcd-repair} tóm tắt phương pháp đề xuất: phân rã theo ba khối như cấu trúc BCD của~\cite{huang2025ddatsap}, sau đó áp dụng hai thao tác sửa lịch cho các cảnh báo có slack thấp.
+\Cref{alg:bcd-repair} là phương pháp dự kiến cho Pha 2: phân rã theo ba khối như cấu trúc BCD của~\cite{huang2025ddatsap}, sau đó áp dụng hai thao tác sửa lịch cho các cảnh báo có độ dư thời gian thấp. Phương pháp này chưa được cài đặt và chưa được đánh giá trong Pha 1.
 
 \begin{algorithm}[htbp]
-\caption{Phân rã theo khối kết hợp sửa lịch theo slack}
+\caption{Phân rã theo khối kết hợp sửa lịch theo độ dư thời gian (Pha 2, chưa đánh giá)}
 \label{alg:bcd-repair}
 \begin{algorithmic}[1]
-\Require Kịch bản $(G, A, \text{tham số kênh})$, số vòng tối đa $I_{\max}$
-\Ensure Quỹ đạo $q$, lựa chọn path $x$, băng thông $b$
-\State Khởi tạo quỹ đạo khả thi $q^{(0)}$ và path $x^{(0)}$
+\Require Scenario, tập candidate, số vòng tối đa $I_{\max}$
+\Ensure Quỹ đạo $q$, lựa chọn đường $x$, băng thông $b$
+\State Khởi tạo quỹ đạo khả thi $q^{(0)}$ và lựa chọn đường $x^{(0)}$
 \For{$i = 1, \dots, I_{\max}$}
-    \State Cập nhật $b$ với $(q, x)$ cố định \Comment{bài toán lồi}
-    \State Cập nhật $x$ với $(q, b)$ cố định \Comment{hoán đổi trong candidate set}
-    \State Cập nhật $q$ với $(x, b)$ cố định \Comment{local search}
-    \State Tính slack của từng cảnh báo; chọn tập nguy cơ $A_{\mathrm{risk}}$
+    \State Cập nhật $b$ với $(q, x)$ cố định
+    \State Cập nhật $x$ với $(q, b)$ cố định \Comment{hoán đổi trong tập candidate}
+    \State Cập nhật $q$ với $(x, b)$ cố định \Comment{tìm kiếm cục bộ}
+    \State Tính độ dư thời gian của từng cảnh báo; chọn tập nguy cơ $A_{\mathrm{risk}}$
     \ForAll{$a \in A_{\mathrm{risk}}$}
-        \State Thử chuyển băng thông từ luồng dư slack sang $a$
-        \State Thử đổi path của $a$ trong candidate set
-        \State Nhận thay đổi nếu objective từ điển không giảm
+        \State Thử chuyển băng thông từ luồng còn dư sang $a$
+        \State Thử đổi đường của $a$ trong tập candidate
+        \State Nhận thay đổi nếu mục tiêu từ điển không giảm
     \EndFor
     \If{không cải thiện trong $\kappa$ vòng liên tiếp} \textbf{break} \EndIf
 \EndFor
 \State \Return $(q, x, b)$
 \end{algorithmic}
 \end{algorithm}
-
-\subsection{Phân tích}
-\label{sec:analysis}
-
-\begin{proposition}[Cận trên]
-\label{prop:ub}
-Với quỹ đạo $q$ và tập candidate path cố định, giá trị tối ưu của bài nới lỏng tuyến tính $\mathrm{UB}(q)$ là cận trên của \cref{eq:objective} trên cùng $q$.
-\end{proposition}
-\begin{proof}
-Phác thảo: [nới lỏng $x,z\in[0,1]$ và thay hàm dung lượng lõm bằng các tiếp tuyến chỉ mở rộng miền khả thi].
-% Lưu ý: không bắt đầu nội dung proof/theorem bằng "[" vì LaTeX hiểu là tuỳ chọn tên.
-\end{proof}
-
-Độ phức tạp mỗi vòng của \cref{alg:bcd-repair} là [phân tích theo $\abs{A}$, $\abs{V}$, $\abs{E}$, $N$, $K$].
