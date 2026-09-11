@@ -5,6 +5,7 @@ import pytest
 from baselines.b1 import B1
 from models.evaluate import EXPECTED, evaluate, REALIZED
 from models.paths import candidate_paths
+from optimization import scoring
 from optimization.objectives import leximin_key, lexicographic_key
 from optimization.scoring import INFEASIBLE_SCORE, BudgetExhausted, DesignScorer
 from scenario_builders import make_alert
@@ -78,3 +79,18 @@ def test_empty_design_ids_score_expected_rates_and_infeasible_plans_score_lowest
     assert key == evaluate(scenario, plan, EXPECTED, candidates=candidates).key
     broken = type(plan)(plan.trajectory, {"alert-0000": 7}, plan.bandwidth)
     assert scorer.score(broken) == INFEASIBLE_SCORE
+
+
+def test_scorer_skips_the_checker_and_reuses_one_connectivity_cache(monkeypatch):
+    scenario, candidates, plan = _far_source_plan()
+    real, seen = scoring.evaluate, []
+
+    def spy(*args, **kwargs):
+        seen.append((kwargs["check"], id(kwargs["connectivity_cache"])))
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(scoring, "evaluate", spy)
+    scorer = DesignScorer(scenario, candidates, design_ids=(0, 1), budget=5)
+    first = scorer.score(plan)
+    assert scorer.score_with_ledger(plan)[0] == first
+    assert [check for check, _ in seen] == [False, False] and len({cache for _, cache in seen}) == 1
