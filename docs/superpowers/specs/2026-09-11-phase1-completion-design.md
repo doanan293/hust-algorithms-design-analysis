@@ -66,11 +66,13 @@ docs/report ──► skill compile_latex.sh ──► main.pdf
 | `src/bounds/solve.py` | HiGHS LP/MILP via `scipy`, `BoundResult` |
 | `src/bounds/crosscheck.py` | Reduced instances, MILP solution to plan conversion |
 | `src/runner/config.py` | Experiment config loading and validation |
-| `src/runner/tasks.py` | Task definitions, shard keys, execution |
+| `src/runner/tasks.py` | Task definitions, task hashes, and per-task execution |
+| `src/runner/experiment.py` | Task planning, parallel execution, shard merging, validity checks, `manifest.json` |
 | `src/runner/aggregate.py` | Merging, per-scenario means, cluster bootstrap, gaps, validity checks |
 | `src/runner/provenance.py` | `manifest.json` contents and source hash |
 | `experiments/run_phase1.py` | Thin entry point |
-| `experiments/report_tables.py` | Report CSVs (parameters, Phase 1 results, MILP cross-check, LP runtime) in `docs/report/data/` |
+| `experiments/report_tables.py` | Report CSVs (parameters, Phase 1 results, MILP cross-check, LP runtime) and result macros in `docs/report/data/` |
+| `tests/support/` | Shared test builders (`scenario_builders.py`, `channel_builders.py`), on the pytest `pythonpath` |
 | `experiments/calibrate_v0.py` | Imports trajectories from `src/baselines` |
 | `configs/scenarios/v0-bh50.yaml` | Backhaul-stressed family |
 | `configs/experiments/phase1.yaml` | Phase 1 experiment |
@@ -87,6 +89,7 @@ Both baselines use the shared evaluator, candidate set, EDF dispatcher, and `Equ
 class Method(Protocol):
     name: str
     uses_uav: bool
+    def trajectory(self, scenario: Scenario) -> np.ndarray: ...
     def plan(self, scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], counter: EvaluationCounter) -> Plan: ...
 ```
 
@@ -147,11 +150,12 @@ Phase 1 solves 2 sets × 30 scenarios × 30 realizations × 2 variants = 3,600 L
 
 ### 6.4 MILP cross-check
 
-- Instances: from set `v0`, sort evaluation scenarios by `(flow_variable_count, scenario_id)`, where `flow_variable_count` is $\sum_a\sum_p H_p(d_a-r_a)$ over the full scenario, and take positions $\mathrm{round}(i\cdot 29/4)$ for $i=0,\dots,4$; keep the ten alerts with the smallest IDs; B1 trajectory; realization 0.
+- Instances: from set `v0`, sort evaluation scenarios by `(flow_variable_count, scenario_id)`, where `flow_variable_count` is $\sum_a\sum_p H_p(d_a-r_a)$ over the full scenario, and take positions $\lfloor i\cdot 29/4+1/2\rfloor=0,7,15,22,29$; keep the ten alerts with the smallest IDs; B1 trajectory; realization 0.
 - **LP-UB:** Section 6.1 LP. **MILP-UB:** the same model with $x,z$ binary, time limit 300 s; record the incumbent, the dual bound, and the status.
-- **MILP plan value:** convert the incumbent to a plan (chosen paths; `StaticSchedule` from $b$; where a slot has more than two positive downlinks, keep the two largest and zero the rest) and evaluate it on realization 0. The plan uses realized channel knowledge and is used only to measure bound tightness.
-- Required chain within $10^{-6}$ alerts: MILP plan value ≤ MILP dual bound ≤ LP-UB, and MILP incumbent ≤ MILP dual bound.
-- Diagnostic: the maximum relative overestimate of the ten-tangent envelope over $b\in[B_{\mathrm{tot}}/512,\,B_{\mathrm{tot}}]$ for the SNR values present in the cross-check instances.
+- **MILP plan value:** convert the incumbent to a plan (chosen paths; `StaticSchedule` from $b$; where a slot has more than two positive downlinks, keep the two largest and zero the rest), evaluate it on realization 0, evaluate the same path choice with `EqualSplitBacklogged`, and record both values and their maximum. Both plans are feasible, so the maximum is a lower bound on the optimum. In the prototype the static schedule reached 0–3 timely alerts because its per-slot bandwidth is out of step with EDF service, while the equal split reached the MILP optimum on four of five instances. The plan uses realized channel knowledge in its path choice and is used only to measure bound tightness.
+- **Method value:** evaluate B1 on the same reduced instance and realization for reference.
+- Required chain within $10^{-6}$ alerts: max(MILP plan value, B1 value, MILP incumbent) ≤ MILP dual bound ≤ LP-UB.
+- Diagnostic: the maximum relative overestimate of the ten-tangent envelope over $b\in[B_{\mathrm{tot}}/512,\,B_{\mathrm{tot}}]$ for the SNR values present in the cross-check instances. Below $B_{\mathrm{tot}}/512$ the envelope still allows about 1.4 kbit per half-slot at zero bandwidth; in the prototype, 20 or 30 tangents changed the cross-check LP bounds by less than 0.001 alerts while doubling LP time, so ten tangents are kept.
 
 ## 7. Backhaul-Stressed Family
 
@@ -189,8 +193,8 @@ output_dir: results/phase1
 - **Method task** `(set_id, scenario_id, method)`: plan once, evaluate on all realization IDs, emit one row per realization.
 - **Bound task** `(set_id, scenario_id, variant, realization_id)`: build and solve one LP.
 - **Cross-check task** per reduced instance.
-- Tasks run in `concurrent.futures.ProcessPoolExecutor(max_workers=workers)` and depend only on their inputs.
-- Each finished task writes `results/phase1/shards/<task_key>.json` with a `task_hash` over the task fields, the scenario `sha256`, the config hash, and a source hash of all files under `src/models`, `src/baselines`, `src/bounds`, and `src/runner`. A rerun skips shards whose hash matches and recomputes the rest. `results/phase1/shards/` is added to `.gitignore`.
+- Tasks run in `concurrent.futures.ProcessPoolExecutor(max_workers=workers)` with the `spawn` start method and depend only on their inputs. Forked workers deadlocked in the prototype when the parent process had already used HiGHS.
+- Each finished task writes `results/phase1/shards/<task_key>.json` with a `task_hash` over the task type and fields (which carry every configuration value the task uses), the scenario `sha256`, and a source hash of all files under `src/models`, `src/baselines`, `src/bounds`, and `src/runner`. Configuration changes that do not affect a task, such as `workers`, do not invalidate its shard. A rerun skips shards whose hash matches and recomputes the rest. `results/phase1/shards/` is added to `.gitignore`.
 - After all tasks, shards are merged into CSV files sorted by their key columns.
 
 ### 8.3 Outputs (committed)
@@ -198,10 +202,10 @@ output_dir: results/phase1
 | File | Columns |
 |---|---|
 | `method_realizations.csv` | `set_id, scenario_id, topology_id, method, realization_id, alert_count, timely_count, timely_ratio, source_count, connected_count, conn_ratio, shortfall, planning_runtime_s, evaluation_runtime_s, evaluate_calls` |
-| `bounds.csv` | `set_id, scenario_id, topology_id, variant, realization_id, value, ratio, status, runtime_s, variables, rows, nonzeros` |
-| `milp_crosscheck.csv` | `scenario_id, alert_count, lp_ub, milp_incumbent, milp_dual_bound, milp_status, milp_runtime_s, milp_plan_value, tangent_max_overestimate` |
+| `bounds.csv` | `set_id, scenario_id, topology_id, variant, trajectory_method, realization_id, value, ratio, status, runtime_s, variables, rows, nonzeros` |
+| `milp_crosscheck.csv` | `set_id, scenario_id, alert_count, lp_ub, lp_status, milp_incumbent, milp_dual_bound, milp_status, milp_runtime_s, milp_plan_static_value, milp_plan_equal_split_value, milp_plan_value, method_value, tangent_max_overestimate` |
 | `summary.csv` | `set_id, method, scenario_count, timely_ratio_mean, timely_ratio_ci_low, timely_ratio_ci_high, conn_ratio_mean, bound_ratio_mean, gap_mean, gap_undefined_count, shortfall_mean, planning_runtime_s_mean, evaluation_runtime_s_per_realization_mean, bound_runtime_s_mean` |
-| `manifest.json` | experiment ID, config hash, git commit and dirty flag, source hash, scenario manifest SHA-256 per set, Python/numpy/scipy versions, HiGHS version string reported by scipy, platform, CPU count, workers, start and end UTC time, command line |
+| `manifest.json` | experiment ID, config path and hash, git commit and dirty flag, source hash, scenario manifest SHA-256 per set, Python/numpy/scipy versions, HiGHS version string reported by scipy, platform, CPU count, workers, start and end UTC time, command line, task counts (total, executed, skipped), status, failures |
 
 ### 8.4 Aggregation
 
@@ -225,13 +229,19 @@ The report gives: candidate generation $O(|V|+|E|+|A||V|\log|V|)$; evaluation $O
 
 ### 9.3 Literature verification
 
-Verify with web sources before citing: strong NP-hardness of $1|r_j|\sum U_j$ (expected: Lenstra, Rinnooy Kan, and Brucker, 1977) and polynomial solvability of $1|r_j,\mathrm{pmtn}|\sum U_j$ (expected: Lawler, 1990). A reference enters `docs/report/references.bib` only with verified authors, title, venue, volume, pages, year, and DOI or stable URL, and only if the source states the result as cited. An unverifiable result is removed from the report text. These results provide context; the proposition does not rely on them.
+Verified during planning with web sources:
+
+- Strong NP-hardness of $1|r_j|\sum U_j$ is stated in Lenstra and Shmoys, *Elements of Scheduling*, arXiv:2001.06005 (2020), Chapter 5 ("the problem $1|r_j|\sum U_j$ is strongly NP-hard"; Theorem 3.11 for $1|r_j|L_{\max}$). Lenstra, Rinnooy Kan, and Brucker (1977) is not cited because the statement could not be checked in its text.
+- Polynomial solvability of $1|r_j,\mathrm{pmtn}|\sum U_j$: Lawler, "A Dynamic Programming Algorithm for Preemptive Scheduling of a Single Machine to Minimize the Number of Late Jobs", *Annals of Operations Research* 26 (1990) 125–133, DOI 10.1007/BF02248588; corroborated by Vakhania et al., arXiv:2405.18789, Section 3.2.2.
+
+Only these two entries are added to `docs/report/references.bib`. They provide context; the proposition does not rely on them.
 
 ## 10. Report Updates
 
-- `preamble.tex`: add `\usepackage{csvsimple}`, `\usepackage{pgfplots}` with `\pgfplotsset{compat=1.18}` (skill `charts-and-graphs.md`), and `\sisetup{output-decimal-marker={,}}` to match Vietnamese text.
+- `preamble.tex`: add `cleveref` names for propositions, definitions, and remarks; add `\usepackage{csvsimple}`, `\usepackage{pgfplots}` with `\pgfplotsset{compat=1.18}` (skill `charts-and-graphs.md`), and `\sisetup{output-decimal-marker={,}}` to match Vietnamese text.
 - `experiments/report_tables.py` writes report CSVs to `docs/report/data/`: `params.csv` from `configs/scenarios/v0.yaml` and `configs/experiments/phase1.yaml` (cells may hold math and `siunitx` macros), `phase1_main.csv` and `phase1_milp.csv` from `results/phase1/` (numbers formatted with decimal commas), all semicolon-separated; and `lp_runtime.csv` (comma-separated, plain numbers: variables and runtime per LP) from `bounds.csv`.
 - `tables/params.tex`, `tables/phase1_main.tex`, `tables/phase1_milp.tex`: booktabs tables whose rows come from `\csvreader[separator=semicolon, ...]`, following the skill's Tables from CSV Data pattern; the semicolon separator keeps decimal commas and macros intact inside cells.
+- `data/phase1_results.tex`: `\newcommand` macros for every summary value, total compute minutes summed from the result CSVs (the manifest of a resumed run only records its own invocation), and LP/MILP statistics, so report text never copies numbers by hand.
 - LP runtime figure in `experiments.tex`: `\addplot table [col sep=comma] {data/lp_runtime.csv}` on log-log axes (variables against runtime), following the skill's `charts-and-graphs.md`.
 - `method.tex`: full system model and constraints; B0 and B1; bound proposition and proof; hardness proposition and proof; complexity subsection. The BCD-repair algorithm stays as the planned Phase 2 method and is labelled as not yet evaluated.
 - `experiments.tex`: setup (data sources, scenario generation, both families, seeds, realizations, hardware); Phase 1 results table; MILP cross-check table; LP runtime figure. The illustrative table with B2/B3/P rows and the convergence placeholder figure are removed.
