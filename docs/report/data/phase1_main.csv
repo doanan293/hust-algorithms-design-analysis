@@ -1,0 +1,5 @@
+set;backhaul;method;timely;ci;conn;bound;gap;planning;evaluation;boundtime
+v0;\qty{1000}{\kilo\bit\per\second};B0;\num{0.413};[\num{0.319}, \num{0.487}];\num{0.509};\num{0.483};\num{0.171};\num{0.001};\num{0.034};\num{0.524}
+v0;\qty{1000}{\kilo\bit\per\second};B1;\num{0.494};[\num{0.391}, \num{0.582}];\num{1.000};\num{0.621};\num{0.238};\num{0.183};\num{0.035};\num{3.069}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B0;\num{0.370};[\num{0.283}, \num{0.437}];\num{0.509};\num{0.468};\num{0.229};\num{0.000};\num{0.033};\num{1.845}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B1;\num{0.430};[\num{0.344}, \num{0.500}];\num{1.000};\num{0.585};\num{0.287};\num{0.164};\num{0.033};\num{7.041}
