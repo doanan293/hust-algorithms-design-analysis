@@ -89,7 +89,7 @@ A scenario is one topology plus one workload-and-failure seed. Channel randomnes
 | Damage zones | Centers uniform in the box, rejection sampling for minimum pairwise separation, at most 1,000 attempts before raising an error | 3 zones, separation ≥ 600 m, radius $R_{\mathrm{dmg}}=400$ m |
 | Source points $S$ | Assigned to zones round-robin; position drawn from an isotropic Gaussian around the zone center and clipped to the box; not graph nodes | 15 sources, $\sigma=150$ m |
 | Alerts | Source uniform over $S$; release slot $r_a$ uniform integer in $[0, N-D_{\max}-1]$; deadline $d_a=r_a+D$ with $D$ uniform integer in $[D_{\min}, D_{\max}]$ | 40 alerts, $D\in[20,60]$ |
-| Size | $L_a=\mathrm{round}(L_{\mathrm{ref}}\cdot\mathrm{clip}(v/\mathrm{median}(v),0.25,4))$, $v$ sampled with replacement from one fixed SNDlib instance; labelled derived | instance `abilene`, $L_{\mathrm{ref}}=10^6$ bits |
+| Size | $L_a=\mathrm{round}(L_{\mathrm{ref}}\cdot\mathrm{clip}(v/\mathrm{median}(v),0.25,4))$, $v$ sampled with replacement from one fixed SNDlib instance; labelled derived | instance `abilene`, $L_{\mathrm{ref}}=2.5\times10^5$ bits |
 | Failures | Each edge fails independently with $p_{\mathrm{in}}$ if its midpoint lies within $R_{\mathrm{dmg}}$ of any zone center, otherwise with $p_{\mathrm{out}}$ | $p_{\mathrm{in}}=0.6$, $p_{\mathrm{out}}=0.05$ |
 | Backhaul | Surviving edge capacity $C_{\mathrm{bh}}$, shared by all flows on the edge; failed edge capacity 0 | $C_{\mathrm{bh}}=10^6$ bit/s |
 | UAV | $q_s=q_t=$ position of $c$; fixed altitude | $H=100$ m, $V_{\max}=50$ m/s |
@@ -281,3 +281,5 @@ Deviations from `docs/issue.md` adopted in this design:
 - The two radio stages of a slot are called access and downlink half-slots to avoid confusion with course phases (Section 6.4).
 
 Calibration changes to $L_{\mathrm{ref}}$ or the deadline window are appended here with date and reason.
+
+- **2026-09-11 — $L_{\mathrm{ref}}$ from $10^6$ to $2.5\times10^5$ bits.** A prototype of this design generated the v0 set from the pinned data and ran the Section 10.3 check. With $L_{\mathrm{ref}}=10^6$ bits the zone-tour plan reached a mean timely ratio of 0.042 (ground-only 0.261, two realizations), below the 0.05 bound. A bit-flow breakdown showed the UAV downlink as the bottleneck: of 325 Mbit uplinked to the UAV over eight scenarios, 56 Mbit were forwarded and 269 Mbit expired on board, because the tour hovers at zone centres and the 0.05 W downlink reaches drop nodes hundreds of metres away. With 30 realizations, $5\times10^5$ bits passed narrowly (ground-only 0.335, zone tour 0.069, two scenarios at zero), and $2.5\times10^5$ bits passed with margin (ground-only 0.413, zone tour 0.104, no scenario at zero). One evaluation of 30 realizations, checker included, took 0.30–0.57 s. The downlink bottleneck is a property of the naive calibration plan and is relevant to the trajectory–relay coupling studied in sub-projects B and C.
