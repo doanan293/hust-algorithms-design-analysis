@@ -2063,7 +2063,11 @@ def test_phase1_config_yields_the_phase1_task_keys():
 
 Run: `uv run --extra test pytest tests/runner -v`
 
-Expected: collection fails for `test_runner_aggregate.py` (`cannot import name 'union_bound_ratios'`) and `test_runner_config.py` (`cannot import name 'MethodSpec'`); `test_search_methods_bound_their_own_trajectories_and_join_the_union_bound` fails with `ValueError: methods: unknown or missing methods`, because the old loader accepts method names only.
+Expected: collection fails for `test_runner_aggregate.py` (`cannot import name 'union_bound_ratios'`) and `test_runner_config.py` (`cannot import name 'MethodSpec'`), and pytest stops at these collection errors.
+
+Run: `uv run --extra test pytest tests/runner/test_runner_experiment.py -v`
+
+Expected: `test_search_methods_bound_their_own_trajectories_and_join_the_union_bound` fails with `ValueError: methods: unknown or missing methods`, because the old loader accepts method names only.
 
 - [ ] **Step 3: Parse method specs and build methods**
 
@@ -2973,7 +2977,7 @@ output_dir: results/phase2/pilot
 
 Run: `uv run --extra test pytest tests/runner -v`
 
-Expected: 23 passed (the Phase 1 key test runs because `data/manifests` and `data/processed/scenarios` exist in this checkout).
+Expected: 27 passed, counting the unchanged report-table and provenance tests (the Phase 1 key test runs because `data/manifests` and `data/processed/scenarios` exist in this checkout).
 
 Run: `uv run --extra test pytest -q`
 
