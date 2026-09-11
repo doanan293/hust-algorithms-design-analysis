@@ -76,3 +76,14 @@ def test_method_specs_accept_names_and_search_mappings(tmp_path: Path):
 def test_invalid_configs_are_rejected(tmp_path: Path, change, message):
     with pytest.raises(ValueError, match=message):
         load_experiment_config(_write(tmp_path, change))
+
+
+def test_scenario_sets_accept_a_replicate_filter(tmp_path: Path):
+    def keep_first_replicate(raw):
+        raw["scenario_sets"][1]["replicates"] = [0, 2]
+
+    config = load_experiment_config(_write(tmp_path, keep_first_replicate))
+    assert [item.replicates for item in config.scenario_sets] == [None, (0, 2)]
+    for bad in ([], [-1], [1, 1], ["0"], True):
+        with pytest.raises(ValueError, match=r"scenario_sets\[0\].replicates"):
+            load_experiment_config(_write(tmp_path, lambda raw, bad=bad: raw["scenario_sets"][0].update(replicates=bad)))
