@@ -5,6 +5,9 @@ import math
 from pathlib import Path
 import time
 import traceback
+from typing import Mapping
+
+import numpy as np
 
 from baselines import get_method
 from bounds.crosscheck import model_snr_values, plan_from_solution, reduce_scenario, tangent_max_overestimate
@@ -12,12 +15,13 @@ from bounds.formulation import build_bound_model, restrict_to_ground
 from bounds.solve import solve_lp, solve_milp
 from models.channel import build_link_channels, channel_uniforms
 from models.evaluate import REALIZED, EvaluationCounter, evaluate
-from models.paths import candidate_paths, radio_links
+from models.paths import CandidatePath, candidate_paths, radio_links
 from models.plan import EqualSplitBacklogged, Plan, stationary_trajectory
-from models.scenario import load_scenario
+from models.scenario import Scenario, load_scenario
 
-GROUND_ONLY = "ground_only"
-TRAJECTORY = "trajectory"
+from .config import MethodSpec
+from .methods import GROUND_ONLY, TRAJECTORY, build_method
+
 CROSSCHECK_TRAJECTORY_METHOD = "B1"
 
 
@@ -26,12 +30,13 @@ class MethodTask:
     set_id: str
     scenario_id: str
     scenario_path: str
-    method: str
+    spec: MethodSpec
     realization_ids: tuple[int, ...]
+    tangents: int
 
     @property
     def key(self) -> str:
-        return f"method__{self.set_id}__{self.scenario_id}__{self.method}"
+        return f"method__{self.set_id}__{self.scenario_id}__{self.spec.id}"
 
 
 @dataclass(frozen=True)
@@ -69,11 +74,6 @@ class CrosscheckTask:
 Task = MethodTask | BoundTask | CrosscheckTask
 
 
-def bound_variant(method_name: str) -> tuple[str, str]:
-    method = get_method(method_name)
-    return (TRAJECTORY, method.name) if method.uses_uav else (GROUND_ONLY, "")
-
-
 def task_hash(task: Task, scenario_sha256: str, source_hash: str) -> str:
     payload = {
         "type": type(task).__name__,
@@ -84,10 +84,11 @@ def task_hash(task: Task, scenario_sha256: str, source_hash: str) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
-def run_method_task(task: MethodTask) -> list[dict[str, object]]:
+def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Method rows, plus trajectory bound rows for the planned trajectory when the spec asks for bounds."""
     scenario = load_scenario(Path(task.scenario_path))
     candidates = candidate_paths(scenario)
-    method = get_method(task.method)
+    method = build_method(task.spec)
     counter = EvaluationCounter()
     started = time.perf_counter()
     plan = method.plan(scenario, candidates, counter)
@@ -106,7 +107,7 @@ def run_method_task(task: MethodTask) -> list[dict[str, object]]:
                 "set_id": task.set_id,
                 "scenario_id": task.scenario_id,
                 "topology_id": scenario.network_id,
-                "method": task.method,
+                "method": task.spec.id,
                 "realization_id": realization.realization_id,
                 "alert_count": len(scenario.alerts),
                 "timely_count": timely,
@@ -120,7 +121,47 @@ def run_method_task(task: MethodTask) -> list[dict[str, object]]:
                 "evaluate_calls": counter.calls,
             }
         )
-    return rows
+    bound_rows = []
+    if task.spec.bounds:
+        bound_rows = [
+            bound_row(
+                task.set_id, task.scenario_id, scenario, candidates, TRAJECTORY, task.spec.id, plan.trajectory,
+                realization_id, task.tangents,
+            )
+            for realization_id in task.realization_ids
+        ]
+    return rows, bound_rows
+
+
+def bound_row(
+    set_id: str,
+    scenario_id: str,
+    scenario: Scenario,
+    candidates: Mapping[str, tuple[CandidatePath, ...]],
+    variant: str,
+    trajectory_method: str,
+    trajectory: np.ndarray,
+    realization_id: int,
+    tangents: int,
+) -> dict[str, object]:
+    """Solve the per-realization LP bound for a fixed trajectory on the evaluation channel draws."""
+    channels = build_link_channels(scenario, radio_links(candidates), trajectory, channel_uniforms(scenario, realization_id))
+    result = solve_lp(build_bound_model(scenario, candidates, channels, tangents))
+    return {
+        "set_id": set_id,
+        "scenario_id": scenario_id,
+        "topology_id": scenario.network_id,
+        "variant": variant,
+        "trajectory_method": trajectory_method,
+        "realization_id": realization_id,
+        "value": result.value,
+        "ratio": result.value / len(scenario.alerts),
+        "status": result.status,
+        "runtime_s": result.runtime_s,
+        "variables": result.variables,
+        "rows": result.rows,
+        "nonzeros": result.nonzeros,
+    }
 
 
 def run_bound_task(task: BoundTask) -> list[dict[str, object]]:
@@ -131,26 +172,11 @@ def run_bound_task(task: BoundTask) -> list[dict[str, object]]:
         trajectory = stationary_trajectory(scenario)
     else:
         trajectory = get_method(task.trajectory_method).trajectory(scenario)
-    channels = build_link_channels(
-        scenario, radio_links(candidates), trajectory, channel_uniforms(scenario, task.realization_id)
-    )
-    result = solve_lp(build_bound_model(scenario, candidates, channels, task.tangents))
     return [
-        {
-            "set_id": task.set_id,
-            "scenario_id": task.scenario_id,
-            "topology_id": scenario.network_id,
-            "variant": task.variant,
-            "trajectory_method": task.trajectory_method,
-            "realization_id": task.realization_id,
-            "value": result.value,
-            "ratio": result.value / len(scenario.alerts),
-            "status": result.status,
-            "runtime_s": result.runtime_s,
-            "variables": result.variables,
-            "rows": result.rows,
-            "nonzeros": result.nonzeros,
-        }
+        bound_row(
+            task.set_id, task.scenario_id, scenario, candidates, task.variant, task.trajectory_method, trajectory,
+            task.realization_id, task.tangents,
+        )
     ]
 
 
@@ -198,13 +224,18 @@ def run_crosscheck_task(task: CrosscheckTask) -> list[dict[str, object]]:
     ]
 
 
-RUNNERS = {MethodTask: run_method_task, BoundTask: run_bound_task, CrosscheckTask: run_crosscheck_task}
+RUNNERS = {BoundTask: run_bound_task, CrosscheckTask: run_crosscheck_task}
 
 
 def execute(task: Task) -> dict[str, object]:
     started = time.perf_counter()
+    bound_rows: list[dict[str, object]] = []
     try:
-        rows, error = RUNNERS[type(task)](task), None
+        if isinstance(task, MethodTask):
+            rows, bound_rows = run_method_task(task)
+        else:
+            rows = RUNNERS[type(task)](task)
+        error = None
     except Exception as exc:  # recorded in the shard; the experiment reports it and exits non-zero
-        rows, error = [], "".join(traceback.format_exception_only(type(exc), exc)).strip()
-    return {"key": task.key, "rows": rows, "error": error, "runtime_s": time.perf_counter() - started}
+        rows, bound_rows, error = [], [], "".join(traceback.format_exception_only(type(exc), exc)).strip()
+    return {"key": task.key, "rows": rows, "bound_rows": bound_rows, "error": error, "runtime_s": time.perf_counter() - started}

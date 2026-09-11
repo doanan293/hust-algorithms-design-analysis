@@ -5,9 +5,10 @@ from typing import Mapping, Sequence
 import numpy as np
 
 from .config import BootstrapConfig
-from .tasks import bound_variant
+from .methods import TRAJECTORY
 
 VALIDITY_TOLERANCE = 1e-6
+BoundOwners = Mapping[str, tuple[str, str] | None]
 
 
 def cluster_bootstrap_ci(
@@ -36,16 +37,20 @@ def _bound_lookup(bound_rows: Sequence[Mapping[str, object]]) -> dict[tuple, flo
 
 
 def validity_violations(
-    method_rows: Sequence[Mapping[str, object]], bound_rows: Sequence[Mapping[str, object]]
+    method_rows: Sequence[Mapping[str, object]], bound_rows: Sequence[Mapping[str, object]], owners: BoundOwners
 ) -> list[str]:
+    """Every bound optimal; every method row with its own bound stays below it."""
     bounds = _bound_lookup(bound_rows)
     violations = []
     for row in bound_rows:
         if row["status"] != "optimal":
             violations.append(f"bound {row['set_id']}/{row['scenario_id']}/{row['variant']}/r{row['realization_id']}: {row['status']}")
     for row in method_rows:
-        variant, owner = bound_variant(str(row["method"]))
-        key = (row["set_id"], row["scenario_id"], variant, owner, int(row["realization_id"]))
+        owner = owners[str(row["method"])]
+        if owner is None:
+            continue
+        variant, trajectory_method = owner
+        key = (row["set_id"], row["scenario_id"], variant, trajectory_method, int(row["realization_id"]))
         label = f"{row['set_id']}/{row['scenario_id']}/{row['method']}/r{row['realization_id']}"
         if key not in bounds:
             violations.append(f"{label}: missing {variant} bound")
@@ -72,14 +77,29 @@ def crosscheck_violations(rows: Sequence[Mapping[str, object]]) -> list[str]:
     return violations
 
 
+def union_bound_ratios(bound_rows: Sequence[Mapping[str, object]]) -> dict[tuple[str, str, int], float]:
+    """Per (set, scenario, realization): the largest trajectory bound ratio over every trajectory with bounds."""
+    union: dict[tuple[str, str, int], float] = {}
+    for row in bound_rows:
+        if row["variant"] == TRAJECTORY:
+            key = (str(row["set_id"]), str(row["scenario_id"]), int(row["realization_id"]))
+            union[key] = max(union.get(key, -math.inf), float(row["ratio"]))
+    return union
+
+
 def _mean(values: Sequence[float]) -> float:
     return sum(values) / len(values)
+
+
+def _mean_or_nan(values: Sequence[float]) -> float:
+    return _mean(values) if values else math.nan
 
 
 def summarize(
     method_rows: Sequence[Mapping[str, object]],
     bound_rows: Sequence[Mapping[str, object]],
     bootstrap: BootstrapConfig,
+    owners: BoundOwners,
 ) -> list[dict[str, object]]:
     grouped: dict[tuple[str, str], dict[str, list[Mapping[str, object]]]] = defaultdict(lambda: defaultdict(list))
     for row in method_rows:
@@ -87,11 +107,13 @@ def summarize(
     bounds: dict[tuple, list[Mapping[str, object]]] = defaultdict(list)
     for row in bound_rows:
         bounds[(row["set_id"], row["scenario_id"], row["variant"], row["trajectory_method"])].append(row)
+    union = union_bound_ratios(bound_rows)
     summary = []
     for (set_id, method), scenarios in sorted(grouped.items()):
-        variant, owner = bound_variant(method)
+        owner = owners[method]
         clusters: dict[str, list[float]] = defaultdict(list)
-        timely, conn, shortfall, planning, evaluation, bound_means, bound_runtime, gaps = [], [], [], [], [], [], [], []
+        timely, conn, shortfall, planning, evaluation, calls = [], [], [], [], [], []
+        bound_means, bound_runtime, gaps, union_means, union_gaps = [], [], [], [], []
         for scenario_id in sorted(scenarios):
             rows = scenarios[scenario_id]
             scenario_timely = _mean([float(row["timely_ratio"]) for row in rows])
@@ -101,13 +123,21 @@ def summarize(
             shortfall.append(_mean([float(row["shortfall"]) for row in rows]))
             planning.append(_mean([float(row["planning_runtime_s"]) for row in rows]))
             evaluation.append(_mean([float(row["evaluation_runtime_s"]) for row in rows]))
-            scenario_bounds = bounds[(set_id, scenario_id, variant, owner)]
-            bound_mean = _mean([float(row["ratio"]) for row in scenario_bounds])
-            bound_means.append(bound_mean)
-            bound_runtime.append(_mean([float(row["runtime_s"]) for row in scenario_bounds]))
-            gaps.append(relative_gap(bound_mean, scenario_timely))
+            calls.append(_mean([float(row["evaluate_calls"]) for row in rows]))
+            if owner is not None:
+                scenario_bounds = bounds[(set_id, scenario_id, *owner)]
+                bound_mean = _mean([float(row["ratio"]) for row in scenario_bounds])
+                bound_means.append(bound_mean)
+                bound_runtime.append(_mean([float(row["runtime_s"]) for row in scenario_bounds]))
+                gaps.append(relative_gap(bound_mean, scenario_timely))
+            union_keys = [(set_id, scenario_id, int(row["realization_id"])) for row in rows]
+            if all(key in union for key in union_keys):
+                union_mean = _mean([union[key] for key in union_keys])
+                union_means.append(union_mean)
+                union_gaps.append(relative_gap(union_mean, scenario_timely))
         low, high = cluster_bootstrap_ci(clusters, bootstrap.resamples, bootstrap.seed, bootstrap.confidence)
         defined = [value for value in gaps if value is not None]
+        union_defined = [value for value in union_gaps if value is not None]
         summary.append(
             {
                 "set_id": set_id,
@@ -117,13 +147,16 @@ def summarize(
                 "timely_ratio_ci_low": low,
                 "timely_ratio_ci_high": high,
                 "conn_ratio_mean": _mean(conn),
-                "bound_ratio_mean": _mean(bound_means),
-                "gap_mean": _mean(defined) if defined else math.nan,
-                "gap_undefined_count": len(gaps) - len(defined),
+                "bound_ratio_mean": _mean_or_nan(bound_means),
+                "gap_mean": _mean_or_nan(defined),
+                "gap_undefined_count": len(scenarios) - len(defined),
                 "shortfall_mean": _mean(shortfall),
                 "planning_runtime_s_mean": _mean(planning),
                 "evaluation_runtime_s_per_realization_mean": _mean(evaluation),
-                "bound_runtime_s_mean": _mean(bound_runtime),
+                "bound_runtime_s_mean": _mean_or_nan(bound_runtime),
+                "union_bound_ratio_mean": _mean_or_nan(union_means),
+                "union_gap_mean": _mean_or_nan(union_defined),
+                "evaluate_calls_mean": _mean(calls),
             }
         )
     return summary

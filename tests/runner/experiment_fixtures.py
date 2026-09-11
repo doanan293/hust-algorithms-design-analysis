@@ -9,7 +9,7 @@ from models.scenario import load_scenario
 from scenario_builders import BASE_SCENARIO, make_alert
 
 
-def write_tiny_experiment(root: Path, output_dir: Path, workers: int = 2) -> Path:
+def write_tiny_experiment(root: Path, output_dir: Path, workers: int = 2, methods=("B0", "B1"), crosscheck: bool = True) -> Path:
     scenario_dir = root / "scenarios"
     scenario_dir.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -36,13 +36,14 @@ def write_tiny_experiment(root: Path, output_dir: Path, workers: int = 2) -> Pat
         "scenario_sets": [{"set_id": "tiny", "manifest": str(manifest), "scenario_dir": str(scenario_dir)}],
         "split": "eval",
         "realization_ids": {"start": 0, "stop": 2},
-        "methods": ["B0", "B1"],
+        "methods": list(methods),
         "bounds": {"tangents": 10},
-        "milp_crosscheck": {"set_id": "tiny", "scenario_count": 2, "alert_count": 2, "realization_id": 0, "time_limit_s": 30},
         "bootstrap": {"resamples": 200, "seed": 5, "confidence": 0.95},
         "workers": workers,
         "output_dir": str(output_dir),
     }
+    if crosscheck:
+        config["milp_crosscheck"] = {"set_id": "tiny", "scenario_count": 2, "alert_count": 2, "realization_id": 0, "time_limit_s": 30}
     path = root / f"experiment-{output_dir.name}.yaml"
     path.write_text(yaml.safe_dump(config), encoding="utf-8")
     return path

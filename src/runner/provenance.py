@@ -10,7 +10,7 @@ import scipy
 from bounds.solve import highs_version
 
 SRC_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_PACKAGES = ("models", "baselines", "bounds", "runner")
+SOURCE_PACKAGES = ("models", "baselines", "bounds", "optimization", "runner")
 
 
 def source_hash(src_root: Path = SRC_ROOT, packages: tuple[str, ...] = SOURCE_PACKAGES) -> str:

@@ -1,0 +1,16 @@
+experiment_id: phase2-pilot
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+split: dev
+realization_ids: {start: 0, stop: 30}
+methods:
+  - B1
+  - {id: B2, base: search, bounds: true}
+  - {id: B3, base: search, params: {objective: leximin}, bounds: true}
+  - {id: P, base: search, params: {operation1: true, operation2: true}, bounds: true}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/pilot

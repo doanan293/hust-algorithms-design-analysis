@@ -7,3 +7,4 @@ data/processed/
 data/manifests/*.tmp
 data/manifests/*.partial
 results/phase1/shards/
+results/phase2/**/shards/
