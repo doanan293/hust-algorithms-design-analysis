@@ -1,0 +1,6 @@
+set_id,scenario_id,alert_count,lp_ub,lp_status,milp_incumbent,milp_dual_bound,milp_status,milp_runtime_s,milp_plan_static_value,milp_plan_equal_split_value,milp_plan_value,method_value,tangent_max_overestimate
+v0,Agis-r2,10,9.507986070731143,optimal,9.0,9.0,optimal,3.3112964639876736,3.0,9.0,9.0,9.0,0.024211298464980345
+v0,Belnet2008-r0,10,6.406504508724919,optimal,5.0,5.0,optimal,1.7893075040046824,0.0,5.0,5.0,5.0,0.02420226367825998
+v0,BtNorthAmerica-r0,10,3.8877488846073653,optimal,2.0,2.0,optimal,3.626228918990819,0.0,2.0,2.0,2.0,0.024209074192000805
+v0,Digex-r1,10,2.377690569646913,optimal,1.0,1.0,optimal,0.5815704459964763,0.0,1.0,1.0,1.0,0.02418750025106839
+v0,Digex-r2,10,5.315535436480445,optimal,4.0,4.0,optimal,5.031768033004482,1.0,3.0,3.0,3.0,0.024218594693826305
