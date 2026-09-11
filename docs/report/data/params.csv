@@ -1,0 +1,25 @@
+parameter;symbol;value
+Kích thước vùng mô phỏng;$L_{\mathrm{box}}$;\qty{2000}{\metre}
+Topology đánh giá / phát triển;---;10 / 3
+Replicate mỗi topology (đánh giá / phát triển);---;3 / 2
+Số realization kênh;$M$;30
+Độ dài slot / số slot;$\Delta$, $N$;\qty{1}{\second} / 150
+Tỷ lệ nửa slot truy nhập;$\tau$;\num{0.5}
+Độ cao / tốc độ tối đa UAV;$H$, $V_{\max}$;\qty{100}{\metre} / \qty{50}{\metre\per\second}
+Công suất UAV / số downlink đồng thời;$P_U$;\qty{0.1}{\watt} / 2
+Công suất nguồn;$p_s$;\qty{0.1}{\watt}
+Tổng băng thông mỗi nửa slot;$B_{\mathrm{tot}}$;\qty{1}{\mega\hertz}
+Mật độ phổ nhiễu;$N_0$;\qty{-140}{\dBm\per\hertz}
+Tham số PrLoS;$(a, b)$;(\num{9.61}, \num{0.16})
+Suy hao NLoS / số mũ LoS, NLoS;$\mu$, $\alpha_L$, $\alpha_N$;\num{0.2} / \num{2.2}, \num{3.3}
+Độ lợi tham chiếu;$\beta_0$;\qty{-50}{\dB}
+Số mũ suy hao mặt đất;$\alpha_G$;\num{2.8}
+Ngưỡng tốc độ khả dụng;$R_{\min}$;\qty{10}{\kilo\bit\per\second}
+Candidate path (tối đa đường mặt đất);$K$;3 (2)
+Vùng hư hại: số / khoảng cách / bán kính;---;3 / \qty{600}{\metre} / \qty{400}{\metre}
+Số nguồn / độ lệch chuẩn vị trí;$|S|$, $\sigma$;15 / \qty{150}{\metre}
+Số cảnh báo / cửa sổ deadline;$|A|$, $d_a-r_a$;40 / 20--60 slot
+Kích thước tham chiếu (tỷ lệ cắt, instance);$L_{\mathrm{ref}}$;\qty{250}{\kilo\bit} ([\num{0.25}, \num{4}], \texttt{abilene})
+Xác suất hỏng cạnh trong / ngoài vùng;$p_{\mathrm{in}}$, $p_{\mathrm{out}}$;\num{0.60} / \num{0.05}
+Dung lượng backhaul (v0 / v0-bh50);$C_e$;\qty{1000}{\kilo\bit\per\second} / \qty{50}{\kilo\bit\per\second}
+Số tiếp tuyến trong cận LP / lần lấy mẫu bootstrap;---;10 / 10000
