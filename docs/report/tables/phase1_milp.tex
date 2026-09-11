@@ -1,0 +1,15 @@
+% Đối chiếu MILP — hàng đọc từ data/phase1_milp.csv (sinh bởi experiments/report_tables.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Đối chiếu trên instance thu nhỏ (10 cảnh báo, quỹ đạo B1, realization 0): số cảnh báo đúng hạn của B1 và của kế hoạch dựng từ nghiệm MILP (giá trị tốt hơn giữa băng thông của nghiệm và chia đều theo backlog), nghiệm MILP tốt nhất, cận đối ngẫu MILP, cận LP và thời gian giải MILP.}
+\label{tab:phase1-milp}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Scenario} & \textbf{$|A|$} & \textbf{B1} & \textbf{KH MILP} & \textbf{MILP} & \textbf{Cận MILP} & \textbf{Cận LP} & \textbf{Thời gian (s)} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase1_milp.csv}{1=\colscenario, 2=\colalerts, 3=\colmethod, 4=\colplan, 5=\colincumbent, 6=\coldual, 7=\collp, 9=\colruntime}{\texttt{\colscenario} & \colalerts & \colmethod & \colplan & \colincumbent & \coldual & \collp & \colruntime}
+\bottomrule
+\end{tabular}
+\end{table}

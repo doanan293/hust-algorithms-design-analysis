@@ -71,6 +71,9 @@
 \usepackage{longtable}
 \usepackage{float}
 \usepackage[table]{xcolor}
+\usepackage{csvsimple}           % bảng đọc thẳng từ CSV (skill: Tables from CSV Data)
+\usepackage{pgfplots}             % biểu đồ từ CSV (skill: charts-and-graphs)
+\pgfplotsset{compat=1.18}
 
 % --- Danh sách (nén khoảng cách) ----------------------------------------------
 \usepackage{enumitem}
@@ -87,7 +90,7 @@
 
 % --- Đơn vị và số -------------------------------------------------------------
 \usepackage{siunitx}
-\sisetup{detect-all}
+\sisetup{detect-all, output-decimal-marker={,}, per-mode=symbol}  % dấu phẩy thập phân theo văn bản tiếng Việt; đơn vị dạng kbit/s
 \DeclareSIUnit{\dBm}{dBm}         % siunitx không có sẵn dBm
 \DeclareSIUnit{\dB}{dB}
 
@@ -118,6 +121,12 @@
 \Crefname{algorithm}{Thuật toán}{Thuật toán}
 \crefname{theorem}{Định lý}{Định lý}
 \Crefname{theorem}{Định lý}{Định lý}
+\crefname{proposition}{Mệnh đề}{Mệnh đề}
+\Crefname{proposition}{Mệnh đề}{Mệnh đề}
+\crefname{definition}{Định nghĩa}{Định nghĩa}
+\Crefname{definition}{Định nghĩa}{Định nghĩa}
+\crefname{remark}{Nhận xét}{Nhận xét}
+\Crefname{remark}{Nhận xét}{Nhận xét}
 \crefname{lemma}{Bổ đề}{Bổ đề}
 \Crefname{lemma}{Bổ đề}{Bổ đề}
 \crefname{definition}{Định nghĩa}{Định nghĩa}

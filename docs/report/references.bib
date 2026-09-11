@@ -1,6 +1,7 @@
 % references.bib — tài liệu tham khảo (biblatex + biber, style=ieee)
-% Entry huang2025ddatsap lấy từ metadata PDF gốc. Ba entry dataset/sách cần
-% đối chiếu lại số trang/volume với nguồn gốc trước khi nộp.
+% huang2025ddatsap: metadata PDF gốc. knight2011zoo, orlowski2010sndlib: đối chiếu Crossref.
+% lawler1990preemptive, lenstra2020elements: đối chiếu Springer, arXiv và tổng quan arXiv:2405.18789.
+% rahnemoonfar2023rescuenet chưa được đối chiếu; phải kiểm tra trước khi trích dẫn (Pha 2).
 
 @article{huang2025ddatsap,
   author  = {Huang, Ping and Lin, Jie and Liu, Tong and Ning, Jin and Luo, Junsong and Duo, Bin},
@@ -50,4 +51,24 @@
   volume  = {10},
   pages   = {913},
   doi     = {10.1038/s41597-023-02799-4},
+}
+
+@article{lawler1990preemptive,
+  author  = {Lawler, Eugene L.},
+  title   = {A Dynamic Programming Algorithm for Preemptive Scheduling of a Single Machine to Minimize the Number of Late Jobs},
+  journal = {Annals of Operations Research},
+  year    = {1990},
+  volume  = {26},
+  pages   = {125--133},
+  doi     = {10.1007/BF02248588},
+}
+
+@misc{lenstra2020elements,
+  author        = {Lenstra, Jan Karel and Shmoys, David B.},
+  title         = {Elements of Scheduling},
+  year          = {2020},
+  eprint        = {2001.06005},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.DS},
+  doi           = {10.48550/arXiv.2001.06005},
 }
