@@ -14,9 +14,12 @@ METHOD_ID_PATTERN = re.compile(r"^[A-Za-z0-9.-]+(_[A-Za-z0-9.-]+)*$")
 
 @dataclass(frozen=True)
 class ScenarioSetRef:
+    """A generated scenario set; `replicates` keeps only the listed replicate numbers (all when None)."""
+
     set_id: str
     manifest: Path
     scenario_dir: Path
+    replicates: tuple[int, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -50,6 +53,20 @@ class MethodSpec:
 
 def _frozen(value: object) -> object:
     return tuple(_frozen(item) for item in value) if isinstance(value, (list, tuple)) else value
+
+
+def _replicates(item: dict, index: int) -> tuple[int, ...] | None:
+    raw = item.get("replicates")
+    if raw is None:
+        return None
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or len(set(raw)) != len(raw)
+        or any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in raw)
+    ):
+        raise ValueError(f"scenario_sets[{index}].replicates: expected a list of distinct non-negative integers")
+    return tuple(raw)
 
 
 def parse_method_spec(raw: object, index: int) -> MethodSpec:
@@ -104,8 +121,8 @@ def load_experiment_config(path: Path) -> ExperimentConfig:
     payload = path.read_bytes()
     raw = yaml.safe_load(payload)
     sets = tuple(
-        ScenarioSetRef(str(item["set_id"]), Path(item["manifest"]), Path(item["scenario_dir"]))
-        for item in raw["scenario_sets"]
+        ScenarioSetRef(str(item["set_id"]), Path(item["manifest"]), Path(item["scenario_dir"]), _replicates(item, index))
+        for index, item in enumerate(raw["scenario_sets"])
     )
     set_ids = [item.set_id for item in sets]
     if not sets or len(set(set_ids)) != len(set_ids):

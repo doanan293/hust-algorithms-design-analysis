@@ -56,7 +56,12 @@ def scenario_refs(config: ExperimentConfig) -> list[ScenarioRef]:
             raise FileNotFoundError(f"scenario manifest not found: {scenario_set.manifest}")
         with scenario_set.manifest.open(newline="", encoding="utf-8") as stream:
             rows = sorted(
-                (row for row in csv.DictReader(stream) if row["split"] == config.split),
+                (
+                    row
+                    for row in csv.DictReader(stream)
+                    if row["split"] == config.split
+                    and (scenario_set.replicates is None or int(row["replicate"]) in scenario_set.replicates)
+                ),
                 key=lambda row: row["scenario_id"],
             )
         for row in rows:
