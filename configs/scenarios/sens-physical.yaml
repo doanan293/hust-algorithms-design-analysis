@@ -1,0 +1,56 @@
+set_id: sens-physical
+data_root: data
+selection_seed: 20260911
+scenario_base_seed: 20260911
+topology:
+  strata: 13
+  dev_count: 3
+  eval_replicates: 3
+  dev_replicates: 2
+workload:
+  zone_count: 3
+  zone_min_separation_m: 600.0
+  zone_radius_m: 400.0
+  zone_max_attempts: 1000
+  source_count: 15
+  source_sigma_m: 150.0
+  alert_count: 40
+  deadline_min_slots: 20
+  deadline_max_slots: 60
+  size_ref_bits: 250000
+  size_ratio_min: 0.25
+  size_ratio_max: 4.0
+  sndlib_instance: abilene
+failures:
+  p_in: 0.6
+  p_out: 0.05
+backhaul_capacity_bps: 1000000.0
+uav:
+  altitude_m: 100.0
+  v_max_mps: 50.0
+  total_power_w: 0.1
+  max_active_downlinks: 2
+time:
+  slot_s: 1.0
+  num_slots: 150
+  access_fraction: 0.5
+spectrum:
+  b_tot_hz: 1000000.0
+  noise_psd_dbm_per_hz: -164.0
+channel:
+  uav:
+    plos_a: 9.61
+    plos_b: 0.16
+    nlos_attenuation: 0.2
+    alpha_los: 2.2
+    alpha_nlos: 3.3
+    beta0_db: -40.0
+  ground:
+    alpha: 2.8
+    beta0_db: -40.0
+  usable_rate_bps: 10000.0
+source_power_w: 0.1
+paths:
+  k: 3
+  max_ground: 2
+  version: 1
