@@ -1,0 +1,16 @@
+experiment_id: phase1
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+  - set_id: v0-bh50
+    manifest: data/manifests/scenarios_v0-bh50.csv
+    scenario_dir: data/processed/scenarios/v0-bh50
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods: [B0, B1]
+bounds: {tangents: 10}
+milp_crosscheck: {set_id: v0, scenario_count: 5, alert_count: 10, realization_id: 0, time_limit_s: 300}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase1
