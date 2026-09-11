@@ -28,3 +28,13 @@ Chạy test offline bằng:
 ```bash
 python -m pytest -q
 ```
+
+## Bộ scenario v0
+
+Sau khi chạy profile `paper`, sinh bộ scenario v0 gồm 30 scenario đánh giá và 6 scenario phát triển:
+
+```bash
+python -m data.cli scenarios --config configs/scenarios/v0.yaml
+```
+
+Lệnh đọc network đã chuẩn hóa trong `data/processed/networks/` và instance SNDlib `abilene`, ghi file scenario vào `data/processed/scenarios/v0/` (bị Git ignore) và manifest `data/manifests/scenarios_v0.csv` (được commit). Chạy lại với cùng cấu hình cho cùng cột `sha256`.
