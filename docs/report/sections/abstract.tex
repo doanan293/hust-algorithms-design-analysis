@@ -1,8 +1,8 @@
 \begin{abstract}
 \noindent
-Sau thiên tai, một phần mạng mặt đất bị hỏng và các cảnh báo phát sinh tại hiện trường cần được đưa về trung tâm cứu hộ trước hạn. Báo cáo này nghiên cứu bài toán đồng tối ưu quỹ đạo của một UAV làm relay di động, lựa chọn relay/đường chuyển tiếp và phân bổ băng thông, với mục tiêu tối đa tỷ lệ cảnh báo giao đúng hạn dưới kênh không--đất bất định theo mô hình xác suất tầm nhìn thẳng (PrLoS)~\cite{huang2025ddatsap}. Chúng tôi đề xuất một thuật toán phân rã theo khối kết hợp cơ chế sửa lịch theo độ dư thời gian (slack), và đánh giá trên các kịch bản tổng hợp từ Topology Zoo~\cite{knight2011zoo}, SNDlib~\cite{orlowski2010sndlib} và RescueNet~\cite{rahnemoonfar2023rescuenet}. [Kết quả chính: một câu về số liệu.] [Kết luận: một câu.]
+Sau thiên tai, một phần mạng mặt đất bị hỏng và các cảnh báo phát sinh tại hiện trường cần được đưa về trung tâm cứu hộ trước hạn. Báo cáo này nghiên cứu bài toán đồng tối ưu quỹ đạo của một UAV làm relay di động, lựa chọn relay hoặc đường chuyển tiếp và phân bổ băng thông, nhằm tối đa tỷ lệ cảnh báo giao đúng hạn dưới kênh không--đất theo mô hình xác suất tầm nhìn thẳng~\cite{huang2025ddatsap}. Chúng tôi chứng minh bài toán là NP-khó ngay cả khi quỹ đạo cố định, xây dựng cận trên quy hoạch tuyến tính hợp lệ theo từng realization kênh, và đánh giá hai phương pháp cơ sở trên các kịch bản tổng hợp từ Topology Zoo~\cite{knight2011zoo} và SNDlib~\cite{orlowski2010sndlib}. Trên \ResultScenarioCount{} kịch bản đánh giá, UAV bay theo quỹ đạo cố định giao đúng hạn \ResultTimelyVzeroBone{} số cảnh báo so với \ResultTimelyVzeroBzero{} khi không có UAV và đưa mọi nguồn về trạng thái có kết nối, nhưng vẫn cách cận trên một gap \ResultGapVzeroBone, và gap này tăng khi backhaul băng hẹp. Kết quả Pha 1 là nền cho phương pháp phân rã kết hợp sửa lịch ở Pha 2.
 
 \vspace{0.5em}
 \noindent
-\textbf{Từ khoá:} UAV relay, quỹ đạo, lựa chọn relay, phân bổ băng thông, deadline, tối ưu không lồi.
+\textbf{Từ khoá:} UAV relay, quỹ đạo, lựa chọn relay, phân bổ băng thông, hạn giao, cận trên quy hoạch tuyến tính.
 \end{abstract}
