@@ -1,0 +1,30 @@
+{
+  "command": [
+    "experiments/run_phase2.py"
+  ],
+  "config_hash": "7fb71ad9e3377e8265f3838a81787e027fe4e10450e5bff2d1e7cb2a604a5193",
+  "config_path": "configs/experiments/phase2_pilot.yaml",
+  "environment": {
+    "cpu_count": 12,
+    "highs": "1.12.0",
+    "numpy": "2.5.3",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "scipy": "1.18.1"
+  },
+  "executed_task_count": 204,
+  "experiment_id": "phase2-pilot",
+  "failures": [],
+  "finished_utc": "2026-09-11T14:19:03.879760+00:00",
+  "git_commit": "8ae7e77e097a12c89b75b8bfc66943b317302333",
+  "git_dirty": false,
+  "scenario_manifest_sha256": {
+    "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17"
+  },
+  "skipped_task_count": 0,
+  "source_hash": "56bb553ac3a3300537c71677b754d097c8ad3a80b1beba6d1a6cc89dd9ed9f19",
+  "started_utc": "2026-09-11T14:01:22.821009+00:00",
+  "status": "complete",
+  "task_count": 204,
+  "workers": 12
+}
