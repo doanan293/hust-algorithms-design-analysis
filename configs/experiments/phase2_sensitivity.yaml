@@ -1,0 +1,72 @@
+experiment_id: phase2-sensitivity
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+    replicates: [0]
+  - set_id: v0-bh50
+    manifest: data/manifests/scenarios_v0-bh50.csv
+    scenario_dir: data/processed/scenarios/v0-bh50
+    replicates: [0]
+  - set_id: sens-bh100
+    manifest: data/manifests/scenarios_sens-bh100.csv
+    scenario_dir: data/processed/scenarios/sens-bh100
+    replicates: [0]
+  - set_id: sens-lref125k
+    manifest: data/manifests/scenarios_sens-lref125k.csv
+    scenario_dir: data/processed/scenarios/sens-lref125k
+    replicates: [0]
+  - set_id: sens-lref500k
+    manifest: data/manifests/scenarios_sens-lref500k.csv
+    scenario_dir: data/processed/scenarios/sens-lref500k
+    replicates: [0]
+  - set_id: sens-lref1m
+    manifest: data/manifests/scenarios_sens-lref1m.csv
+    scenario_dir: data/processed/scenarios/sens-lref1m
+    replicates: [0]
+  - set_id: sens-physical
+    manifest: data/manifests/scenarios_sens-physical.csv
+    scenario_dir: data/processed/scenarios/sens-physical
+    replicates: [0]
+  - set_id: sens-deadline-short
+    manifest: data/manifests/scenarios_sens-deadline-short.csv
+    scenario_dir: data/processed/scenarios/sens-deadline-short
+    replicates: [0]
+  - set_id: sens-deadline-long
+    manifest: data/manifests/scenarios_sens-deadline-long.csv
+    scenario_dir: data/processed/scenarios/sens-deadline-long
+    replicates: [0]
+  - set_id: sens-btot05
+    manifest: data/manifests/scenarios_sens-btot05.csv
+    scenario_dir: data/processed/scenarios/sens-btot05
+    replicates: [0]
+  - set_id: sens-btot2
+    manifest: data/manifests/scenarios_sens-btot2.csv
+    scenario_dir: data/processed/scenarios/sens-btot2
+    replicates: [0]
+  - set_id: sens-alerts20
+    manifest: data/manifests/scenarios_sens-alerts20.csv
+    scenario_dir: data/processed/scenarios/sens-alerts20
+    replicates: [0]
+  - set_id: sens-alerts60
+    manifest: data/manifests/scenarios_sens-alerts60.csv
+    scenario_dir: data/processed/scenarios/sens-alerts60
+    replicates: [0]
+  - set_id: sens-k2
+    manifest: data/manifests/scenarios_sens-k2.csv
+    scenario_dir: data/processed/scenarios/sens-k2
+    replicates: [0]
+  - set_id: sens-k5
+    manifest: data/manifests/scenarios_sens-k5.csv
+    scenario_dir: data/processed/scenarios/sens-k5
+    replicates: [0]
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods:
+  - B1
+  - {id: B2, base: search}
+  - {id: P, base: search, params: {operation1: true, operation2: true}}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/sensitivity

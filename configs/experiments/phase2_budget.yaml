@@ -1,0 +1,22 @@
+experiment_id: phase2-budget
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods:
+  - {id: B2_b250, base: search, params: {budget: 250}}
+  - {id: B2_b500, base: search, params: {budget: 500}}
+  - {id: B2_b1000, base: search, params: {budget: 1000}}
+  - {id: B2_b2000, base: search, params: {budget: 2000}}
+  - {id: B2_b4000, base: search, params: {budget: 4000}}
+  - {id: P_b250, base: search, params: {operation1: true, operation2: true, budget: 250}}
+  - {id: P_b500, base: search, params: {operation1: true, operation2: true, budget: 500}}
+  - {id: P_b1000, base: search, params: {operation1: true, operation2: true, budget: 1000}}
+  - {id: P_b2000, base: search, params: {operation1: true, operation2: true, budget: 2000}}
+  - {id: P_b4000, base: search, params: {operation1: true, operation2: true, budget: 4000}}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/budget

@@ -1,0 +1,16 @@
+experiment_id: phase2-design
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+    replicates: [0]
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods:
+  - {id: P_design_expected, base: search, params: {operation1: true, operation2: true, design_ids: expected}}
+  - {id: P_design1, base: search, params: {operation1: true, operation2: true, design_ids: [0]}}
+  - {id: P_design10, base: search, params: {operation1: true, operation2: true, design_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/design

@@ -1,0 +1,27 @@
+experiment_id: phase2-main
+scenario_sets:
+  - set_id: v0
+    manifest: data/manifests/scenarios_v0.csv
+    scenario_dir: data/processed/scenarios/v0
+  - set_id: v0-bh50
+    manifest: data/manifests/scenarios_v0-bh50.csv
+    scenario_dir: data/processed/scenarios/v0-bh50
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods:
+  - B0
+  - B1
+  - {id: B2, base: search, bounds: true}
+  - {id: B3, base: search, params: {objective: leximin}, bounds: true}
+  - {id: P, base: search, params: {operation1: true, operation2: true}, bounds: true}
+  - {id: P_op1, base: search, params: {operation1: true}}
+  - {id: P_op2, base: search, params: {operation2: true}}
+  - {id: P_fixed_paths, base: search, params: {path_block: false, operation1: true}}
+  - {id: P_fixed_trajectory, base: search, params: {trajectory_block: false, operation1: true, operation2: true}}
+  - {id: P_equal_bandwidth, base: search, params: {bandwidth_block: false, operation2: true}}
+  - {id: P_no_backlog, base: search, params: {operation1: true, operation2: true, backlog: false}}
+  - {id: P_expected_design, base: search, params: {operation1: true, operation2: true, design_ids: expected}}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/main
