@@ -8,6 +8,7 @@ from .rng import named_rng
 from .scenario import Scenario, UAV_ID
 
 LinkId = tuple[str, str, str]
+CHANNEL_NAMESPACES = ("eval", "design")
 ACCESS = "access"
 DOWNLINK = "down"
 BACKHAUL = "backhaul"
@@ -95,8 +96,11 @@ def ground_point_ids(scenario: Scenario) -> tuple[str, ...]:
     return tuple(source.id for source in scenario.sources) + tuple(node.id for node in scenario.nodes)
 
 
-def channel_uniforms(scenario: Scenario, realization_id: int) -> dict[str, np.ndarray]:
-    rng = named_rng(scenario.scenario_seed, f"channel-eval:{realization_id}")
+def channel_uniforms(scenario: Scenario, realization_id: int, namespace: str = "eval") -> dict[str, np.ndarray]:
+    """Uniform draws per ground point and slot; "eval" scores results, "design" is reserved for planners."""
+    if namespace not in CHANNEL_NAMESPACES:
+        raise ValueError(f"unknown channel namespace {namespace!r}; expected one of {CHANNEL_NAMESPACES}")
+    rng = named_rng(scenario.scenario_seed, f"channel-{namespace}:{realization_id}")
     point_ids = ground_point_ids(scenario)
     draws = rng.random((len(point_ids), scenario.time.num_slots))
     return {point_id: draws[index] for index, point_id in enumerate(point_ids)}
