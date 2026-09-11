@@ -1,0 +1,17 @@
+key;year;venue;objective;uavs;relay_selection;deadline;connectivity;channel_uncertainty;bandwidth_power;method;guarantee
+huang2025ddatsap;2025;Sensors;Max–min tốc độ tin trung bình;1;Không;Không;Không nêu;PrLoS;Công suất, lập lịch khe;BCD, SCA;Không nêu
+tran2022relay;2022;IEEE TWC;Tối đa số thiết bị phục vụ đúng hạn;1;Không nêu;Có, theo thiết bị;Không nêu;Không nêu;Băng thông, công suất, bộ nhớ UAV;Nới lỏng biến nhị phân, xấp xỉ trong;Không nêu
+samir2020time;2020;IEEE TWC;Tối đa số thiết bị phục vụ trước hạn;1;Không nêu;Có, theo thiết bị;Không nêu;Không nêu;Tài nguyên vô tuyến;BRB, SCA;Tối ưu toàn cục với BRB
+albusalih2018deadline;2018;Baghdad Sci. J.;Tối thiểu năng lượng thu thập;Nhiều;Không nêu;Có, hạn thu thập;Không nêu;Không nêu;Không nêu;MILP, heuristic;Tối ưu với MILP
+liu2022aoi;2022;IEEE IoT J.;Tối thiểu thời gian nhiệm vụ;1;Không nêu;Có, ngưỡng AoI;Không nêu;Không nêu;Không nêu;Phân rã, SCA, GA;Không nêu
+liu2024interference;2024;IEEE TVT;Tối thiểu thời gian nhiệm vụ;1;Có, liên kết UAV--trạm;Có, theo dữ liệu;Không nêu;Không nêu;Không nêu;BCD, SCA;Không nêu
+tang2022delay;2022;IEEE TVT;Tối thiểu năng lượng UAV;Nhiều;Có, liên kết người dùng;Có, trễ hàng đợi hữu hạn;Không nêu;Nhu cầu, di chuyển ngẫu nhiên;Không nêu;Lyapunov, phân rã trực tuyến;Không nêu
+he2022delay;2022;IEEE TVT;Tối thiểu tổng trễ thông tin;1;Không nêu;Mục tiêu trễ;Không nêu;Không nêu;Cấp phát kênh;Luân phiên Newton, relax-and-round, SCA;Không nêu
+cao2023priority;2023;IEEE TGCN;Năng lượng UAV và trễ theo ưu tiên;1;Không nêu;Mục tiêu trễ theo ưu tiên;Không nêu;Nút cảm biến di động;Không nêu;Heuristic học tăng cường, trực tuyến;Không nêu
+fadlullah2016dynamic;2016;IEEE Network;Giảm trễ, tăng thông lượng relay;Nhiều;Không nêu;Trễ do nghẽn hàng đợi;Chuỗi relay giữa các UAV;Không nêu;Không nêu;Điều khiển quỹ đạo theo ngưỡng hàng đợi;Không nêu
+du2023timeconstrained;2023;IEEE INFOCOM Wkshps;Tối đa số thiết bị phục vụ trong thời gian thu thập;1;Không nêu;Có, thời gian thu thập;Không nêu;Không nêu;Thời gian, công suất phát;Luân phiên, SCA, xấp xỉ bậc hai;Không nêu
+wang2026juror;2026;arXiv;Tăng phân phát tin trong DTN;Không nêu;Có, định tuyến cơ hội;Có, TTL của tin;Tiếp xúc gián đoạn;Không nêu;Không nêu;Học tăng cường PPO;Không nêu
+kalantari2017backhaul;2017;IEEE ICC Wkshps;Tối đa số người dùng hoặc tổng tốc độ;1;Có, backhaul;Không nêu;Không nêu;Không nêu;Không nêu;Tìm vị trí 3D;Tối ưu vị trí đặt
+selim2018postdisaster;2018;IEEE Globecom Wkshps;Tối thiểu năng lượng drone;Nhiều;Có, drone backhaul có dây;Không nêu;Không nêu;Không nêu;Không nêu;Tối ưu vị trí và năng lượng;Không nêu
+yu2023backhaul;2023;IEEE TNSE;Cấp băng thông và vị trí trạm bay;1;Có, backhaul FSO;Không nêu;Không nêu;Không nêu;Băng thông;Thuật toán BROAD;Không nêu
+queiros2024predictive;2024;IEEE Globecom Wkshps;Hiệu năng mạng với tốc độ tối thiểu;Nhiều tầng;Có, relay backhaul bay;Không nêu;Không nêu;Không nêu;Băng thông;Simulated annealing có hàm phạt;Không nêu
