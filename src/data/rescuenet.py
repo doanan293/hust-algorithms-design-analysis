@@ -38,11 +38,16 @@ def load_label_map(path: Path) -> dict[int, str]:
     return labels
 
 
-def _index_by_stem(directory: Path, suffixes: set[str]) -> dict[str, Path]:
+def _index_by_stem(
+    directory: Path, suffixes: set[str], stem_suffix: str = ""
+) -> dict[str, Path]:
     result: dict[str, Path] = {}
     for path in sorted(directory.rglob("*")):
         if path.is_file() and path.suffix.lower() in suffixes:
-            key = path.stem.casefold()
+            stem = path.stem
+            if stem_suffix and stem.endswith(stem_suffix):
+                stem = stem[: -len(stem_suffix)]
+            key = stem.casefold()
             if key in result:
                 raise ValueError(f"duplicate canonical stem: {key}")
             result[key] = path
@@ -50,8 +55,16 @@ def _index_by_stem(directory: Path, suffixes: set[str]) -> dict[str, Path]:
 
 
 def pair_images_and_masks(root: Path) -> tuple[RescuePair, ...]:
-    images = _index_by_stem(root / "images", {".jpg", ".jpeg", ".png"})
-    masks = _index_by_stem(root / "masks", {".png"})
+    if (root / "val-org-img").is_dir() and (root / "val-label-img").is_dir():
+        image_dir, mask_dir, mask_suffix = (
+            root / "val-org-img",
+            root / "val-label-img",
+            "_lab",
+        )
+    else:
+        image_dir, mask_dir, mask_suffix = root / "images", root / "masks", ""
+    images = _index_by_stem(image_dir, {".jpg", ".jpeg", ".png"})
+    masks = _index_by_stem(mask_dir, {".png"}, mask_suffix)
     if images.keys() != masks.keys():
         missing_masks = sorted(images.keys() - masks.keys())
         missing_images = sorted(masks.keys() - images.keys())
