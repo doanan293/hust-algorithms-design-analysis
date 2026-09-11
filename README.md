@@ -65,3 +65,27 @@ uv run python experiments/calibrate_v0.py
 ```
 
 Lệnh trả mã 0 khi cả hai kế hoạch khả thi và tỷ lệ đúng hạn trung bình của mỗi kế hoạch nằm trong [0.05, 0.95].
+
+## Pha 1: baseline, cận trên và báo cáo
+
+Sinh họ scenario backhaul yếu `v0-bh50` (giống v0, chỉ đổi dung lượng backhaul còn 50 kbit/s) và kiểm tra hiệu chỉnh:
+
+```bash
+uv run python -m data.cli scenarios --config configs/scenarios/v0-bh50.yaml
+uv run python experiments/calibrate_v0.py --manifest data/manifests/scenarios_v0-bh50.csv --scenario-dir data/processed/scenarios/v0-bh50 --output results/calibration/v0-bh50.json
+```
+
+Chạy thí nghiệm Pha 1 (B0, B1, cận trên LP theo từng realization và đối chiếu MILP) trên cả hai họ scenario:
+
+```bash
+uv run python experiments/run_phase1.py --config configs/experiments/phase1.yaml
+```
+
+Kết quả nằm trong `results/phase1/`; `results/phase1/shards/` (bị Git ignore) lưu từng task nên chạy lại lệnh sẽ bỏ qua task đã xong. Lệnh trả mã khác 0 nếu có task lỗi, LP không tối ưu hoặc kiểm tra tính hợp lệ của cận thất bại.
+
+Sinh dữ liệu cho báo cáo (bảng tham số, bảng kết quả, macro số liệu, dữ liệu hình runtime) rồi biên dịch báo cáo bằng script của skill LaTeX:
+
+```bash
+uv run python experiments/report_tables.py
+cd docs/report && bash ../../.claude/skills/latex-document-skill/scripts/compile_latex.sh main.tex --preview --preview-dir build/preview
+```

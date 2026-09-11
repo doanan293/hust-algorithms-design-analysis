@@ -1,8 +1,14 @@
 \section{Thảo luận}
 \label{sec:discussion}
 
-[Giải thích vì sao cơ chế sửa lịch giúp ích, khi nào không giúp; đối chiếu với B3 để tách tác dụng của objective khỏi tác dụng của cơ chế.]
+\paragraph{Vai trò của UAV.}
+Trên cả hai họ kịch bản, một quỹ đạo cố định đơn giản đã nâng khả năng kết nối lên mọi nguồn và tăng tỷ lệ cảnh báo đúng hạn so với mạng mặt đất đơn thuần. Tuy vậy, khoảng tin cậy chồng lấn và gap so với cận trên còn lớn, nhất là khi backhaul băng hẹp. Điều này cho thấy lợi ích của UAV phụ thuộc vào việc quỹ đạo, lựa chọn đường và băng thông được phối hợp, không chỉ vào việc có UAV hay không.
 
-[Giới hạn: mô phỏng không chứng minh hiệu năng thực địa; kịch bản tổng hợp mượn cấu trúc mạng backbone sau khi thu nhỏ; heuristic không có bảo đảm tối ưu ngoài cận trên LP trên quỹ đạo cố định.]
+\paragraph{Độ chặt của cận.}
+Cận LP hợp lệ cho mọi kế hoạch có cùng quỹ đạo và tập candidate, nhưng nó biết trước kênh và nới lỏng tính nguyên. Trên instance thu nhỏ, phần lớn khoảng cách giữa cận và giá trị đạt được đến từ nới lỏng tính nguyên, nên gap trên kịch bản đầy đủ có thể phóng đại phần còn cải thiện được. Việc siết cận, chẳng hạn bằng MILP trên instance lớn hơn hoặc thêm bất đẳng thức hợp lệ, là một hướng của Pha 2.
 
-[Hướng phát triển: SAA trong thiết kế, nhiều UAV, tối ưu công suất.]
+\paragraph{Giới hạn.}
+Kết quả dựa trên mô phỏng và không chứng minh hiệu năng thực địa. Mạng backbone gốc được thu nhỏ về vùng \qty{2}{\kilo\metre}, nên chỉ còn mượn cấu trúc. Trạng thái kênh độc lập giữa các slot, kênh mặt đất tất định và công suất cố định. Khoảng tin cậy dựa trên mười cụm topology nên còn rộng. Cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho, không phải cận toàn cục. Các phương pháp cơ sở là heuristic và không có bảo đảm tối ưu.
+
+\paragraph{Hướng tiếp theo.}
+Pha 2 sẽ cài đặt BCD kiểu Huang (B2), biến thể dùng mục tiêu max--min (B3) và phương pháp đề xuất với hai thao tác sửa lịch (P), thực hiện ablation, phân tích độ nhạy và kiểm định thống kê ghép cặp, so sánh với một phương pháp mạnh từ tài liệu, và bổ sung case study với mục tiêu lấy từ RescueNet.
