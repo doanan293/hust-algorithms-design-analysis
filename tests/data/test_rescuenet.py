@@ -28,6 +28,19 @@ def test_pairs_images_and_masks_by_canonical_stem(tmp_path: Path):
     ]
 
 
+def test_pairs_validation_archive_directories_and_label_suffix(tmp_path: Path):
+    (tmp_path / "val-org-img").mkdir()
+    (tmp_path / "val-label-img").mkdir()
+    Image.new("RGB", (2, 2), "white").save(tmp_path / "val-org-img/10781.jpg")
+    Image.new("L", (2, 2), 1).save(tmp_path / "val-label-img/10781_lab.png")
+
+    pairs = pair_images_and_masks(tmp_path)
+
+    assert [(pair.pair_id, pair.image.name, pair.mask.name) for pair in pairs] == [
+        ("10781", "10781.jpg", "10781_lab.png")
+    ]
+
+
 def test_count_mask_classes_returns_pixel_counts(tmp_path: Path):
     mask = tmp_path / "mask.png"
     Image.fromarray(np.array([[0, 1], [1, 2]], dtype=np.uint8)).save(mask)

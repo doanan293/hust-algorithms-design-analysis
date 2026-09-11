@@ -1,0 +1,80 @@
+[
+  {
+    "byte_size": 330,
+    "dataset_family": "rescuenet",
+    "download_url": "https://ndownloader.figshare.com/files/40583321",
+    "evidence": [
+      "Figshare article metadata reports CC0.",
+      "Author repository README reports CC BY-NC-ND for dataset content."
+    ],
+    "filename": "RescueNet-Segmentation-Dataset-Note.txt",
+    "landing_page": "https://springernature.figshare.com/articles/dataset/22826606",
+    "license_name": null,
+    "license_review_required": true,
+    "license_url": null,
+    "profile": "paper",
+    "retrieved_at_utc": "2026-09-11T02:03:02.513309+00:00",
+    "sha256": "2e4d22c501f12d4f525e711c0e950d766711ca8ab96290045677734e16b56bfd",
+    "source_id": "rescuenet-descriptor",
+    "status": "reused",
+    "upstream_checksum": "md5:82c158ff471b67f73f60c5213ec84251",
+    "upstream_version": "article:22826606"
+  },
+  {
+    "byte_size": 2373908074,
+    "dataset_family": "rescuenet",
+    "download_url": "https://ndownloader.figshare.com/files/40582916",
+    "evidence": [
+      "Figshare article metadata reports CC0.",
+      "Author repository README reports CC BY-NC-ND for dataset content."
+    ],
+    "filename": "segmentation-validationset.zip",
+    "landing_page": "https://springernature.figshare.com/articles/dataset/22826369",
+    "license_name": null,
+    "license_review_required": true,
+    "license_url": null,
+    "profile": "paper",
+    "retrieved_at_utc": "2026-09-11T02:03:05.402771+00:00",
+    "sha256": "6ef3fccf20291cce6bf6672caf38c88d592c12be1e3d1c79b4a87bec031faf1f",
+    "source_id": "rescuenet-validation",
+    "status": "reused",
+    "upstream_checksum": "md5:51360be8ea3f73233605a767801c9d1c",
+    "upstream_version": "article:22826369"
+  },
+  {
+    "byte_size": 792538,
+    "dataset_family": "sndlib",
+    "download_url": "https://sndlib.put.poznan.pl/download/sndlib-networks-xml.zip",
+    "evidence": [],
+    "filename": "sndlib-networks-xml.zip",
+    "landing_page": "https://sndlib.put.poznan.pl/download.action",
+    "license_name": null,
+    "license_review_required": false,
+    "license_url": null,
+    "profile": "paper",
+    "retrieved_at_utc": "2026-09-11T02:03:02.512620+00:00",
+    "sha256": "1490c86061503f4160efaa6eed3bf4a0b314566cc5257bc37169c3d6c4e1e96f",
+    "source_id": "sndlib-networks-xml",
+    "status": "reused",
+    "upstream_checksum": "sha256:1490c86061503f4160efaa6eed3bf4a0b314566cc5257bc37169c3d6c4e1e96f",
+    "upstream_version": "archive:2014-07-07"
+  },
+  {
+    "byte_size": 16126531,
+    "dataset_family": "topology-zoo",
+    "download_url": "https://github.com/sk2/topologyzoo.git",
+    "evidence": [],
+    "filename": "topology-zoo",
+    "landing_page": "https://github.com/sk2/topologyzoo",
+    "license_name": null,
+    "license_review_required": false,
+    "license_url": null,
+    "profile": "paper",
+    "retrieved_at_utc": "2026-09-11T02:03:02.485525+00:00",
+    "sha256": "bda9807abe707baf2239a826d75273530e325c2cbac951f16432231abf270d72",
+    "source_id": "topology-zoo",
+    "status": "downloaded",
+    "upstream_checksum": null,
+    "upstream_version": "e278b1bdaafea5dac33883bf9c97401db4cd7347"
+  }
+]

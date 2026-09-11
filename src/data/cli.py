@@ -157,8 +157,13 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def _find_pair_root(root: Path) -> Path:
-    for directory in sorted(path for path in root.rglob("*") if path.is_dir()):
-        if (directory / "images").is_dir() and (directory / "masks").is_dir():
+    directories = [root, *sorted(path for path in root.rglob("*") if path.is_dir())]
+    for directory in directories:
+        standard = (directory / "images").is_dir() and (directory / "masks").is_dir()
+        validation = (directory / "val-org-img").is_dir() and (
+            directory / "val-label-img"
+        ).is_dir()
+        if standard or validation:
             return directory
     raise ValueError(f"RescueNet extracted archive has no images/masks root: {root}")
 
