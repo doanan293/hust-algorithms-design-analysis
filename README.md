@@ -38,3 +38,30 @@ python -m data.cli scenarios --config configs/scenarios/v0.yaml
 ```
 
 Lệnh đọc network đã chuẩn hóa trong `data/processed/networks/` và instance SNDlib `abilene`, ghi file scenario vào `data/processed/scenarios/v0/` (bị Git ignore) và manifest `data/manifests/scenarios_v0.csv` (được commit). Chạy lại với cùng cấu hình cho cùng cột `sha256`.
+
+## Evaluator và kiểm tra hiệu chỉnh
+
+Mọi phương pháp chấm điểm kế hoạch qua cùng một hàm:
+
+```python
+from pathlib import Path
+
+from models.evaluate import REALIZED, evaluate
+from models.paths import candidate_paths
+from models.plan import EqualSplitBacklogged, Plan, stationary_trajectory
+from models.scenario import load_scenario
+
+scenario = load_scenario(Path("data/processed/scenarios/v0/Agis-r0.json"))
+candidates = candidate_paths(scenario)
+plan = Plan(stationary_trajectory(scenario), {alert.id: 0 for alert in scenario.alerts}, EqualSplitBacklogged())
+result = evaluate(scenario, plan, REALIZED, tuple(range(30)), candidates=candidates)
+print(result.timely_ratio, result.key)
+```
+
+Kiểm tra hiệu chỉnh chạy hai kế hoạch đơn giản trên 30 scenario đánh giá với 30 realization kênh và ghi `results/calibration/v0.json`:
+
+```bash
+python experiments/calibrate_v0.py
+```
+
+Lệnh trả mã 0 khi cả hai kế hoạch khả thi và tỷ lệ đúng hạn trung bình của mỗi kế hoạch nằm trong [0.05, 0.95].
