@@ -29,10 +29,21 @@ class StaticSchedule:
 
 
 @dataclass(frozen=True)
+class WeightedBacklogged:
+    """Split B_tot among backlogged links of a half-slot in proportion to per-slot weights; missing links weigh 0."""
+
+    weights: Mapping[LinkId, np.ndarray]
+
+    def weight(self, link: LinkId, slot: int) -> float:
+        values = self.weights.get(link)
+        return 0.0 if values is None else float(values[slot])
+
+
+@dataclass(frozen=True)
 class Plan:
     trajectory: np.ndarray
     path_choice: Mapping[str, int | None]
-    bandwidth: EqualSplitBacklogged | StaticSchedule
+    bandwidth: EqualSplitBacklogged | StaticSchedule | WeightedBacklogged
 
 
 def stationary_trajectory(scenario: Scenario) -> np.ndarray:
@@ -70,6 +81,8 @@ def validate_plan(
             violations.append(f"path_choice: alert {alert_id} has invalid candidate index {index}")
     if isinstance(plan.bandwidth, StaticSchedule):
         violations.extend(_schedule_violations(scenario, candidates, plan.bandwidth))
+    elif isinstance(plan.bandwidth, WeightedBacklogged):
+        violations.extend(_weight_violations(scenario, candidates, plan.bandwidth))
     elif not isinstance(plan.bandwidth, EqualSplitBacklogged):
         violations.append("bandwidth: unknown policy")
     return violations
@@ -88,6 +101,21 @@ def _trajectory_violations(scenario: Scenario, trajectory: np.ndarray) -> list[s
     limit = scenario.uav.v_max_mps * scenario.time.slot_s * (1.0 + RELATIVE_TOLERANCE)
     for slot in np.flatnonzero(steps > limit):
         violations.append(f"trajectory: slot {slot} moves {steps[slot]:.3f} m, limit {limit:.3f} m")
+    return violations
+
+
+def _weight_violations(
+    scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], policy: WeightedBacklogged
+) -> list[str]:
+    known = set(radio_links(candidates))
+    violations = []
+    for link in sorted(policy.weights):
+        if link not in known:
+            violations.append(f"bandwidth: unknown radio link {link}")
+            continue
+        values = np.asarray(policy.weights[link], dtype=float)
+        if values.shape != (scenario.time.num_slots,) or not np.all(np.isfinite(values)) or np.any(values < 0.0):
+            violations.append(f"bandwidth: weights of {link} need {scenario.time.num_slots} finite non-negative values")
     return violations
 
 

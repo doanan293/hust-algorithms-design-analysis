@@ -48,6 +48,7 @@ class EvaluationResult:
     paths_version: int
     scenario_sha256: str
     runtime_s: float
+    channel_namespace: str = "eval"
 
 
 def evaluate(
@@ -58,6 +59,7 @@ def evaluate(
     counter: EvaluationCounter | None = None,
     candidates: Mapping[str, tuple[CandidatePath, ...]] | None = None,
     keep_ledger: bool = False,
+    channel_namespace: str = "eval",
 ) -> EvaluationResult:
     started = time.perf_counter()
     if mode not in (EXPECTED, REALIZED):
@@ -84,13 +86,14 @@ def evaluate(
             paths_version=scenario.paths.version,
             scenario_sha256=scenario.sha256,
             runtime_s=time.perf_counter() - started,
+            channel_namespace=channel_namespace,
         )
 
     links = set(radio_links(candidates)) | set(all_uav_links(scenario))
     without_uav = connectivity(scenario, None)
     results = []
     for realization_id in realization_ids if mode == REALIZED else (None,):
-        uniforms = None if realization_id is None else channel_uniforms(scenario, realization_id)
+        uniforms = None if realization_id is None else channel_uniforms(scenario, realization_id, channel_namespace)
         channels = build_link_channels(scenario, links, plan.trajectory, uniforms)
         outcome = simulate(scenario, candidates, plan, channels, realization_id)
         problems = check_ledger(scenario, candidates, plan, channels, outcome.ledger, outcome.delivered_bits)
@@ -128,4 +131,5 @@ def evaluate(
         paths_version=scenario.paths.version,
         scenario_sha256=scenario.sha256,
         runtime_s=time.perf_counter() - started,
+        channel_namespace=channel_namespace,
     )

@@ -5,7 +5,7 @@ from typing import Mapping
 from .channel import ACCESS, BACKHAUL, DOWNLINK, LinkChannel, LinkId
 from .ledger import Ledger
 from .paths import CandidatePath
-from .plan import Plan, StaticSchedule, chosen_paths
+from .plan import Plan, StaticSchedule, WeightedBacklogged, chosen_paths
 from .scenario import Scenario
 
 DELIVERY_TOLERANCE_BITS = 1e-6
@@ -112,6 +112,14 @@ def _allocate_bandwidth(
         (min(entry[0] for entry in queues[link]), link[2], link) for link in queues if link[0] == DOWNLINK
     )
     active = [item[2] for item in ranked_downlinks[: scenario.uav.max_active_downlinks]]
+    if isinstance(plan.bandwidth, WeightedBacklogged):
+        allocation = {}
+        for group in (access, active):
+            weights = [plan.bandwidth.weight(link, slot) for link in group]
+            weight_sum = sum(weights)
+            for link, weight in zip(group, weights):
+                allocation[link] = total * weight / weight_sum if weight_sum > 0.0 else total / len(group)
+        return allocation
     allocation = {link: total / len(access) for link in access}
     allocation.update({link: total / len(active) for link in active})
     return allocation
