@@ -1,0 +1,17 @@
+experiment_id: phase2-case-study
+scenario_sets:
+  - set_id: rescuenet
+    manifest: data/manifests/scenarios_rescuenet.csv
+    scenario_dir: data/processed/scenarios/rescuenet
+split: eval
+realization_ids: {start: 0, stop: 30}
+methods:
+  - B0
+  - B1
+  - {id: B2, base: search, bounds: true}
+  - {id: P, base: search, params: {operation1: true, operation2: true}, bounds: true}
+  - {id: TRAN, base: TRAN, params: {theta: 0.3333333333333333, mu: 10.0, block_slots: 1}, bounds: true}
+bounds: {tangents: 10}
+bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
+workers: 12
+output_dir: results/phase2/case_study
