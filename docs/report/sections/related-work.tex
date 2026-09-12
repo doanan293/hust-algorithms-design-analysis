@@ -1,29 +1,21 @@
 \section{Nghiên cứu liên quan}
 \label{sec:related}
 
-\paragraph{UAV relay và tối ưu quỹ đạo.}
-Huang và cộng sự~\cite{huang2025ddatsap} nghiên cứu hệ relay hai chiều dùng UAV cho nhiều cặp người dùng mặt đất dưới mô hình kênh PrLoS, đề xuất giao thức cấp phát khe thời gian hai ăng-ten động (DDATSAP) và tối đa tốc độ trung bình nhỏ nhất bằng cách tối ưu đồng thời hệ số lập lịch tài nguyên, công suất phát và quỹ đạo, với ràng buộc vùng cấm bay. Bài toán không lồi được giải bằng thuật toán lặp kết hợp phân rã theo khối (BCD) và xấp xỉ lồi liên tiếp (SCA). Đề tài này kế thừa mô hình kênh PrLoS và cấu trúc phân rã đó, nhưng thay mục tiêu bằng tỷ lệ cảnh báo giao đúng hạn, bổ sung lựa chọn relay trên mạng mặt đất có dung lượng backhaul hữu hạn, và dùng giao thức hai nửa slot bán song công thay cho DDATSAP.
+Phần này dựa trên một tổng quan có giao thức cố định. Sáu truy vấn theo các chủ đề UAV relay có hạn giao, lựa chọn relay với backhaul, luồng trên đồ thị mở rộng theo thời gian, giao dữ liệu đúng hạn dưới kênh ngẫu nhiên, đồng thiết kế quỹ đạo và băng thông, và phân rã kết hợp sửa lịch được chạy trên Crossref và arXiv, bổ sung mười truy vấn trên công cụ tìm kiếm web. Bài được sàng lọc theo tiêu đề rồi theo tóm tắt. Một bài được chọn nếu nghiên cứu UAV làm relay hoặc thu thập dữ liệu với ràng buộc thời gian theo từng yêu cầu (hạn, giới hạn trễ hoặc tuổi thông tin, trễ là mục tiêu, thời gian sống của tin, số yêu cầu được phục vụ trong một khoảng thời gian), hoặc có lựa chọn trạm hay ràng buộc dung lượng backhaul. Siêu dữ liệu được đối chiếu với Crossref hoặc arXiv; mọi nhận định chỉ lấy từ phần văn bản đã đọc, là tóm tắt, riêng bài của Huang và cộng sự là toàn văn. Mười sáu bài được chọn; \cref{tab:related} so sánh chúng theo các thuộc tính liên quan trực tiếp tới bài toán.
+
+\paragraph{UAV relay và thu thập dữ liệu có hạn.}
+Huang và cộng sự~\cite{huang2025ddatsap} dùng UAV làm relay giải mã và chuyển tiếp có bộ đệm cho nhiều cặp người dùng dưới kênh PrLoS, tối đa tốc độ trung bình nhỏ nhất bằng phân rã theo khối (BCD) kết hợp xấp xỉ lồi liên tiếp (SCA); đề tài này kế thừa mô hình kênh và cấu trúc ba khối của bài đó. Nhóm gần nhất với mục tiêu cảnh báo đúng hạn tối đa số thiết bị được phục vụ: Tran và cộng sự~\cite{tran2022relay} yêu cầu dữ liệu của thiết bị tới gateway mặt đất kịp thời qua bộ nhớ của UAV và tối ưu băng thông, công suất, quỹ đạo bằng nới lỏng biến nhị phân và xấp xỉ trong; Samir và cộng sự~\cite{samir2020time} gắn cho mỗi thiết bị một hạn cứng, tìm tối ưu toàn cục bằng branch, reduce and bound cho instance nhỏ và dùng SCA cho instance lớn; Du và cộng sự~\cite{du2023timeconstrained} đếm thiết bị được phục vụ trong thời gian thu thập hữu hạn. Các bài khác đặt thời gian vào ràng buộc hoặc mục tiêu theo cách khác: hạn thu thập chung với mô hình MILP và heuristic~\cite{albusalih2018deadline}, ngưỡng tuổi thông tin và lựa chọn trạm mặt đất nhận dữ liệu~\cite{liu2022aoi,liu2024interference}, trễ hàng đợi hữu hạn trong thiết kế trực tuyến dựa trên Lyapunov~\cite{tang2022delay}, trễ là mục tiêu của relay UAV hoặc của thu thập theo mức ưu tiên~\cite{he2022delay,cao2023priority,fadlullah2016dynamic}, và thời gian sống của tin trong mạng chịu trễ với UAV học tăng cường~\cite{wang2026juror}.
+
+\paragraph{Backhaul và lựa chọn trạm.}
+Khi UAV làm trạm gốc hoặc relay nối người dùng với mạng lõi, dung lượng backhaul giới hạn số người dùng phục vụ được. Kalantari và cộng sự~\cite{kalantari2017backhaul} đặt vị trí 3D của trạm bay theo loại backhaul; Selim và Kamal~\cite{selim2018postdisaster} dùng drone có dây làm backhaul sau thiên tai; Yu và cộng sự~\cite{yu2023backhaul} đồng tối ưu băng thông và vị trí dưới ràng buộc dung lượng backhaul quang không dây; Queiros và cộng sự~\cite{queiros2024predictive} cấp băng thông và đặt relay bay tầng hai khi đã biết trước quỹ đạo tầng một. Các bài này không có ràng buộc thời gian theo từng yêu cầu.
+
+\paragraph{Phương pháp giải.}
+Phân rã theo khối kết hợp SCA là cách giải phổ biến cho quỹ đạo và tài nguyên~\cite{huang2025ddatsap,wu2018multi,liu2024interference}; Wu và cộng sự~\cite{wu2018multi} chứng minh cách này hội tụ tới ít nhất một nghiệm tối ưu cục bộ cho bài toán thông lượng max--min. Các bài có đếm yêu cầu được phục vụ phải xử lý biến nhị phân bằng nới lỏng~\cite{tran2022relay} hoặc branch-and-bound~\cite{samir2020time}. Park và Lee~\cite{park2026expected} chỉ ra rằng xấp xỉ tốc độ kỳ vọng bằng tốc độ tại kênh trung bình ước lượng cao tốc độ thực do bất đẳng thức Jensen, là lý do đề tài này chấm điểm thiết kế trên các realization lấy mẫu. Tìm kiếm lân cận lớn với các toán tử phá và sửa~\cite{ropke2006alns} là tiền lệ cho cơ chế sửa lịch, còn định tuyến trên đồ thị thay đổi theo thời gian có động học biết trước~\cite{jain2004dtn} là tiền lệ cho cách đo khả năng kết nối theo thời gian.
 
 \paragraph{Lập lịch với thời điểm phát sinh và hạn.}
-Khi chỉ xét một liên kết, việc chọn tập cảnh báo giao đúng hạn gần với bài toán lập lịch một máy tối thiểu số công việc trễ. Phiên bản không ngắt quãng $1\,|\,r_j\,|\,\sum U_j$ là NP-khó mạnh~\cite{lenstra2020elements}, còn phiên bản có ngắt quãng $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$ giải được bằng quy hoạch động trong thời gian đa thức~\cite{lawler1990preemptive}. Mô hình ở \cref{sec:method} cho phép chia dữ liệu theo slot, gần với trường hợp có ngắt quãng; độ khó của nó đến từ ràng buộc mỗi cảnh báo đi theo đúng một đường (\cref{sec:hardness}).
+Khi chỉ xét một liên kết, việc chọn tập cảnh báo giao đúng hạn gần với bài toán lập lịch một máy tối thiểu số công việc trễ. Phiên bản không ngắt quãng $1\,|\,r_j\,|\,\sum U_j$ là NP-khó mạnh~\cite{lenstra2020elements}, còn phiên bản có ngắt quãng $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$ giải được bằng quy hoạch động trong thời gian đa thức~\cite{lawler1990preemptive}. Mô hình ở \cref{sec:method} cho phép chia dữ liệu theo slot, gần với trường hợp có ngắt quãng; độ khó của nó đến từ ràng buộc mỗi cảnh báo đi theo đúng một đường (\cref{sec:hardness}). Cận trên ở \cref{sec:bound} dựa trên tính lõm của hàm tốc độ theo băng thông và bao các tiếp tuyến, là công cụ chuẩn của tối ưu lồi~\cite{boyd2004convex}.
 
-\paragraph{Tối ưu không lồi và cận trên.}
-Cận trên ở \cref{sec:bound} dựa trên tính lõm của hàm tốc độ theo băng thông và việc thay hàm lõm bằng bao các tiếp tuyến, là các công cụ chuẩn của tối ưu lồi~\cite{boyd2004convex}.
+\paragraph{Khoảng trống và phương pháp so sánh mạnh.}
+Không bài nào trong \cref{tab:related} kết hợp hạn theo từng yêu cầu với việc chọn relay mặt đất trên backhaul có dung lượng hữu hạn: các bài có hạn giả định một điểm đích, còn các bài có ràng buộc backhaul không có hạn theo yêu cầu. Để chọn một phương pháp mạnh từ tài liệu, các tiêu chí được xét theo thứ tự: mục tiêu gần với số cảnh báo đúng hạn, thiết kế ngoại tuyến với nhu cầu đã biết, đồng tối ưu quỹ đạo và tài nguyên vô tuyến, đủ chi tiết hoặc có mã để tái lập, và thích nghi được mà không đổi bản chất phương pháp. Ba bài của Tran, Samir và Du đạt tiêu chí đầu; tiêu chí cuối quyết định chọn Tran và cộng sự~\cite{tran2022relay} (phiên bản bán song công), vì chỉ bài này mô hình dữ liệu đi qua bộ đệm UAV tới gateway mặt đất, tương ứng với đường UAV thả dữ liệu vào mạng mặt đất ở đây. Bài của Samir và cộng sự là phương án dự phòng vì đã có mã cài đặt công khai. Việc thích nghi và đánh giá phương pháp này thuộc giai đoạn cuối của đề tài.
 
-\paragraph{Phạm vi của phần này.}
-Tổng quan có hệ thống về UAV relay có hạn giao, lựa chọn relay với backhaul, luồng trên đồ thị mở rộng theo thời gian và phân bổ băng thông, cùng việc chọn một phương pháp mạnh từ tài liệu để so sánh, thuộc Pha 2 và chưa được thực hiện trong báo cáo Pha 1.
-
-\begin{table}[htbp]
-\centering
-\small
-\caption{So sánh với công trình tham chiếu.}
-\label{tab:related}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-\textbf{Công trình} & \textbf{Mục tiêu} & \textbf{Chọn relay} & \textbf{Hạn giao} & \textbf{Kênh} & \textbf{Phương pháp} \\
-\midrule
-\cite{huang2025ddatsap} & Max--min tốc độ & Không & Không & PrLoS & BCD--SCA \\
-Đề tài này & Tỷ lệ đúng hạn & Có & Có & PrLoS & B0, B1, cận LP (Pha 1) \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/related_work}

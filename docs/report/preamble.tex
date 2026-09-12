@@ -100,6 +100,7 @@
 % biblatex chưa có chuỗi tiếng Việt ("vol.", "no.", "pp.") nên ánh xạ sang chuỗi tiếng Anh theo chuẩn IEEE
 \usepackage[backend=biber, style=ieee, sorting=none, maxbibnames=6, autolang=none]{biblatex}
 \DeclareLanguageMapping{vietnamese}{english}
+\AtBeginBibliography{\raggedright}  % tên bài dài có từ nối gạch không ngắt được, căn trái để không tràn lề
 % \addbibresource nằm trong main.tex để script compile_latex.sh của skill nhận ra cần chạy biber
 
 % --- Liên kết và tham chiếu chéo (nạp gần cuối) -------------------------------
