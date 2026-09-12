@@ -17,7 +17,7 @@ from .manifests import write_source_ledger
 from .models import ArtifactSpec, PipelineConfig, SourceRecord
 from .rescuenet import count_mask_classes, load_label_map, pair_images_and_masks, RescueRecord, select_pairs
 from .rescuenet_targets import extract_targets, load_target_config, write_targets
-from .scenarios import build_scenario_set, load_scenario_set_config
+from .scenarios import RESCUENET, build_scenario_set, load_scenario_set_config, load_targets
 from .sndlib import inventory_sndlib, parse_sndlib_xml
 from .topology_zoo import fetch_pinned_repo, inventory_topology, normalize_topology
 
@@ -211,6 +211,7 @@ def run_scenarios(config_path: Path, data_root: Path | None) -> int:
     raw_sha256 = [
         record["sha256"] for record in ledger if record["source_id"] in ("topology-zoo", "sndlib-networks-xml")
     ]
+    targets = load_targets(root / config.targets_manifest, config.targets_manifest_sha256) if config.source_generator == RESCUENET else ()
     scenarios = build_scenario_set(
         networks,
         network_sha256,
@@ -218,6 +219,7 @@ def run_scenarios(config_path: Path, data_root: Path | None) -> int:
         config,
         raw_sha256,
         hashlib.sha256(config_path.read_bytes()).hexdigest(),
+        targets,
     )
     output_dir = root / "processed" / "scenarios" / config.set_id
     output_dir.mkdir(parents=True, exist_ok=True)

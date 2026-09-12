@@ -1,6 +1,8 @@
 import copy
+import csv
 from dataclasses import dataclass
 import hashlib
+import io
 import math
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -14,6 +16,11 @@ from models.rng import named_rng
 GENERATOR_VERSION = 2
 DEMAND_PROVENANCE = "derived-from-sndlib-demand"
 PHYSICAL_SECTIONS = ("uav", "time", "spectrum", "channel", "source_power_w", "paths")
+SYNTHETIC = "synthetic"
+RESCUENET = "rescuenet"
+SYNTHETIC_SOURCE_FIELDS = ("zone_min_separation_m", "zone_max_attempts", "source_count", "source_sigma_m")
+TARGET_SOURCE_FIELDS = ("targets_manifest", "targets_manifest_sha256")
+KMEANS_MAX_ITERATIONS = 100
 
 
 @dataclass(frozen=True)
@@ -27,11 +34,11 @@ class ScenarioSetConfig:
     eval_replicates: int
     dev_replicates: int
     zone_count: int
-    zone_min_separation_m: float
+    zone_min_separation_m: float | None
     zone_radius_m: float
-    zone_max_attempts: int
-    source_count: int
-    source_sigma_m: float
+    zone_max_attempts: int | None
+    source_count: int | None
+    source_sigma_m: float | None
     alert_count: int
     deadline_min_slots: int
     deadline_max_slots: int
@@ -43,6 +50,39 @@ class ScenarioSetConfig:
     failure_p_out: float
     backhaul_capacity_bps: float
     physical: Mapping[str, object]
+    source_generator: str = SYNTHETIC
+    targets_manifest: Path | None = None
+    targets_manifest_sha256: str | None = None
+
+
+def _source_fields(workload: Mapping[str, object]) -> dict[str, object]:
+    """Fields of the source generator: sampled zones and sources, or a RescueNet target manifest (spec D Section 9)."""
+    generator = str(workload.get("source_generator", SYNTHETIC))
+    if generator == SYNTHETIC:
+        extra = sorted(key for key in TARGET_SOURCE_FIELDS if key in workload)
+        if extra:
+            raise ValueError(f"workload: {extra} apply only to source_generator {RESCUENET}")
+        return {
+            "source_generator": SYNTHETIC,
+            "zone_min_separation_m": float(workload["zone_min_separation_m"]),
+            "zone_max_attempts": int(workload["zone_max_attempts"]),
+            "source_count": int(workload["source_count"]),
+            "source_sigma_m": float(workload["source_sigma_m"]),
+        }
+    if generator != RESCUENET:
+        raise ValueError(f"workload.source_generator: unknown generator {generator!r}; expected {SYNTHETIC} or {RESCUENET}")
+    extra = sorted(key for key in SYNTHETIC_SOURCE_FIELDS if key in workload)
+    if extra:
+        raise ValueError(f"workload: {extra} apply only to source_generator {SYNTHETIC}")
+    missing = sorted(key for key in TARGET_SOURCE_FIELDS if key not in workload)
+    if missing:
+        raise ValueError(f"workload: source_generator {RESCUENET} needs {missing}")
+    return {
+        "source_generator": RESCUENET,
+        **dict.fromkeys(SYNTHETIC_SOURCE_FIELDS),
+        "targets_manifest": Path(str(workload["targets_manifest"])),
+        "targets_manifest_sha256": str(workload["targets_manifest_sha256"]),
+    }
 
 
 def load_scenario_set_config(path: Path) -> ScenarioSetConfig:
@@ -58,11 +98,8 @@ def load_scenario_set_config(path: Path) -> ScenarioSetConfig:
         eval_replicates=int(topology["eval_replicates"]),
         dev_replicates=int(topology["dev_replicates"]),
         zone_count=int(workload["zone_count"]),
-        zone_min_separation_m=float(workload["zone_min_separation_m"]),
         zone_radius_m=float(workload["zone_radius_m"]),
-        zone_max_attempts=int(workload["zone_max_attempts"]),
-        source_count=int(workload["source_count"]),
-        source_sigma_m=float(workload["source_sigma_m"]),
+        **_source_fields(workload),
         alert_count=int(workload["alert_count"]),
         deadline_min_slots=int(workload["deadline_min_slots"]),
         deadline_max_slots=int(workload["deadline_max_slots"]),
@@ -157,6 +194,67 @@ def sample_sources(
     return sources
 
 
+def load_targets(path: Path, expected_sha256: str) -> tuple[tuple[float, float], ...]:
+    """Normalized (x_m, y_m) of the RescueNet target manifest, in file order, after checking its SHA-256."""
+    payload = path.read_bytes()
+    actual = hashlib.sha256(payload).hexdigest()
+    if actual != expected_sha256:
+        raise ValueError(f"{path}: SHA-256 {actual} does not match workload.targets_manifest_sha256 {expected_sha256}")
+    rows = csv.DictReader(io.StringIO(payload.decode("utf-8")))
+    return tuple((float(row["x_m"]), float(row["y_m"])) for row in rows)
+
+
+def target_zones_and_sources(
+    targets: Sequence[tuple[float, float]], zone_count: int, radius_m: float, label: str
+) -> tuple[list[dict[str, float]], list[dict[str, object]]]:
+    """One source per target; zones are k-means clusters (farthest-point start, Lloyd steps) sorted by (x, y)."""
+    points = np.asarray(targets, dtype=float).reshape(-1, 2)
+    if len(points) < zone_count:
+        raise ValueError(f"{label}: {len(points)} targets cannot form {zone_count} zones")
+    chosen = [min(range(len(points)), key=lambda index: (points[index, 0], points[index, 1]))]
+    while len(chosen) < zone_count:
+        nearest = np.min(np.linalg.norm(points[:, None, :] - points[chosen][None, :, :], axis=2), axis=1)
+        chosen.append(int(np.argmax(nearest)))
+    centers = points[chosen].copy()
+    assignment = np.full(len(points), -1)
+    for _ in range(KMEANS_MAX_ITERATIONS):
+        updated = np.argmin(np.linalg.norm(points[:, None, :] - centers[None, :, :], axis=2), axis=1)
+        if np.array_equal(updated, assignment):
+            break
+        assignment = updated
+        for zone in range(zone_count):
+            members = points[assignment == zone]
+            if len(members):
+                centers[zone] = members.mean(axis=0)
+    order = sorted(range(zone_count), key=lambda zone: (centers[zone, 0], centers[zone, 1]))
+    rank = {zone: position for position, zone in enumerate(order)}
+    zones = [{"x_m": float(centers[zone, 0]), "y_m": float(centers[zone, 1]), "radius_m": radius_m} for zone in order]
+    width = max(2, len(str(len(points) - 1)))
+    sources = [
+        {"id": f"s{index:0{width}d}", "x_m": float(x), "y_m": float(y), "zone": rank[int(assignment[index])]}
+        for index, (x, y) in enumerate(points)
+    ]
+    return zones, sources
+
+
+def place_sources(
+    config: ScenarioSetConfig, seed: int, box_m: float, label: str, targets: Sequence[tuple[float, float]] = ()
+) -> tuple[list[dict[str, float]], list[dict[str, object]]]:
+    """Damage zones and source points of one scenario, sampled or taken from RescueNet targets (spec D Section 9)."""
+    if config.source_generator == RESCUENET:
+        return target_zones_and_sources(targets, config.zone_count, config.zone_radius_m, label)
+    zones = sample_damage_zones(
+        named_rng(seed, "damage-zones"),
+        box_m,
+        config.zone_count,
+        config.zone_min_separation_m,
+        config.zone_radius_m,
+        config.zone_max_attempts,
+        label,
+    )
+    return zones, sample_sources(named_rng(seed, "sources"), zones, config.source_count, config.source_sigma_m, box_m)
+
+
 def sample_alerts(
     alert_rng: np.random.Generator,
     size_rng: np.random.Generator,
@@ -222,6 +320,7 @@ def generate_scenario(
     network_sha256: str,
     raw_sha256: Sequence[str],
     config_hash: str,
+    targets: Sequence[tuple[float, float]] = (),
 ) -> dict[str, object]:
     network_id = str(network["network_id"])
     box_m = float(network["normalization"]["box_size_m"])
@@ -235,16 +334,7 @@ def generate_scenario(
         ({"id": str(node["id"]), "x_m": float(node["x_m"]), "y_m": float(node["y_m"])} for node in network["nodes"]),
         key=lambda node: node["id"],
     )
-    zones = sample_damage_zones(
-        named_rng(seed, "damage-zones"),
-        box_m,
-        config.zone_count,
-        config.zone_min_separation_m,
-        config.zone_radius_m,
-        config.zone_max_attempts,
-        network_id,
-    )
-    sources = sample_sources(named_rng(seed, "sources"), zones, config.source_count, config.source_sigma_m, box_m)
+    zones, sources = place_sources(config, seed, box_m, network_id, targets)
     alerts = sample_alerts(
         named_rng(seed, "alerts"), named_rng(seed, "sizes"), [source["id"] for source in sources], config, demand_values
     )
@@ -279,6 +369,7 @@ def generate_scenario(
             "config_hash": config_hash,
             "scenario_seed": seed,
             "generator_version": GENERATOR_VERSION,
+            **({"targets_manifest_sha256": config.targets_manifest_sha256} if config.source_generator == RESCUENET else {}),
         },
     }
 
@@ -290,6 +381,7 @@ def build_scenario_set(
     config: ScenarioSetConfig,
     raw_sha256: Sequence[str],
     config_hash: str,
+    targets: Sequence[tuple[float, float]] = (),
 ) -> list[dict[str, object]]:
     eligible = [(topology_id, len(network["nodes"])) for topology_id, network in networks.items()]
     splits = select_topologies(eligible, config.strata, config.dev_count, config.selection_seed)
@@ -308,6 +400,7 @@ def build_scenario_set(
                     network_sha256[topology_id],
                     raw_sha256,
                     config_hash,
+                    targets,
                 )
             )
     return scenarios
