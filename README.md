@@ -142,3 +142,21 @@ uv run python experiments/phase2_literature_statistics.py
 ```
 
 Kết quả nằm trong `results/phase2/tran_pilot/`, `results/phase2/literature/` và `results/phase2/statistics_literature.csv`. `experiments/run_phase1.py` và `experiments/run_phase2.py` nhận thêm `--output-dir` để ghi kết quả vào thư mục khác với thư mục trong cấu hình.
+
+## Pha 2: case study RescueNet
+
+Target được lấy từ mask công trình hư hại (lớp 3–5) của 30 cặp ảnh RescueNet đã chọn. Vị trí target được chiếu sang UTM 16N bằng GPS, độ cao tương đối, hướng gimbal và tiêu cự trong metadata DJI của ảnh; các target trùng trong 10 m được gộp rồi chuẩn hóa về hộp 2 km (`src/data/rescuenet_targets.py`, spec D Mục 8). Ảnh và mask không được phân phối lại; kho chỉ lưu manifest target.
+
+```bash
+uv run python -m data.cli rescuenet-targets --config configs/data/rescuenet_targets.yaml
+uv run python -m data.cli scenarios --config configs/scenarios/rescuenet.yaml
+```
+
+Họ scenario `rescuenet` giống `v0` nhưng đặt mỗi nguồn tại một target, với ba vùng hư hại là ba cụm k-means. Chạy B0, B1, B2, P và TRAN trên 30 scenario đánh giá, rồi lập lại kế hoạch cho scenario đại diện để có bản đồ target–relay–quỹ đạo và tiến trình giao cảnh báo:
+
+```bash
+systemd-run --user --scope --quiet -p MemoryMax=14G -p MemorySwapMax=0 uv run python experiments/run_phase2.py --config configs/experiments/phase2_case_study.yaml
+systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 uv run python experiments/case_study_trace.py
+```
+
+Kết quả nằm trong `results/phase2/case_study/` và `results/phase2/case_study/trace/`.
