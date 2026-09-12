@@ -628,7 +628,7 @@ PY
 cd ../..
 ```
 
-Expected: `final pass issues: 0; pages: 15; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call first removes the Git-ignored auxiliary files of any earlier build; in a checkout that had been built before, stale `main.aux`, `main.bcf`, and `main.pdf` produced a corrupted PDF whose preview generation failed.
+Expected: `final pass issues: 0; pages: 15; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call removes the Git-ignored auxiliary files of earlier builds. If an editor builds `docs/report` automatically when a `.tex` file changes (VS Code LaTeX Workshop does this by default), its latexmk run writes the same `main.pdf` during this compile and corrupts it, so the preview step fails; pause the editor's automatic build, or run this step in a copy of `docs/report` outside the editor's workspace.
 
 - [ ] **Step 3: Commit**
 
@@ -749,7 +749,7 @@ PY
 cd ../..
 ```
 
-Expected: `final pass issues: 0; pages: 18; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call first removes the Git-ignored auxiliary files of any earlier build; in a checkout that had been built before, stale `main.aux`, `main.bcf`, and `main.pdf` produced a corrupted PDF whose preview generation failed.
+Expected: `final pass issues: 0; pages: 18; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call removes the Git-ignored auxiliary files of earlier builds. If an editor builds `docs/report` automatically when a `.tex` file changes (VS Code LaTeX Workshop does this by default), its latexmk run writes the same `main.pdf` during this compile and corrupts it, so the preview step fails; pause the editor's automatic build, or run this step in a copy of `docs/report` outside the editor's workspace.
 
 Open the preview page that holds Table 1 and confirm that all seven columns fit the text width and the last row is "Đề tài này".
 
@@ -1108,7 +1108,7 @@ PY
 cd ../..
 ```
 
-Expected: `final pass issues: 0; pages: 22; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call first removes the Git-ignored auxiliary files of any earlier build; in a checkout that had been built before, stale `main.aux`, `main.bcf`, and `main.pdf` produced a corrupted PDF whose preview generation failed.
+Expected: `final pass issues: 0; pages: 22; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call removes the Git-ignored auxiliary files of earlier builds. If an editor builds `docs/report` automatically when a `.tex` file changes (VS Code LaTeX Workshop does this by default), its latexmk run writes the same `main.pdf` during this compile and corrupts it, so the preview step fails; pause the editor's automatic build, or run this step in a copy of `docs/report` outside the editor's workspace.
 
 Open the preview pages with Tables 3–7 and Figures 1–2: the ablation table fits the text width, the budget curve shows B2 and P rising to about 0.55 by $E=1000$, and the sensitivity grid has six panels with one shared legend.
 
@@ -1253,7 +1253,7 @@ PY
 cd ../..
 ```
 
-Expected: `final pass issues: 0; pages: 23; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call first removes the Git-ignored auxiliary files of any earlier build; in a checkout that had been built before, stale `main.aux`, `main.bcf`, and `main.pdf` produced a corrupted PDF whose preview generation failed.
+Expected: `final pass issues: 0; pages: 23; unresolved ??: 0` and exit code 0. The script scans only the last pdfLaTeX pass, because earlier passes always report undefined references before biber and the cross-reference pass have run. The `--clean` call removes the Git-ignored auxiliary files of earlier builds. If an editor builds `docs/report` automatically when a `.tex` file changes (VS Code LaTeX Workshop does this by default), its latexmk run writes the same `main.pdf` during this compile and corrupts it, so the preview step fails; pause the editor's automatic build, or run this step in a copy of `docs/report` outside the editor's workspace.
 
 Open every preview page in `docs/report/build/preview/`: no placeholder text, no macro name printed literally, tables and figures inside the margins, and the bibliography ragged-right.
 
