@@ -1,0 +1,4 @@
+set_id,method,scenario_count,timely_ratio_mean,timely_ratio_ci_low,timely_ratio_ci_high,conn_ratio_mean,bound_ratio_mean,gap_mean,gap_undefined_count,shortfall_mean,planning_runtime_s_mean,evaluation_runtime_s_per_realization_mean,bound_runtime_s_mean,union_bound_ratio_mean,union_gap_mean,evaluate_calls_mean
+v0,P_design1,10,0.47591666666666665,0.3865,0.5475,0.9997777777777778,nan,nan,10,17.604045848702743,29.236003329601953,0.042271729159983805,nan,nan,nan,1989.0
+v0,P_design10,10,0.51375,0.4200812500000001,0.5909208333333333,1.0,nan,nan,10,16.738150934999705,236.87762483080442,0.02587621251004748,nan,nan,nan,1981.9
+v0,P_design_expected,10,0.46725000000000005,0.3780791666666667,0.5444166666666667,1.0,nan,nan,10,17.92289487808678,26.556997091302765,0.042845636513278204,nan,nan,nan,1916.2

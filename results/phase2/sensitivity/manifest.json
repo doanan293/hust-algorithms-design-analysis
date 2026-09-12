@@ -1,0 +1,46 @@
+{
+  "command": [
+    "experiments/run_phase2.py",
+    "--config",
+    "configs/experiments/phase2_sensitivity.yaml"
+  ],
+  "config_hash": "a9bb9fcafb1a9ae063a867f8c9cbf704be9ea58ffadb116abce22ef85be2a58d",
+  "config_path": "configs/experiments/phase2_sensitivity.yaml",
+  "environment": {
+    "cpu_count": 12,
+    "highs": "1.12.0",
+    "numpy": "2.5.3",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "scipy": "1.18.1"
+  },
+  "executed_task_count": 4950,
+  "experiment_id": "phase2-sensitivity",
+  "failures": [],
+  "finished_utc": "2026-09-12T04:46:09.489013+00:00",
+  "git_commit": "250bfd16e08ddaa2af161e187333c8dadffadeed",
+  "git_dirty": false,
+  "scenario_manifest_sha256": {
+    "sens-alerts20": "3535f060b0a14b422862ce146f4f3c1ef257553b2f020a9d672415816b4b4070",
+    "sens-alerts60": "fc18376e55d269595f9f47b2474c84e128ff2a70896768ecf7768cd48e9b6583",
+    "sens-bh100": "8eca928a04f3cc4ef85dfd753b4a1e30bdf80feb8ed7434b4fc655725fa5b5b3",
+    "sens-btot05": "534c19134d8a414c1a7fcd5a24deb85541fafd01cb766e4e46665666935def43",
+    "sens-btot2": "531c48daf59ed59305276adea383339c60550275bb752578e256c290619bfe3b",
+    "sens-deadline-long": "0be9b014952f8bcc04c054cb3a64c4d89bf0c26332e86869ac4e38c52c99f0fa",
+    "sens-deadline-short": "fd36c88aa8e125c5730f66ad629296577fedcbe6001e60de62473a988f966846",
+    "sens-k2": "58ca585cf0b901a14bf55b7d0cda8419bb549f196c8a086e1224f42dc5a03598",
+    "sens-k5": "e8be15a3c58beba8cc78439f5ddc7158744a003abaeb27aef6ea420afb6e9f6b",
+    "sens-lref125k": "83a462ad76b092f6212288530e014a8f6105516ad8ea390f094afa17de4e9e26",
+    "sens-lref1m": "40661ee972f91fc744fc6c8af6be2397fe7de89966e785c030b9aca31dbd5492",
+    "sens-lref500k": "d217ba81738fbe86acb211912f4c533697be1852b791e718469b302f40838043",
+    "sens-physical": "e6c57451b0e171a0a720171c8c1abd94db17ca59c88dd0aac23ebd2ab411bf27",
+    "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",
+    "v0-bh50": "00cef77c7f0136ae15f63bf306c4d661f707cd4cddbc00a163342838ac7b36b6"
+  },
+  "skipped_task_count": 0,
+  "source_hash": "b61d93a2baf63cdbec0c658db978940eb6419eec24f03d986f158baa7a3b5d74",
+  "started_utc": "2026-09-12T03:32:51.119305+00:00",
+  "status": "complete",
+  "task_count": 4950,
+  "workers": 12
+}

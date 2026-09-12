@@ -89,3 +89,29 @@ Sinh dữ liệu cho báo cáo (bảng tham số, bảng kết quả, macro số
 uv run python experiments/report_tables.py
 cd docs/report && bash ../../.claude/skills/latex-document-skill/scripts/compile_latex.sh main.tex --preview --preview-dir build/preview
 ```
+
+## Pha 2: phương pháp tìm kiếm, thí nghiệm và thống kê
+
+Sinh 13 họ scenario độ nhạy; mỗi họ chỉ khác `configs/scenarios/v0.yaml` ở các trường liệt kê trong spec Pha 2, Mục 11.3:
+
+```bash
+for config in configs/scenarios/sens-*.yaml; do uv run python -m data.cli scenarios --config "$config"; done
+```
+
+Chạy các thí nghiệm Pha 2. Kết quả nằm trong `results/phase2/<tên>/`; thư mục `shards/` bên trong bị Git ignore và giúp chạy lại bỏ qua task đã xong:
+
+```bash
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_pilot.yaml        # chạy thử B1, B2, B3, P trên tập phát triển
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_main.yaml         # B0, B1, B2, B3, P và bảy biến thể ablation trên v0, v0-bh50
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_budget.yaml       # B2 và P với ngân sách 250 đến 4000 lần đánh giá
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_sensitivity.yaml  # B1, B2, P trên replicate 0 của 15 họ scenario
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_design.yaml       # P thiết kế trên tốc độ kỳ vọng, 1 hoặc 10 realization
+```
+
+Tính kiểm định ghép cặp theo topology (tám so sánh, hiệu chỉnh Holm) từ thí nghiệm chính:
+
+```bash
+uv run python experiments/phase2_statistics.py
+```
+
+Tổng quan tài liệu, bảng so sánh và lý do chọn baseline từ tài liệu nằm ở `docs/literature/review.md`.
