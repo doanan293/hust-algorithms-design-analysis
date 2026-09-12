@@ -1,0 +1,15 @@
+% Số realization thiết kế của P — hàng đọc từ data/phase2_design.csv (sinh bởi experiments/report_tables_phase2.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{P với số realization thiết kế khác nhau trên replicate đầu của mười topology v0 (ngân sách 2000). Thời gian lập kế hoạch tính bằng giây.}
+\label{tab:phase2-design}
+\begin{tabular}{@{}lccr@{}}
+\toprule
+\textbf{Realization thiết kế} & \textbf{Đúng hạn} & \textbf{Lập KH} & \textbf{Đánh giá} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase2_design.csv}{1=\coldesign, 2=\coltimely, 3=\colplanning, 4=\colcalls}{\coldesign & \coltimely & \colplanning & \colcalls}
+\bottomrule
+\end{tabular}
+\end{table}

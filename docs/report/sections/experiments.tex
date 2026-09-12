@@ -1,37 +1,132 @@
-\section{Kết quả thực nghiệm (Pha 1)}
+\section{Kết quả thực nghiệm}
 \label{sec:experiments}
 
 \subsection{Thiết lập}
 \label{sec:setup}
 
-Bộ kịch bản v0 được sinh tất định từ 130 topology Topology Zoo có 15--40 nút, có toạ độ và liên thông. Các topology được chia tầng theo số nút; mười topology được dùng để đánh giá với ba replicate mỗi topology, ba topology khác dành cho phát triển với hai replicate và không được dùng trong Pha 1, vì các phương pháp cơ sở không có tham số cần hiệu chỉnh. Kích thước cảnh báo lấy tỷ lệ tương đối từ demand của instance SNDlib \texttt{abilene}~\cite{orlowski2010sndlib}; vùng hư hại, điểm nguồn, thời điểm phát sinh, hạn và cạnh hỏng được sinh bằng các luồng số ngẫu nhiên có seed riêng. Họ v0-bh50 giữ nguyên mọi seed và chỉ giảm dung lượng backhaul, nên hai họ cùng topology, cảnh báo và mẫu cạnh hỏng. \Cref{tab:params} liệt kê các tham số. Mọi kết hợp là kịch bản tổng hợp từ dữ liệu công khai, không phải mạng cứu hộ đo thực địa.
+Bộ kịch bản v0 được sinh tất định từ 130 topology Topology Zoo có 15--40 nút, có toạ độ và liên thông. Các topology được chia tầng theo số nút; mười topology được dùng để đánh giá với ba replicate mỗi topology, ba topology khác dành cho phát triển với hai replicate. Kích thước cảnh báo lấy tỷ lệ tương đối từ demand của instance SNDlib \texttt{abilene}~\cite{orlowski2010sndlib}; vùng hư hại, điểm nguồn, thời điểm phát sinh, hạn và cạnh hỏng được sinh bằng các luồng số ngẫu nhiên có seed riêng. Họ v0-bh50 giữ nguyên mọi seed và chỉ giảm dung lượng backhaul, nên hai họ cùng topology, cảnh báo và mẫu cạnh hỏng. \Cref{tab:params} liệt kê các tham số. Mọi kết hợp là kịch bản tổng hợp từ dữ liệu công khai, không phải mạng cứu hộ đo thực địa.
 
-Mỗi phương pháp lập kế hoạch một lần cho mỗi scenario và được đánh giá trên 30 realization kênh dùng chung số ngẫu nhiên; cận trên được giải cho từng realization. Trên mỗi họ, kết quả được lấy trung bình theo realization rồi theo \ResultScenarioCount{} scenario đánh giá; khoảng tin cậy 95\% dùng bootstrap theo cụm topology, vì các replicate của cùng một topology không độc lập. Kiểm định ghép cặp giữa các phương pháp thuộc Pha 2. Thí nghiệm chạy bằng Python \ResultPythonVersion, \texttt{scipy} \ResultScipyVersion{} và HiGHS \ResultHighsVersion{} với \ResultWorkers{} tiến trình trên máy \ResultCpuCount{} CPU; tổng thời gian tính của các task là \ResultComputeMinutes{} phút.
+Mỗi phương pháp lập kế hoạch một lần cho mỗi scenario và được đánh giá trên 30 realization kênh dùng chung số ngẫu nhiên. Các topology phát triển chỉ được dùng cho một lần chạy thử để xác nhận ngân sách $E=2000$ và $M_d=5$; không tham số nào được chỉnh trên tập đánh giá. Thí nghiệm chính chạy B0, B1, B2, B3, P và bảy biến thể ablation của P trên \ResultTwoScenarioCount{} scenario đánh giá của mỗi họ. Cận trên LP được giải cho từng realization trên chính quỹ đạo của B1, B2, B3 và P; \emph{cận hợp} của một realization là giá trị lớn nhất trong các cận đó. Thí nghiệm ngân sách chạy B2 và P với $E$ từ 250 đến 4000 trên v0. Thí nghiệm độ nhạy thay đổi từng tham số một so với v0 trên replicate đầu của mỗi topology đánh giá (\ResultTwoSensitivityScenarioCount{} scenario mỗi họ), và thí nghiệm số realization thiết kế chạy P trên cùng các scenario đó.
+
+Kết quả được lấy trung bình theo realization rồi theo scenario; khoảng tin cậy 95\% dùng bootstrap theo cụm topology vì các replicate của một topology không độc lập. Tám so sánh chính (P $-$ B2, B2 $-$ B1, B2 $-$ B3 và P $-$ B1 trên mỗi họ) dùng mười cặp giá trị ở mức topology: kiểm định đổi dấu chính xác xét cả $2^{10}$ cách đổi dấu, giá trị $p$ được hiệu chỉnh Holm trên tám so sánh, khoảng tin cậy của chênh lệch dùng bootstrap trên topology với \num{10000} lần lấy mẫu, và cỡ ảnh hưởng là tương quan hạng biserial ghép cặp. Ablation và độ nhạy được báo cáo mô tả, không kiểm định thêm. Cả \ResultTwoLpOptimalCount{} trong \ResultTwoLpCount{} bài LP của thí nghiệm chính và độ nhạy được giải tối ưu; khi presolve của HiGHS không phân loại được một bài (hai bài ở lần chạy đầu tiên, do hệ số của ma trận trải từ khoảng $10^{-13}$ tới $10^{6}$), bài đó được giải lại khi tắt presolve. Thí nghiệm chạy bằng Python \ResultPythonVersion, \texttt{scipy} \ResultScipyVersion{} và HiGHS \ResultHighsVersion{} với \ResultWorkers{} tiến trình trên máy \ResultCpuCount{} CPU; tổng thời gian tính của các task Pha 2 là \ResultTwoComputeHours{} giờ.
 
 \input{tables/params}
 
-\subsection{Kết quả chính}
+\subsection{So sánh chính}
 \label{sec:results-main}
 
-\input{tables/phase1_main}
+\input{tables/phase2_main}
 
-\Cref{tab:phase1-main} tóm tắt kết quả. Trên họ v0, B1 giao đúng hạn trung bình \ResultTimelyVzeroBone{} số cảnh báo, so với \ResultTimelyVzeroBzero{} của B0; B1 cao hơn B0 trên \ResultBoneWinsVzero{} trong \ResultScenarioCount{} scenario và bằng B0 trên \ResultBoneTiesVzero{} scenario. Khả năng kết nối cho thấy vai trò của UAV rõ hơn: không có UAV, chỉ \ResultConnVzeroBzero{} nguồn có đường theo thời gian tới trung tâm, còn với quỹ đạo B1 tỷ lệ này là \ResultConnVzeroBone. Khoảng tin cậy của hai phương pháp chồng lấn; kết luận thống kê về chênh lệch cần kiểm định ghép cặp ở Pha 2.
+\Cref{tab:phase2-main} tóm tắt so sánh chính. Trên họ v0, B2 giao đúng hạn \ResultTwoTimelyVzeroBtwo{} số cảnh báo, so với \ResultTwoTimelyVzeroBone{} của B1 và \ResultTwoTimelyVzeroBzero{} của B0; B2 cao hơn B0 trên \ResultTwoHigherVzeroBtwoBzero{} và cao hơn B1 trên \ResultTwoHigherVzeroBtwoBone{} trong \ResultTwoScenarioCount{} scenario. P đạt \ResultTwoTimelyVzeroP, gần như bằng B2: P cao hơn B2 trên \ResultTwoHigherVzeroPBtwo{} scenario, bằng trên \ResultTwoEqualVzeroPBtwo{} và thấp hơn trên \ResultTwoLowerVzeroPBtwo. B3 chỉ đạt \ResultTwoTimelyVzeroBthree, thấp hơn cả B1, dù mọi phương pháp dùng UAV đều đưa khả năng kết nối lên gần bằng một. Khi backhaul chỉ còn \qty{50}{\kilo\bit\per\second}, thứ tự không đổi: B2 đạt \ResultTwoTimelyVzeroBhfivezeroBtwo{} và P đạt \ResultTwoTimelyVzeroBhfivezeroP, so với \ResultTwoTimelyVzeroBhfivezeroBone{} của B1 và \ResultTwoTimelyVzeroBhfivezeroBzero{} của B0.
 
-Gap của B0 so với cận chỉ dùng mặt đất là \ResultGapVzeroBzero, còn gap của B1 so với cận trên quỹ đạo B1 là \ResultGapVzeroBone. Hai cận dùng thông tin khác nhau, nên gap đo phần còn có thể cải thiện trong cùng điều kiện của từng phương pháp, không dùng để so trực tiếp hai phương pháp. Với quỹ đạo B1 cố định, cận trên cho thấy việc chọn đường và cấp băng thông tốt hơn có thể giao tới \ResultBoundVzeroBone{} số cảnh báo.
+Gap của B2 so với cận trên chính quỹ đạo của nó là \ResultTwoGapVzeroBtwo, nhỏ hơn gap \ResultTwoGapVzeroBone{} của B1 trên quỹ đạo B1, vì B2 vừa giao được nhiều cảnh báo hơn vừa chọn quỹ đạo có cận cao hơn. So với cận hợp \ResultTwoUnionBoundVzeroBtwo, B2 còn cách \ResultTwoUnionGapVzeroBtwo{} và B1 cách \ResultTwoUnionGapVzeroBone. B3 có gap riêng \ResultTwoGapVzeroBthree{} dù cận trên quỹ đạo của nó gần bằng của B2, nên phần thua kém đến từ lựa chọn đường và băng thông theo mục tiêu leximin chứ không từ quỹ đạo.
 
-Khi backhaul chỉ còn \qty{50}{\kilo\bit\per\second}, tỷ lệ đúng hạn giảm còn \ResultTimelyVzeroBhfivezeroBzero{} với B0 và \ResultTimelyVzeroBhfivezeroBone{} với B1, trong khi gap tăng lên \ResultGapVzeroBhfivezeroBzero{} và \ResultGapVzeroBhfivezeroBone. B1 vẫn cao hơn B0 trên \ResultBoneWinsVzeroBhfivezero{} scenario. Gap tăng cho thấy quy tắc chia đều băng thông và chọn đường theo độ trễ ước tính của các phương pháp cơ sở không thích nghi với nghẽn backhaul, là tình huống mà cơ chế sửa lịch ở Pha 2 nhắm tới.
+\subsection{Kiểm định thống kê}
+\label{sec:results-stats}
+
+\input{tables/phase2_statistics}
+
+\Cref{tab:phase2-stats} cho thấy B2 hơn B1 trung bình \ResultTwoDiffVzeroBtwoBone{} (KTC 95\% [\ResultTwoDiffLowVzeroBtwoBone, \ResultTwoDiffHighVzeroBtwoBone]) trên v0 và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} trên v0-bh50, còn P hơn B1 \ResultTwoDiffVzeroPBone{} và \ResultTwoDiffVzeroBhfivezeroPBone. Các so sánh này và B2 $-$ B3 đều có $p_{\mathrm{Holm}}=\ResultTwoHolmFloor$, giá trị nhỏ nhất có thể với mười topology và tám so sánh ($8\cdot 2/2^{10}$): cả mười topology cùng chiều, và tương quan hạng biserial bằng một. Ngược lại, P $-$ B2 có chênh lệch \ResultTwoDiffVzeroPBtwo{} (KTC 95\% [\ResultTwoDiffLowVzeroPBtwo, \ResultTwoDiffHighVzeroPBtwo]) trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50, với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$: dữ liệu không cho thấy cơ chế sửa lịch làm tăng tỷ lệ đúng hạn so với B2.
+
+\subsection{Ablation}
+\label{sec:results-ablation}
+
+\input{tables/phase2_ablation}
+
+Trong \cref{tab:phase2-ablation}, bỏ khối đường làm tỷ lệ đúng hạn thay đổi \ResultTwoAblationDiffVzeroPFixedPaths{} trên v0 và \ResultTwoAblationDiffVzeroBhfivezeroPFixedPaths{} trên v0-bh50, còn bỏ khối quỹ đạo thay đổi \ResultTwoAblationDiffVzeroPFixedTrajectory{} và \ResultTwoAblationDiffVzeroBhfivezeroPFixedTrajectory. Thiết kế trên tốc độ kỳ vọng thay cho năm realization lấy mẫu thay đổi \ResultTwoAblationDiffVzeroPExpectedDesign{} và \ResultTwoAblationDiffVzeroBhfivezeroPExpectedDesign, dù thời gian lập kế hoạch ngắn hơn nhiều. Các biến thể còn lại --- chỉ giữ một thao tác sửa lịch, sửa lịch không dùng thông tin backlog, và bỏ khối băng thông --- chỉ lệch khỏi P không quá vài phần nghìn. Lợi ích của tìm kiếm vì vậy đến từ việc đồng chọn đường và quỹ đạo trên các realization lấy mẫu; trọng số băng thông và hai thao tác sửa lịch hầu như không thay đổi kết quả khi bộ điều phối EDF đã chia băng thông theo backlog.
+
+\subsection{Vai trò của UAV theo mức kết nối mặt đất}
+\label{sec:results-connectivity}
+
+\input{tables/phase2_connectivity}
+
+\Cref{tab:phase2-connectivity} chia scenario theo tỷ lệ nguồn có relay mặt đất trong tầm. Tỷ lệ đúng hạn của B0 bám sát tỷ lệ này, với hệ số tương quan \ResultTwoGroundCorrelationVzero{} trên v0 và \ResultTwoGroundCorrelationVzeroBhfivezero{} trên v0-bh50, vì cảnh báo từ nguồn không có relay trong tầm không thể được giao khi không có UAV. UAV đưa khả năng kết nối của mọi nhóm lên gần bằng một, và mức tăng của B2 so với B0 gần như không đổi giữa các nhóm: \ResultTwoTercileGainVzeroLow, \ResultTwoTercileGainVzeroMiddle{} và \ResultTwoTercileGainVzeroHigh{} trên v0, \ResultTwoTercileGainVzeroBhfivezeroLow, \ResultTwoTercileGainVzeroBhfivezeroMiddle{} và \ResultTwoTercileGainVzeroBhfivezeroHigh{} trên v0-bh50. Thí nghiệm không tách riêng nguyên nhân của mức tăng ở từng nhóm, nên báo cáo không suy ra cơ chế từ bảng này.
+
+\subsection{Ngân sách đánh giá và số realization thiết kế}
+\label{sec:results-budget}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{semilogxaxis}[
+    width=0.8\textwidth, height=5.5cm, log basis x=2,
+    xlabel={Ngân sách đánh giá $E$}, ylabel={Tỷ lệ đúng hạn},
+    xtick={250,500,1000,2000,4000}, xticklabels={250,500,1000,2000,4000},
+    grid=major, legend pos=south east, /pgf/number format/use comma,
+    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3},
+]
+\addplot[mark=*, color=blue!70!black] table[col sep=comma, x=budget, y=timely] {data/phase2_budget_b2.csv};
+\addlegendentry{B2}
+\addplot[mark=square*, dashed, color=red!70!black] table[col sep=comma, x=budget, y=timely] {data/phase2_budget_p.csv};
+\addlegendentry{P}
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{Tỷ lệ đúng hạn của B2 và P trên 30 scenario v0 theo ngân sách đánh giá.}
+\label{fig:budget}
+\end{figure}
+
+\input{tables/phase2_design}
+
+Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250$ và \ResultTwoBudgetBtwoOnezerozerozero{} với $E=1000$, rồi gần như không đổi khi tăng tới $E=4000$ (\ResultTwoBudgetBtwoFourzerozerozero), vì phương pháp dừng sau trung bình \ResultTwoBudgetCallsBtwoFourzerozerozero{} lần đánh giá khi một vòng không còn nhận thay đổi. P có cùng xu hướng (\ResultTwoBudgetPTwofivezero, \ResultTwoBudgetPOnezerozerozero{} và \ResultTwoBudgetPFourzerozerozero). Ngân sách mặc định $E=2000$ vì vậy nằm ở vùng bão hoà, và kết luận P không hơn B2 không do thiếu ngân sách. \Cref{tab:phase2-design} cho thấy số realization thiết kế quan trọng hơn ngân sách: thiết kế trên tốc độ kỳ vọng đạt \ResultTwoDesignExpected, một realization đạt \ResultTwoDesignOne, năm realization đạt \ResultTwoDesignFive{} và mười realization đạt \ResultTwoDesignOnezero, trong khi thời gian lập kế hoạch tăng từ \ResultTwoDesignPlanningExpected{} lên \ResultTwoDesignPlanningOnezero{} giây.
+
+\subsection{Độ nhạy}
+\label{sec:results-sensitivity}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+    group style={group size=3 by 2, horizontal sep=1.2cm, vertical sep=1.7cm},
+    width=0.34\textwidth, height=4.3cm, ymin=0.2, ymax=0.65, grid=major,
+    tick label style={font=\scriptsize}, label style={font=\footnotesize},
+    /pgf/number format/use comma, yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
+    cycle list={{blue!70!black, mark=*}, {green!50!black, mark=triangle*}, {red!70!black, dashed, mark=square*}},
+]
+\nextgroupplot[xlabel={$L_{\mathrm{ref}}$ (kbit)}, ylabel={Tỷ lệ đúng hạn}, xmode=log, log basis x=2, xtick={125,250,500,1000}, xticklabels={125,250,500,1000}, legend to name=senslegend, legend columns=3]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_lref.csv}; \addlegendentry{B1}
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_lref.csv}; \addlegendentry{B2}
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_lref.csv}; \addlegendentry{P}
+\nextgroupplot[xlabel={$C_e$ (kbit/s)}, xmode=log, xtick={50,100,1000}, xticklabels={50,100,1000}]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_backhaul.csv};
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_backhaul.csv};
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_backhaul.csv};
+\nextgroupplot[xlabel={Cửa sổ hạn trung bình (slot)}, xtick={20,40,80}]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_deadline.csv};
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_deadline.csv};
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_deadline.csv};
+\nextgroupplot[xlabel={$B_{\mathrm{tot}}$ (MHz)}, ylabel={Tỷ lệ đúng hạn}, xtick={0.5,1,2}]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_btot.csv};
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_btot.csv};
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_btot.csv};
+\nextgroupplot[xlabel={Số cảnh báo $\abs{A}$}, xtick={20,40,60}]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_alerts.csv};
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_alerts.csv};
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_alerts.csv};
+\nextgroupplot[xlabel={Số candidate $K$}, xtick={2,3,5}]
+\addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_paths.csv};
+\addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_paths.csv};
+\addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_paths.csv};
+\end{groupplot}
+\end{tikzpicture}
+
+\pgfplotslegendfromname{senslegend}
+\caption{Tỷ lệ đúng hạn khi thay đổi từng tham số so với v0 (điểm giữa của mỗi hình, trừ backhaul, nơi v0 là \qty{1000}{\kilo\bit\per\second} và v0-bh50 là \qty{50}{\kilo\bit\per\second}), trên replicate đầu của mười topology đánh giá.}
+\label{fig:sensitivity}
+\end{figure}
+
+\Cref{fig:sensitivity} cho thấy thứ tự B1 thấp hơn B2 và P giữ nguyên trên mọi họ không suy biến. Hạn ngắn thu hẹp lợi thế (B1 \ResultTwoSensSensDeadlineShortBone{} so với P \ResultTwoSensSensDeadlineShortP), còn hạn dài mở rộng lợi thế (B1 \ResultTwoSensSensDeadlineLongBone{} so với P \ResultTwoSensSensDeadlineLongP). Cảnh báo lớn hơn làm mọi phương pháp giảm mạnh: với $L_{\mathrm{ref}}=\qty{1}{\mega\bit}$, B1 đạt \ResultTwoSensSensLrefonemBone{} và P đạt \ResultTwoSensSensLrefonemP. Tăng số cảnh báo lên 60 hoặc giảm $B_{\mathrm{tot}}$ còn một nửa làm tỷ lệ đúng hạn giảm nhẹ (P \ResultTwoSensSensAlertssixzeroP{} và \ResultTwoSensSensBtotzerofiveP, so với \ResultTwoSensVzeroP{} của v0), còn số candidate $K$ ảnh hưởng ít. Họ dùng hằng số vật lý khác ($\beta_0=\qty{-40}{\dB}$, $N_0=\qty{-164}{\dBm\per\hertz}$) suy biến: mọi nguồn có relay mặt đất trong tầm và cả ba phương pháp đạt \ResultTwoSensSensPhysicalP, nên họ này không được dùng để kết luận về vai trò của UAV.
 
 \subsection{Độ chặt của cận trên}
 \label{sec:results-milp}
 
 \input{tables/phase1_milp}
 
-\Cref{tab:phase1-milp} đối chiếu cận LP với MILP trên \ResultMilpCount{} instance thu nhỏ. HiGHS giải tối ưu \ResultMilpOptimalCount{} trong \ResultMilpCount{} bài MILP. Trên các instance này, B1 đạt đúng giá trị tối ưu MILP ở \ResultMilpMethodAtOptimumCount{} instance và kế hoạch dựng từ nghiệm MILP đạt tối ưu ở \ResultMilpPlanAtOptimumCount{} instance, nên khoảng cách giữa cận LP và giá trị đạt được chủ yếu đến từ việc nới lỏng tính nguyên của lựa chọn đường. Khi dựng kế hoạch, băng thông lấy thẳng từ nghiệm MILP chỉ giao đúng hạn tổng cộng \ResultMilpStaticTotal{} cảnh báo trên năm instance, so với \ResultMilpEqualSplitTotal{} khi giữ các đường của nghiệm và chia đều băng thông theo backlog, vì lịch băng thông tĩnh lệch nhịp với cách bộ điều phối EDF phục vụ hàng đợi. Bao mười tiếp tuyến ước lượng tốc độ cao hơn thực tế tối đa \ResultTangentOverestimateMax{} (theo tỷ lệ tương đối) trên $[B_{\mathrm{tot}}/512, B_{\mathrm{tot}}]$. Vì vậy gap trên các scenario đầy đủ ở \cref{tab:phase1-main} nên được hiểu là cận trên của phần có thể cải thiện, có thể lớn hơn đáng kể so với phần thực sự đạt được.
+\Cref{tab:phase1-milp} đối chiếu cận LP với MILP trên \ResultMilpCount{} instance thu nhỏ của Pha 1. HiGHS giải tối ưu \ResultMilpOptimalCount{} trong \ResultMilpCount{} bài MILP. Trên các instance này, B1 đạt đúng giá trị tối ưu MILP ở \ResultMilpMethodAtOptimumCount{} instance và kế hoạch dựng từ nghiệm MILP đạt tối ưu ở \ResultMilpPlanAtOptimumCount{} instance, nên khoảng cách giữa cận LP và giá trị đạt được chủ yếu đến từ việc nới lỏng tính nguyên của lựa chọn đường. Khi dựng kế hoạch, băng thông lấy thẳng từ nghiệm MILP chỉ giao đúng hạn tổng cộng \ResultMilpStaticTotal{} cảnh báo trên năm instance, so với \ResultMilpEqualSplitTotal{} khi giữ các đường của nghiệm và chia đều băng thông theo backlog, vì lịch băng thông tĩnh lệch nhịp với cách bộ điều phối EDF phục vụ hàng đợi. Bao mười tiếp tuyến ước lượng tốc độ cao hơn thực tế tối đa \ResultTangentOverestimateMax{} (theo tỷ lệ tương đối) trên $[B_{\mathrm{tot}}/512, B_{\mathrm{tot}}]$. Vì vậy các gap ở \cref{tab:phase2-main} nên được hiểu là cận trên của phần có thể cải thiện, có thể lớn hơn đáng kể so với phần thực sự đạt được.
 
 \subsection{Thời gian tính toán}
 \label{sec:results-runtime}
 
-Lập kế hoạch B0 gần như tức thời, còn B1 mất trung bình \ResultPlanningVzeroBone{} giây cho mỗi scenario v0 vì phải mô phỏng từng candidate; đánh giá một kế hoạch trên một realization mất khoảng \ResultEvaluationVzeroBone{} giây. \Cref{fig:lp-runtime} cho thấy thời gian giải của \ResultLpCount{} bài LP: số biến có trung vị \ResultLpVariablesMedian{} và lớn nhất \ResultLpVariablesMax{}, thời gian giải có trung vị \ResultLpRuntimeMedian{} giây và lớn nhất \ResultLpRuntimeMax{} giây. Cận trên quỹ đạo B1 trong họ v0-bh50 mất trung bình \ResultBoundTimeVzeroBhfivezeroBone{} giây, lâu hơn \ResultBoundTimeVzeroBone{} giây của họ v0.
+Lập kế hoạch B0 gần như tức thời, còn B1 mất trung bình \ResultPlanningVzeroBone{} giây cho mỗi scenario v0 vì phải mô phỏng từng candidate. B2 và P mất trung bình \ResultTwoPlanningVzeroBtwo{} và \ResultTwoPlanningVzeroP{} giây với \ResultTwoCallsVzeroBtwo{} và \ResultTwoCallsVzeroP{} lần đánh giá khi chạy song song \ResultWorkers{} tiến trình; đánh giá một kế hoạch trên một realization mất khoảng \ResultEvaluationVzeroBone{} giây. \Cref{fig:lp-runtime} cho thấy thời gian giải của \ResultLpCount{} bài LP ở Pha 1: số biến có trung vị \ResultLpVariablesMedian{} và lớn nhất \ResultLpVariablesMax{}, thời gian giải có trung vị \ResultLpRuntimeMedian{} giây và lớn nhất \ResultLpRuntimeMax{} giây.
 
 \begin{figure}[htbp]
 \centering
@@ -45,6 +140,19 @@ Lập kế hoạch B0 gần như tức thời, còn B1 mất trung bình \Result
     table[col sep=comma, x=variables, y=runtime] {data/lp_runtime.csv};
 \end{loglogaxis}
 \end{tikzpicture}
-\caption{Thời gian giải của \ResultLpCount{} bài toán LP cận trên (hai họ scenario, hai loại cận, 30 realization) theo số biến.}
+\caption{Thời gian giải của \ResultLpCount{} bài toán LP cận trên ở Pha 1 (hai họ scenario, hai loại cận, 30 realization) theo số biến.}
 \label{fig:lp-runtime}
 \end{figure}
+
+\subsection{Trả lời các câu hỏi nghiên cứu}
+\label{sec:rq}
+
+\textbf{RQ1 --- đồng tối ưu so với tối ưu từng phần.} Đồng tối ưu quỹ đạo, đường và băng thông (B2) tăng tỷ lệ đúng hạn so với quỹ đạo cố định (B1) trên cả hai họ, với chênh lệch \ResultTwoDiffVzeroBtwoBone{} và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} cùng chiều trên cả mười topology. Ablation chỉ ra phần lợi ích này đến từ khối đường và khối quỹ đạo; khối băng thông gần như không đóng góp khi băng thông đã chia theo backlog.
+
+\textbf{RQ2 --- sửa lịch theo nguy cơ trễ hạn.} Không đo được lợi ích: P $-$ B2 bằng \ResultTwoDiffVzeroPBtwo{} trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50 với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$, các biến thể chỉ giữ một thao tác hoặc bỏ thông tin backlog cho kết quả như P, và kết luận không đổi khi tăng ngân sách.
+
+\textbf{RQ3 --- khi nào UAV khôi phục việc chuyển dữ liệu.} UAV đưa khả năng kết nối từ \ResultTwoConnVzeroBzero{} lên gần một và tăng tỷ lệ đúng hạn ở mọi mức kết nối mặt đất, với mức tăng tương tự nhau giữa các nhóm; lợi ích biến mất khi mọi nguồn đã có relay mặt đất trong tầm, như ở họ dùng hằng số vật lý khác.
+
+\textbf{RQ4 --- suy giảm theo điều kiện.} Tỷ lệ đúng hạn giảm mạnh nhất khi cảnh báo lớn hơn hoặc hạn ngắn hơn, giảm nhẹ khi tăng số cảnh báo hoặc giảm phổ; thứ tự giữa các phương pháp giữ nguyên. Sai lệch mô hình kênh khi thiết kế, thể hiện qua việc thiết kế trên tốc độ kỳ vọng thay cho realization lấy mẫu, làm P giảm \ResultTwoAblationDiffVzeroPExpectedDesign.
+
+\textbf{RQ5 --- độ bền của kết luận.} Các chênh lệch có ý nghĩa đều cùng chiều trên cả mười topology, và thứ tự B1 thấp hơn B2, P giữ nguyên trên mọi họ độ nhạy không suy biến. Báo cáo chưa thay đổi quy tắc sinh vùng hư hại, điểm nguồn và cảnh báo, nên độ bền theo quy tắc tạo target chưa được kiểm chứng.
