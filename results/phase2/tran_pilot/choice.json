@@ -1,0 +1,18 @@
+{
+  "theta": 0.3333333333333333,
+  "mu": 10.0,
+  "block_slots": 1,
+  "runtime_limit_s": 600.0,
+  "median_runtime_step1_s": 134.1192717555,
+  "scenarios": [
+    "Bbnplanet-r0",
+    "Bbnplanet-r1",
+    "Canerie-r0",
+    "Canerie-r1",
+    "Fccn-r0",
+    "Fccn-r1"
+  ],
+  "mean_timely_ratio": 0.5436111111111112,
+  "better_than_initial_count": 6,
+  "samir_fallback": false
+}
