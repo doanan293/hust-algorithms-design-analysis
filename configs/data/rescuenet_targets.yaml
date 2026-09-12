@@ -1,0 +1,14 @@
+data_root: data
+selection_manifest: manifests/rescuenet_selection.csv
+image_root: raw/rescuenet-validation/extracted
+label_descriptor: raw/rescuenet-descriptor/RescueNet-Segmentation-Dataset-Note.txt
+output_csv: manifests/rescuenet_targets.csv
+output_json: manifests/rescuenet_targets.json
+damage_classes: [3, 4, 5]
+min_area_m2: 10.0
+merge_radius_m: 10.0
+box_size_m: 2000.0
+utm_epsg: 32616
+max_pitch_deviation_deg: 2.0
+camera_fallback:
+  FC2103: {focal_mm: 4.5, sensor_width_mm: 6.17}
