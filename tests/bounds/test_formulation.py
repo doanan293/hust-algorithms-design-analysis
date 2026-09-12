@@ -93,3 +93,44 @@ def test_bound_is_at_least_every_evaluated_random_plan():
 def test_highs_version_is_reported():
     major, minor, patch = highs_version().split(".")
     assert int(major) >= 1
+
+
+def _one_variable_model():
+    from scipy.sparse import csr_matrix
+
+    from bounds.formulation import BoundModel
+
+    return BoundModel(
+        objective=np.array([-1.0]), a_ub=csr_matrix(np.array([[1.0]])), b_ub=np.array([0.5]), a_eq=csr_matrix((0, 1)),
+        b_eq=np.array([]), upper=np.array([1.0]), integrality=np.array([0]), columns={},
+    )
+
+
+def test_solve_lp_resolves_without_presolve_when_highs_cannot_classify(monkeypatch):
+    from types import SimpleNamespace
+
+    from bounds import solve
+
+    calls = []
+
+    def flaky_linprog(*args, **kwargs):
+        calls.append(kwargs.get("options"))
+        if len(calls) == 1:
+            return SimpleNamespace(status=4, message="model_status is Unknown", fun=None, x=None)
+        return real_linprog(*args, **kwargs)
+
+    real_linprog = solve.linprog
+    monkeypatch.setattr(solve, "linprog", flaky_linprog)
+    result = solve_lp(_one_variable_model())
+    assert (result.status, result.value) == (OPTIMAL, pytest.approx(0.5))
+    assert calls == [None, {"presolve": False}]
+
+
+def test_solve_lp_keeps_an_optimal_first_solve(monkeypatch):
+    from bounds import solve
+
+    calls = []
+    real_linprog = solve.linprog
+    monkeypatch.setattr(solve, "linprog", lambda *args, **kwargs: calls.append(kwargs.get("options")) or real_linprog(*args, **kwargs))
+    assert solve_lp(_one_variable_model()).status == OPTIMAL
+    assert calls == [None]

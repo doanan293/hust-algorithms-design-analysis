@@ -28,9 +28,13 @@ class BoundResult:
 
 
 def solve_lp(model: BoundModel) -> BoundResult:
+    """Solve with HiGHS defaults; if the result is not optimal, solve again without presolve.
+
+    Presolve can leave badly scaled models (coefficients spanning about 1e-13 to 1e6) with model status Unknown,
+    which HiGHS then solves to optimality without presolve.
+    """
     started = time.perf_counter()
-    result = linprog(
-        model.objective,
+    arguments = dict(
         A_ub=model.a_ub,
         b_ub=model.b_ub,
         A_eq=model.a_eq if model.a_eq.shape[0] else None,
@@ -38,6 +42,9 @@ def solve_lp(model: BoundModel) -> BoundResult:
         bounds=np.column_stack([np.zeros(model.variables), model.upper]),
         method="highs",
     )
+    result = linprog(model.objective, **arguments)
+    if result.status != 0:
+        result = linprog(model.objective, **arguments, options={"presolve": False})
     runtime = time.perf_counter() - started
     solved = result.status == 0
     value = -float(result.fun) if solved else math.nan
