@@ -1,0 +1,35 @@
+{
+  "command": [
+    "experiments/run_phase2.py",
+    "--config",
+    "configs/experiments/phase2_literature.yaml"
+  ],
+  "config_hash": "aa33db927ae1bfbc64859959e20915671b5d8ff90843ba23ab9e0199991aa32c",
+  "config_path": "configs/experiments/phase2_literature.yaml",
+  "environment": {
+    "clarabel": "0.11.1",
+    "cpu_count": 12,
+    "cvxpy": "1.9.2",
+    "highs": "1.12.0",
+    "numpy": "2.5.3",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "scipy": "1.18.1"
+  },
+  "executed_task_count": 0,
+  "experiment_id": "phase2-literature",
+  "failures": [],
+  "finished_utc": "2026-09-12T14:46:26.271955+00:00",
+  "git_commit": "8f885c77b1bfe52cf0be50798f8ffb183b22de9d",
+  "git_dirty": false,
+  "scenario_manifest_sha256": {
+    "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",
+    "v0-bh50": "00cef77c7f0136ae15f63bf306c4d661f707cd4cddbc00a163342838ac7b36b6"
+  },
+  "skipped_task_count": 1920,
+  "source_hash": "696c6482ee3307d31d4036ffe4a23310f8e20cd1612a2823b83b987f71ee7dac",
+  "started_utc": "2026-09-12T14:46:25.872988+00:00",
+  "status": "complete",
+  "task_count": 1920,
+  "workers": 12
+}
