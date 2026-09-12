@@ -1,0 +1,32 @@
+{
+  "command": [
+    "experiments/run_phase2.py",
+    "--config",
+    "configs/experiments/phase2_budget.yaml"
+  ],
+  "config_hash": "83a01dfd3c2bb964796fd70d7d9c2fe47f567c2d9164aeb47aecff77be104ef6",
+  "config_path": "configs/experiments/phase2_budget.yaml",
+  "environment": {
+    "cpu_count": 12,
+    "highs": "1.12.0",
+    "numpy": "2.5.3",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "scipy": "1.18.1"
+  },
+  "executed_task_count": 300,
+  "experiment_id": "phase2-budget",
+  "failures": [],
+  "finished_utc": "2026-09-12T03:32:50.714780+00:00",
+  "git_commit": "250bfd16e08ddaa2af161e187333c8dadffadeed",
+  "git_dirty": false,
+  "scenario_manifest_sha256": {
+    "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17"
+  },
+  "skipped_task_count": 0,
+  "source_hash": "b61d93a2baf63cdbec0c658db978940eb6419eec24f03d986f158baa7a3b5d74",
+  "started_utc": "2026-09-12T02:56:41.719851+00:00",
+  "status": "complete",
+  "task_count": 300,
+  "workers": 12
+}
