@@ -330,3 +330,13 @@ The P design score averages the lexicographic objective over five sampled design
 - Reproducibility checked by a script with three levels; no container.
 
 Adjustments made by plans D.1–D.3 from pilot evidence are appended here with date and reason.
+
+### Plan D.1 adjustments (2026-09-12)
+
+- **Effective-channel fit range.** `Scenario` objects carry no box size, so the fit of Section 5.1 runs over horizontal distances from 0 to the largest distance between two ground points (nodes and sources), which is at most $\sqrt2 L_{\mathrm{box}}$.
+- **No cvxpy parameters.** A first prototype held the linearization point in cvxpy parameters; canonicalizing program (58) for one development scenario at slot resolution grew to 17 GB and exhausted WSL memory. Each iteration now builds the program with numeric constants and peaks near 250 MB.
+- **Solver settings.** With exact power cones, Clarabel stopped with `InsufficientProgress` or `AlmostSolved` on development scenarios at slot resolution. With cvxpy's second-order-cone approximation of the power constraint and default tolerances, `Fccn-r1` still failed at the first iteration. With the approximation and `tol_gap_abs = tol_gap_rel = 1e-6`, `tol_feas = 1e-7`, every iteration on all six development scenarios was optimal: at θ = 1/2, μ = 1 and slot resolution, planning took 12–157 s and the timely ratio rose over the initial point on all six (Bbnplanet-r0 0.200→0.388, Bbnplanet-r1 0.489→0.633, Canerie-r0 0.372→0.647, Canerie-r1 0.578→0.768, Fccn-r0 0.027→0.260, Fccn-r1 0.138→0.493). These settings are fixed in `tran_ia.py`, and the block fallback of Section 5.6 is not expected to fire.
+- **Tight slacks and clean iterates.** Each linearization recomputes $z$ and $\Phi$ exactly at the accepted trajectory, which keeps the previous iterate feasible and the relaxed objective non-decreasing. The speed limit is tightened by a relative $10^{-6}$, endpoints are snapped, bandwidth shares are clipped at zero and rescaled so that each block sums to at most one, and λ is clipped to its bounds.
+- **Block size.** `block_slots` must divide `num_slots`.
+- **Pilot module and configuration.** The pilot logic lives in `src/literature/pilot.py`, because spawned workers must import the job function. `experiments/tran_pilot.py` writes `configs/experiments/phase2_literature.yaml` from its choice and writes nothing there when the Samir rule fires.
+- **Memory caps.** Commands that solve TRAN programs run under `systemd-run --user --scope -p MemoryMax=... -p MemorySwapMax=0` (8 GB for tests, 14 GB for the pilot and the comparison experiment), so a memory failure stops only that process.
