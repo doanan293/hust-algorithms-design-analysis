@@ -123,3 +123,22 @@ uv run python experiments/report_tables.py
 uv run python experiments/report_tables_phase2.py
 cd docs/report && bash ../../.claude/skills/latex-document-skill/scripts/compile_latex.sh main.tex --preview --preview-dir build/preview
 ```
+
+## Pha 2: baseline từ tài liệu (Tran et al. 2022, bán song công)
+
+Phương pháp `TRAN` chuyển thể thuật toán xấp xỉ trong (inner approximation) của Tran et al. (2022) cho mô hình của dự án (`src/literature/`, spec D Mục 5). Mỗi vòng lặp giải một bài toán nón bậc hai bằng `cvxpy` với Clarabel. Các lệnh giải TRAN chạy trong `systemd-run` có giới hạn bộ nhớ, để một lỗi tràn bộ nhớ chỉ dừng đúng tiến trình đó.
+
+Chạy pilot trên tập phát triển của `v0`; pilot chọn θ, μ, kích thước block và sinh `configs/experiments/phase2_literature.yaml`:
+
+```bash
+systemd-run --user --scope --quiet -p MemoryMax=14G -p MemorySwapMax=0 uv run python experiments/tran_pilot.py
+```
+
+Chạy thí nghiệm so sánh (B1 làm mốc và TRAN trên `v0`, `v0-bh50`), rồi kiểm tra mốc B1 và tính bốn so sánh ghép cặp với P và B2 của thí nghiệm chính:
+
+```bash
+systemd-run --user --scope --quiet -p MemoryMax=14G -p MemorySwapMax=0 uv run python experiments/run_phase2.py --config configs/experiments/phase2_literature.yaml
+uv run python experiments/phase2_literature_statistics.py
+```
+
+Kết quả nằm trong `results/phase2/tran_pilot/`, `results/phase2/literature/` và `results/phase2/statistics_literature.csv`. `experiments/run_phase1.py` và `experiments/run_phase2.py` nhận thêm `--output-dir` để ghi kết quả vào thư mục khác với thư mục trong cấu hình.
