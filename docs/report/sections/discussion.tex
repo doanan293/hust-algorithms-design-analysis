@@ -1,14 +1,20 @@
 \section{Thảo luận}
 \label{sec:discussion}
 
-\paragraph{Vai trò của UAV.}
-Trên cả hai họ kịch bản, một quỹ đạo cố định đơn giản đã nâng khả năng kết nối lên mọi nguồn và tăng tỷ lệ cảnh báo đúng hạn so với mạng mặt đất đơn thuần. Tuy vậy, khoảng tin cậy chồng lấn và gap so với cận trên còn lớn, nhất là khi backhaul băng hẹp. Điều này cho thấy lợi ích của UAV phụ thuộc vào việc quỹ đạo, lựa chọn đường và băng thông được phối hợp, không chỉ vào việc có UAV hay không.
+\paragraph{Vai trò của UAV và của việc đồng tối ưu.}
+Một quỹ đạo cố định đơn giản đã nối được mọi nguồn với trung tâm và tăng tỷ lệ đúng hạn so với mạng mặt đất đơn thuần, nhưng đồng tối ưu đường và quỹ đạo mới tạo ra chênh lệch nhất quán trên mọi topology. Ablation cho thấy khối đường và khối quỹ đạo là hai nguồn lợi ích chính, còn trọng số băng thông hầu như không đóng góp. Điều này phù hợp với kết quả đối chiếu MILP ở Pha 1: khi bộ điều phối EDF đã chia băng thông theo backlog, quyết định quan trọng là cảnh báo nào đi đường nào và UAV có mặt ở đâu, không phải cách chia băng thông trong từng nửa slot.
+
+\paragraph{Vì sao sửa lịch không cải thiện thêm.}
+P và B2 cho kết quả gần như bằng nhau trên cả hai họ, ở mọi mức ngân sách và trên hầu hết họ độ nhạy. Hai thao tác của P thay đổi đúng những biến mà ba khối của B2 đã tìm kiếm: thao tác đổi đường lặp lại khối đường, còn thao tác chuyển băng thông tác động lên trọng số, vốn ít ảnh hưởng tới kết quả. Một cách giải thích phù hợp với thí nghiệm ngân sách là tìm kiếm của B2 đã bão hoà, nên các thay đổi cục bộ quanh cảnh báo có nguy cơ hiếm khi còn tăng được khoá từ điển; báo cáo không đo trực tiếp tần suất các thao tác được nhận. Kết quả này là âm tính và được báo cáo như đo được; nó không loại trừ các thao tác sửa lịch mạnh hơn, chẳng hạn thay đổi đồng thời đường của nhiều cảnh báo cùng dùng một liên kết nghẽn.
+
+\paragraph{Mục tiêu và thiết kế dưới bất định.}
+Mục tiêu leximin của B3 làm tỷ lệ đúng hạn giảm mạnh so với B2 trên cùng loại quỹ đạo, cho thấy tối ưu phần giao được của cảnh báo khó nhất xung đột với việc giao đủ nhiều cảnh báo; mục tiêu max--min của bài tham chiếu vì vậy không phù hợp với bài toán cảnh báo có hạn. Thiết kế trên tốc độ kỳ vọng kém hơn thiết kế trên các realization lấy mẫu, và tăng số realization thiết kế từ năm lên mười tiếp tục cải thiện (\ResultTwoDesignFive{} lên \ResultTwoDesignOnezero) trong khi thời gian lập kế hoạch tăng từ \ResultTwoDesignPlanningFive{} lên \ResultTwoDesignPlanningOnezero{} giây. Kết quả này nhất quán với nhận xét của~\cite{park2026expected} rằng tốc độ tại kênh trung bình ước lượng cao tốc độ kỳ vọng thực.
 
 \paragraph{Độ chặt của cận.}
-Cận LP hợp lệ cho mọi kế hoạch có cùng quỹ đạo và tập candidate, nhưng nó biết trước kênh và nới lỏng tính nguyên. Trên instance thu nhỏ, phần lớn khoảng cách giữa cận và giá trị đạt được đến từ nới lỏng tính nguyên, nên gap trên kịch bản đầy đủ có thể phóng đại phần còn cải thiện được. Việc siết cận, chẳng hạn bằng MILP trên instance lớn hơn hoặc thêm bất đẳng thức hợp lệ, là một hướng của Pha 2.
+So với cận hợp, P và B2 còn cách \ResultTwoUnionGapVzeroP{} và \ResultTwoUnionGapVzeroBtwo{} trên v0. Cận LP biết trước kênh, nới lỏng tính nguyên của lựa chọn đường và bỏ qua thứ tự EDF, và đối chiếu MILP ở Pha 1 cho thấy phần lớn khoảng cách trên instance nhỏ đến từ nới lỏng tính nguyên. Vì vậy gap hiện tại có thể phóng đại phần còn cải thiện được, và một cận chặt hơn, chẳng hạn MILP trên instance lớn hơn hoặc bất đẳng thức hợp lệ cho lựa chọn đường, là điều kiện để khẳng định phương pháp đã gần tối ưu hay chưa.
 
 \paragraph{Giới hạn.}
-Kết quả dựa trên mô phỏng và không chứng minh hiệu năng thực địa. Mạng backbone gốc được thu nhỏ về vùng \qty{2}{\kilo\metre}, nên chỉ còn mượn cấu trúc. Trạng thái kênh độc lập giữa các slot, kênh mặt đất tất định và công suất cố định. Khoảng tin cậy dựa trên mười cụm topology nên còn rộng. Cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho, không phải cận toàn cục. Các phương pháp cơ sở là heuristic và không có bảo đảm tối ưu.
+Kết quả dựa trên mô phỏng và không chứng minh hiệu năng thực địa. Mạng backbone gốc được thu nhỏ về vùng \qty{2}{\kilo\metre}, nên chỉ còn mượn cấu trúc. Trạng thái kênh độc lập giữa các slot, kênh mặt đất tất định và công suất cố định. Kiểm định dựa trên mười topology, nên mức ý nghĩa nhỏ nhất đạt được bị giới hạn; độ nhạy chỉ dùng replicate đầu của mỗi topology và quy tắc sinh vùng hư hại, điểm nguồn, cảnh báo chưa được thay đổi. Các phương pháp là heuristic không có bảo đảm tối ưu, và cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho.
 
 \paragraph{Hướng tiếp theo.}
-Pha 2 sẽ cài đặt BCD kiểu Huang (B2), biến thể dùng mục tiêu max--min (B3) và phương pháp đề xuất với hai thao tác sửa lịch (P), thực hiện ablation, phân tích độ nhạy và kiểm định thống kê ghép cặp, so sánh với một phương pháp mạnh từ tài liệu, và bổ sung case study với mục tiêu lấy từ RescueNet.
+Giai đoạn cuối của đề tài sẽ cài đặt và so sánh với phương pháp của Tran và cộng sự~\cite{tran2022relay} đã chọn ở \cref{sec:related}, bổ sung case study với mục tiêu lấy từ bộ dữ liệu RescueNet~\cite{rahnemoonfar2023rescuenet}, và hoàn thiện gói tái lập.
