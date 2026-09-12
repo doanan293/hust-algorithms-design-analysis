@@ -1,0 +1,17 @@
+% Bảng so sánh tài liệu — hàng đọc từ data/related_work.csv (tổng quan ở docs/literature/review.md).
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{So sánh các công trình được chọn trong tổng quan theo nội dung tóm tắt (riêng~\cite{huang2025ddatsap} theo toàn văn). ``Không nêu'' nghĩa là phần văn bản đã đọc không nói tới thuộc tính đó.}
+\label{tab:related}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{@{}L{0.06\textwidth}L{0.17\textwidth}L{0.13\textwidth}L{0.14\textwidth}L{0.12\textwidth}L{0.13\textwidth}L{0.15\textwidth}@{}}
+\toprule
+\textbf{Bài} & \textbf{Mục tiêu} & \textbf{Chọn trạm, backhaul} & \textbf{Ràng buộc thời gian} & \textbf{Kênh, bất định} & \textbf{Tài nguyên} & \textbf{Phương pháp} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\, late after last line=\\\midrule]{data/related_work.csv}{1=\colkey, 4=\colobjective, 6=\colrelay, 7=\coldeadline, 9=\colchannel, 10=\colresource, 11=\colmethod}{\expandafter\cite\expandafter{\colkey} & \colobjective & \colrelay & \coldeadline & \colchannel & \colresource & \colmethod}
+Đề tài này & Tỷ lệ cảnh báo đúng hạn & Có, relay mặt đất và backhaul hữu hạn & Có, hạn theo cảnh báo & PrLoS, thiết kế trên realization lấy mẫu & Băng thông theo trọng số & Tìm kiếm theo khối có đánh giá, sửa lịch \\
+\bottomrule
+\end{tabular}
+\end{table}
