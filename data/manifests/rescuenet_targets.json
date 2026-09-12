@@ -1,0 +1,346 @@
+{
+  "config_sha256": "b01bc7c72095761c8ce96cb2dcf027df166b6281d993f3a4838f16da4878c5a0",
+  "dropped_regions": [],
+  "images": [
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01992389,
+      "pair_id": "12915",
+      "pitch_deg": -89.9,
+      "targets": 0,
+      "yaw_deg": 40.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13452",
+      "pitch_deg": -90.0,
+      "targets": 0,
+      "yaw_deg": -86.4
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13563",
+      "pitch_deg": -89.9,
+      "targets": 0,
+      "yaw_deg": 94.1
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11275",
+      "pitch_deg": -89.9,
+      "targets": 3,
+      "yaw_deg": 124.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01992389,
+      "pair_id": "13049",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": -86.4
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02011702,
+      "pair_id": "10781",
+      "pitch_deg": -89.9,
+      "targets": 3,
+      "yaw_deg": -148.6
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13743",
+      "pitch_deg": -89.9,
+      "targets": 4,
+      "yaw_deg": -86.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02011702,
+      "pair_id": "10860",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": -147.5
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02012051,
+      "pair_id": "11451",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": 34.0
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01962896,
+      "pair_id": "15820",
+      "pitch_deg": -89.9,
+      "targets": 2,
+      "yaw_deg": -38.0
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02015328,
+      "pair_id": "11725",
+      "pitch_deg": -89.9,
+      "targets": 3,
+      "yaw_deg": 34.1
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02015328,
+      "pair_id": "11452",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": 34.0
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11337",
+      "pitch_deg": -89.9,
+      "targets": 2,
+      "yaw_deg": 124.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13082",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": 94.1
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02008404,
+      "pair_id": "14881",
+      "pitch_deg": -90.0,
+      "targets": 3,
+      "yaw_deg": -143.3
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02011702,
+      "pair_id": "14852",
+      "pitch_deg": -89.9,
+      "targets": 2,
+      "yaw_deg": 37.3
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02008404,
+      "pair_id": "14877",
+      "pitch_deg": -90.0,
+      "targets": 2,
+      "yaw_deg": -143.1
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11177",
+      "pitch_deg": -89.9,
+      "targets": 2,
+      "yaw_deg": -56.7
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13108",
+      "pitch_deg": -90.0,
+      "targets": 1,
+      "yaw_deg": -86.0
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01978723,
+      "pair_id": "12087",
+      "pitch_deg": -90.0,
+      "targets": 1,
+      "yaw_deg": 31.9
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11160",
+      "pitch_deg": -90.0,
+      "targets": 4,
+      "yaw_deg": 124.3
+    },
+    {
+      "camera": "FC2103",
+      "focal_px": 2958.184765,
+      "focal_source": "fallback",
+      "gsd_m_per_px": 0.02058695,
+      "pair_id": "15142",
+      "pitch_deg": -90.0,
+      "targets": 1,
+      "yaw_deg": -138.6
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11999",
+      "pitch_deg": -90.0,
+      "targets": 5,
+      "yaw_deg": -86.3
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02008404,
+      "pair_id": "14761",
+      "pitch_deg": -89.9,
+      "targets": 1,
+      "yaw_deg": 37.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01992389,
+      "pair_id": "11113",
+      "pitch_deg": -90.0,
+      "targets": 1,
+      "yaw_deg": 124.2
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "13429",
+      "pitch_deg": -89.9,
+      "targets": 2,
+      "yaw_deg": -86.3
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02457717,
+      "pair_id": "15275",
+      "pitch_deg": -90.0,
+      "targets": 2,
+      "yaw_deg": 176.5
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.02008404,
+      "pair_id": "11046",
+      "pitch_deg": -89.9,
+      "targets": 3,
+      "yaw_deg": 30.6
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3051.613037,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01995666,
+      "pair_id": "11125",
+      "pitch_deg": -89.9,
+      "targets": 1,
+      "yaw_deg": -56.7
+    },
+    {
+      "camera": "FC220",
+      "focal_px": 3032.258057,
+      "focal_source": "calibrated",
+      "gsd_m_per_px": 0.01978723,
+      "pair_id": "12224",
+      "pitch_deg": -90.0,
+      "targets": 5,
+      "yaw_deg": -147.7
+    }
+  ],
+  "merged_pairs": [
+    {
+      "distance_m": 4.591,
+      "kept": "11451-r01",
+      "merged": "11452-r02"
+    },
+    {
+      "distance_m": 3.588,
+      "kept": "11451-r02",
+      "merged": "11452-r03"
+    },
+    {
+      "distance_m": 8.209,
+      "kept": "11999-r03",
+      "merged": "13049-r01"
+    },
+    {
+      "distance_m": 2.713,
+      "kept": "14852-r01",
+      "merged": "14881-r03"
+    },
+    {
+      "distance_m": 4.764,
+      "kept": "14852-r02",
+      "merged": "14881-r02"
+    }
+  ],
+  "normalization": {
+    "box_size_m": 2000.0,
+    "e_min": 651556.118755,
+    "extent_e_m": 2884.659338,
+    "extent_n_m": 1476.37738,
+    "n_min": 3313200.208376,
+    "offset_x_m": 0.0,
+    "offset_y_m": 488.196973,
+    "scale": 0.693323
+  },
+  "region_count": 68,
+  "selection_sha256": "90e5c939c470b8b1385e73586d28c3d2fff0c4dbb454352f0cfa77b782a6ae89",
+  "target_count": 63
+}
