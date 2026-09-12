@@ -340,3 +340,12 @@ Adjustments made by plans D.1–D.3 from pilot evidence are appended here with d
 - **Block size.** `block_slots` must divide `num_slots`.
 - **Pilot module and configuration.** The pilot logic lives in `src/literature/pilot.py`, because spawned workers must import the job function. `experiments/tran_pilot.py` writes `configs/experiments/phase2_literature.yaml` from its choice and writes nothing there when the Samir rule fires.
 - **Memory caps.** Commands that solve TRAN programs run under `systemd-run --user --scope -p MemoryMax=... -p MemorySwapMax=0` (8 GB for tests, 14 GB for the pilot and the comparison experiment), so a memory failure stops only that process.
+
+### Plan D.2 adjustments (2026-09-12)
+
+- **Camera fallback uses the image width.** The FC2103 image among the selected pairs (15142) measures 4056 × 3040 px, not 4000 × 3000; the fallback focal length 4.5 mm × 4056 px / 6.17 mm = 2958.2 px gives a GSD of 2.06 cm.
+- **Measured extraction.** The 30 pairs hold 68 damage regions (none below 10 m²); 5 cross-image duplicates merge at 2.7–8.2 m, leaving 63 targets; normalization uses scale 0.693323 and centres the targets north–south (offset 488.2 m). `configs/scenarios/rescuenet.yaml` records the SHA-256 of the resulting `rescuenet_targets.csv`.
+- **Case-study scenario set.** The 36 `rescuenet` scenarios reuse the ten evaluation and three development topologies of `v0` with 63 sources each; the mean ground-connected source fraction of the evaluation scenarios is 0.376 against 0.509 in `v0`, and `scenarios_v0.csv` regenerates with its committed SHA-256.
+- **Stage-test helpers.** The input and configuration helpers of `tests/data/test_scenario_stage.py` move to `tests/support/scenario_stage_inputs.py`, so the RescueNet scenario test reuses them.
+- **Trace options.** `experiments/case_study_trace.py` takes `--anchor` (default P) and `--methods` (default B1, P, TRAN), pairs sources with target-manifest rows by order, and stops when their counts differ.
+- **Runtime and memory.** Alone on `Agis-r0`, P planned in 60 s and TRAN in 179 s with peaks of 118 MB and 373 MB, so the case study keeps the caps of plan D.1: 14 GB for the experiment and 8 GB for the trace.
