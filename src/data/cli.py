@@ -16,6 +16,7 @@ from .config import load_config
 from .manifests import write_source_ledger
 from .models import ArtifactSpec, PipelineConfig, SourceRecord
 from .rescuenet import count_mask_classes, load_label_map, pair_images_and_masks, RescueRecord, select_pairs
+from .rescuenet_targets import extract_targets, load_target_config, write_targets
 from .scenarios import build_scenario_set, load_scenario_set_config
 from .sndlib import inventory_sndlib, parse_sndlib_xml
 from .topology_zoo import fetch_pinned_repo, inventory_topology, normalize_topology
@@ -39,6 +40,9 @@ def build_parser() -> argparse.ArgumentParser:
     scenarios = subparsers.add_parser("scenarios")
     scenarios.add_argument("--config", type=Path, required=True)
     scenarios.add_argument("--data-root", type=Path)
+    targets = subparsers.add_parser("rescuenet-targets")
+    targets.add_argument("--config", type=Path, required=True)
+    targets.add_argument("--data-root", type=Path)
     return parser
 
 
@@ -242,6 +246,14 @@ def run_scenarios(config_path: Path, data_root: Path | None) -> int:
     _write_csv(root / "manifests" / f"scenarios_{config.set_id}.csv", rows)
     return 0
 
+def run_rescuenet_targets(config_path: Path, data_root: Path | None) -> int:
+    config = load_target_config(config_path, data_root)
+    rows, summary = extract_targets(config)
+    write_targets(config, rows, summary)
+    print(json.dumps({"regions": summary["region_count"], "targets": len(rows), "output": str(config.path(config.output_csv))}))
+    return 0
+
+
 STAGES = ("download", "verify", "inventory", "preprocess")
 
 
@@ -278,6 +290,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "scenarios":
         return run_scenarios(args.config, args.data_root)
+    if args.command == "rescuenet-targets":
+        return run_rescuenet_targets(args.config, args.data_root)
     config = load_config(args.profile)
     data_root = args.data_root or config.data_root
     return run_stage(args.command, config, data_root, args.dry_run)
