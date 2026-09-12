@@ -137,30 +137,61 @@ Ngược lại, nếu cả $m$ cảnh báo đúng hạn thì tổng kích thư�
 
 Sinh candidate path tốn $O(\abs{V}+\abs{E})$ cho một lần tìm kiếm theo chiều rộng từ $c$ và $O(\abs{A}\abs{V}\log\abs{V})$ cho việc xếp hạng. Đánh giá một kế hoạch trên $M$ realization tốn $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, với $\mathcal L$ là tập liên kết; bộ kiểm tra độc lập có cùng bậc, còn $\mathrm{Conn}$ tốn $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. B0 lập kế hoạch trong $O(\abs{A}K)$ và B1 trong $O(\abs{A}KNH_{\max})$. Bài toán \eqref{eq:lp} có $\sum_a\sum_p H_p(d_a-r_a)$ biến luồng và cùng số biến buffer, tối đa $\abs{\mathcal L_{\mathrm{vt}}}N$ biến băng thông và tối đa $10\abs{\mathcal L_{\mathrm{vt}}}N$ ràng buộc tiếp tuyến, với $\mathcal L_{\mathrm{vt}}$ là các liên kết vô tuyến của tập candidate. Cận được giải bằng HiGHS qua \texttt{scipy}; báo cáo không đưa ra cận thời gian đa thức cho bộ giải mà đo thời gian thực của mọi bài toán LP (\cref{sec:experiments}).
 
-\subsection{Phương pháp đề xuất cho Pha 2}
+\subsection{Phương pháp tìm kiếm theo khối và sửa lịch}
 \label{sec:algorithm}
 
-\Cref{alg:bcd-repair} là phương pháp dự kiến cho Pha 2: phân rã theo ba khối như cấu trúc BCD của~\cite{huang2025ddatsap}, sau đó áp dụng hai thao tác sửa lịch cho các cảnh báo có độ dư thời gian thấp. Phương pháp này chưa được cài đặt và chưa được đánh giá trong Pha 1.
+\paragraph{Vì sao các khối không là bài toán lồi.}
+Cấu trúc ba khối của~\cite{huang2025ddatsap} được giữ lại, nhưng mỗi khối không được giải bằng một bài toán lồi. Ba thử nghiệm sơ bộ trên sáu scenario đánh giá với mười realization cho thấy lý do. Băng thông lấy từ nghiệm LP ở \cref{sec:bound}, dùng làm lịch tĩnh, làm tỷ lệ đúng hạn giảm từ \num{0.410} của B1 xuống \num{0.128}; dùng làm trọng số chia băng thông đạt \num{0.404}; đường chọn theo nghiệm LP đạt \num{0.412}. Như vậy chỉ dẫn từ LP không chuyển được sang bộ điều phối EDF, còn khối quỹ đạo dưới kênh PrLoS không có hàm thay thế lồi hợp lệ cho mục tiêu đếm cảnh báo. Ngược lại, tìm kiếm cục bộ được chấm điểm bằng chính bộ đánh giá nâng tỷ lệ này lên \num{0.427} khi chấm trên tốc độ kỳ vọng và \num{0.449} khi chấm trên năm realization lấy mẫu; chấm trên tốc độ kỳ vọng còn làm một scenario giảm từ \num{0.372} xuống \num{0.305}. Vì vậy mỗi khối ở đây là một bước tìm kiếm cục bộ có đánh giá.
+
+\paragraph{Chia băng thông theo trọng số.}
+Kế hoạch mang trọng số $w_{e,n}\ge 0$ cho mỗi liên kết vô tuyến $e$ và slot $n$. Trong mỗi nửa slot, gọi $\mathcal B_n$ là tập liên kết truy nhập có dữ liệu chờ, hoặc tập tối đa hai downlink có hạn đầu hàng đợi sớm nhất; băng thông được cấp là
+\begin{equation}
+\label{eq:weights}
+b_{e,n}=B_{\mathrm{tot}}\frac{w_{e,n}}{\sum_{e'\in\mathcal B_n}w_{e',n}},\qquad e\in\mathcal B_n,
+\end{equation}
+\noindent và chia đều khi tổng trọng số bằng $0$. Quy tắc chia đều của B0, B1 là trường hợp mọi trọng số bằng $1$. Trọng số cố định trước nhiệm vụ, còn băng thông thực tế chỉ phụ thuộc hàng đợi hiện tại, nên chính sách không dùng thông tin tương lai.
+
+\paragraph{Chấm điểm thiết kế.}
+Phương pháp tìm kiếm không bao giờ dùng các realization đánh giá. Nó chấm một kế hoạch trên $M_d=5$ realization thiết kế, lấy từ một luồng số ngẫu nhiên khác với luồng đánh giá, theo khoá từ điển \eqref{eq:objective} cộng trên các realization đó. Mỗi lần chấm là một lần đánh giá, và tổng số lần đánh giá bị giới hạn bởi ngân sách $E=2000$; khi hết ngân sách, phương pháp trả về kế hoạch tốt nhất đang có. Một thay đổi chỉ được nhận khi khoá tăng chặt, nên khoá của kế hoạch hiện tại không bao giờ giảm. Khi chấm thiết kế, bộ kiểm tra độc lập được bỏ qua và $\mathrm{Conn}$ được ghi nhớ theo quỹ đạo và realization, vì cả hai không ảnh hưởng tới quyết định tìm kiếm; cách này giữ nguyên kế hoạch trả về và nhanh hơn khoảng \num{2.9} lần. Lần đánh giá cuối trên các realization đánh giá vẫn chạy bộ kiểm tra.
+
+\paragraph{Ba khối của B2.}
+B2 khởi tạo từ kế hoạch B1 với mọi trọng số bằng $1$ và lặp tối đa mười vòng. \emph{Khối đường} duyệt cảnh báo theo hạn tăng dần và thử lần lượt các lựa chọn không phục vụ và từng candidate. \emph{Khối băng thông} duyệt các liên kết vô tuyến đang được dùng theo tổng kích thước cảnh báo đi qua, giảm dần, và thử nhân toàn bộ trọng số của liên kết với $2$, rồi với $1/2$ nếu phép nhân đôi bị từ chối. \emph{Khối quỹ đạo} duyệt một họ hành trình khả thi theo cấu tạo: UAV rời trung tâm, bay thẳng với tốc độ $V_{\max}$ qua một tập con có thứ tự của các vùng hư hại, lơ lửng tại mỗi điểm dừng rồi quay về. Thời gian còn dư được chia cho các điểm dừng đều nhau, theo số cảnh báo của vùng, hoặc theo tổng $1/(d_a-r_a)$ của vùng; điểm dừng là tâm vùng hoặc trọng tâm các nguồn trong vùng. Với ba vùng, họ này có tối đa $90$ hành trình và chứa quỹ đạo của B1. Vòng lặp dừng khi một vòng không nhận thay đổi nào.
+
+\paragraph{B3: mục tiêu leximin.}
+B3 giống B2 nhưng dùng khoá khác. Với $\bar f_a$ là tỷ lệ bit của $a$ tới trung tâm trước hạn, lấy trung bình trên các realization thiết kế, tốc độ giao trung bình của $a$ chia cho tốc độ yêu cầu $L_a/((d_a-r_a)\Delta)$ bằng đúng $\bar f_a$, nên đây là phiên bản chuẩn hoá của mục tiêu max--min của~\cite{huang2025ddatsap}. Vì chỉ một cảnh báo không thể giao cũng làm $\min_a\bar f_a=0$ với mọi kế hoạch, B3 so sánh theo leximin:
+\begin{equation}
+\label{eq:leximin}
+\bigl(\bar f_{(1)},\bar f_{(2)},\dots,\bar f_{(\abs{A})},\ \textstyle\sum_{\omega}\sum_a z_{a,\omega},\ \mathrm{Conn}\bigr),\qquad \bar f_{(1)}\le\bar f_{(2)}\le\dots\le\bar f_{(\abs{A})},
+\end{equation}
+\noindent trong đó cảnh báo không được phục vụ có $\bar f_a=0$. Chênh lệch giữa B2 và B3 đo cái giá của việc tối ưu công bằng thay cho số cảnh báo đúng hạn.
+
+\paragraph{P: sửa lịch theo nguy cơ trễ hạn.}
+P là B2 thêm một vòng sửa lịch sau khối quỹ đạo của mỗi vòng lặp. Một lần đánh giá có ghi sổ trên kế hoạch hiện tại cho biết, với mỗi cảnh báo và realization thiết kế, độ dư thời gian $d_a-1-t_a$ (bằng $-1$ nếu trễ, với $t_a$ là slot giao xong), chặng giữ dữ liệu của cảnh báo trong nhiều slot nhất và các liên kết đã dùng hết dung lượng. Nguy cơ của một cảnh báo là tỷ lệ realization thiết kế trong đó nó trễ hoặc có độ dư không quá $\theta=2$ slot; tối đa $R=10$ cảnh báo có nguy cơ cao nhất được xét. \emph{Thao tác 1} nhân đôi trọng số của chặng thắt cổ chai, nếu đó là liên kết vô tuyến, chỉ trong các slot $[r_a,d_a)$, nên băng thông được chuyển từ các liên kết khác cùng nửa slot sang cảnh báo này. \emph{Thao tác 2} thử các candidate khác của cảnh báo theo số liên kết nghẽn trong cửa sổ của nó, rồi theo chi phí ước lượng, và nhận candidate đầu tiên làm khoá tăng. Mọi thao tác dùng chung ngân sách với ba khối, nên P và B2 có cùng số lần đánh giá tối đa. \Cref{alg:bcd-repair} tóm tắt phương pháp.
 
 \begin{algorithm}[htbp]
-\caption{Phân rã theo khối kết hợp sửa lịch theo độ dư thời gian (Pha 2, chưa đánh giá)}
+\caption{Tìm kiếm theo khối có đánh giá, kết hợp sửa lịch (B2 khi tắt sửa lịch, P khi bật)}
 \label{alg:bcd-repair}
 \begin{algorithmic}[1]
-\Require Scenario, tập candidate, số vòng tối đa $I_{\max}$
-\Ensure Quỹ đạo $q$, lựa chọn đường $x$, băng thông $b$
-\State Khởi tạo quỹ đạo khả thi $q^{(0)}$ và lựa chọn đường $x^{(0)}$
-\For{$i = 1, \dots, I_{\max}$}
-    \State Cập nhật $b$ với $(q, x)$ cố định
-    \State Cập nhật $x$ với $(q, b)$ cố định \Comment{hoán đổi trong tập candidate}
-    \State Cập nhật $q$ với $(x, b)$ cố định \Comment{tìm kiếm cục bộ}
-    \State Tính độ dư thời gian của từng cảnh báo; chọn tập nguy cơ $A_{\mathrm{risk}}$
-    \ForAll{$a \in A_{\mathrm{risk}}$}
-        \State Thử chuyển băng thông từ luồng còn dư sang $a$
-        \State Thử đổi đường của $a$ trong tập candidate
-        \State Nhận thay đổi nếu mục tiêu từ điển không giảm
-    \EndFor
-    \If{không cải thiện trong $\kappa$ vòng liên tiếp} \textbf{break} \EndIf
+\Require Scenario, tập candidate, realization thiết kế, ngân sách $E$, số vòng tối đa $I_{\max}=10$
+\Ensure Quỹ đạo $q$, lựa chọn đường $x$, trọng số băng thông $w$
+\State $(q,x)\gets$ kế hoạch B1; $w\gets 1$; $\kappa\gets$ khoá của $(q,x,w)$
+\For{$i=1,\dots,I_{\max}$}
+    \State Khối đường: với từng cảnh báo theo hạn, thử không phục vụ và từng candidate
+    \State Khối băng thông: với từng liên kết đang dùng, thử $w_e\gets 2w_e$, sau đó $w_e\gets w_e/2$
+    \State Khối quỹ đạo: thử từng hành trình trong họ hành trình khả thi
+    \If{sửa lịch được bật}
+        \State Đánh giá có ghi sổ; chọn tối đa $R$ cảnh báo có nguy cơ trễ hạn cao nhất
+        \ForAll{cảnh báo $a$ có nguy cơ}
+            \State Thao tác 1: nhân đôi trọng số chặng thắt cổ chai trong $[r_a,d_a)$
+            \State Thao tác 2: thử các candidate khác theo số liên kết nghẽn, rồi chi phí
+        \EndFor
+    \EndIf
+    \State Mỗi phép thử được nhận khi khoá tăng chặt; dừng ngay khi hết ngân sách $E$
+    \If{vòng này không nhận thay đổi nào} \textbf{break} \EndIf
 \EndFor
-\State \Return $(q, x, b)$
+\State \Return $(q,x,w)$
 \end{algorithmic}
 \end{algorithm}
+
+\paragraph{Độ phức tạp.}
+Một vòng lặp dùng tối đa $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ lần đánh giá cho ba khối, cộng $1+RK$ lần cho vòng sửa lịch của P, với $\mathcal L_{\mathrm{used}}$ là các liên kết vô tuyến đang được dùng. Mỗi lần đánh giá tốn $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, còn phát hiện nguy cơ duyệt sổ ghi trong $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$ với $T$ là số bản ghi truyền. Ngân sách chặn tổng số lần đánh giá, nên thời gian lập kế hoạch của B2, B3 và P là $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, không phụ thuộc số vòng lặp thực tế. Phương pháp chỉ bảo đảm khoá của kế hoạch không giảm; nó không bảo đảm tối ưu, và cận LP ở \cref{sec:bound}, giải trên chính quỹ đạo mà mỗi phương pháp chọn, đo phần còn có thể cải thiện.
