@@ -3,6 +3,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from literature.tran import TranHD
+from literature.tran_model import TranParams
 from optimization.bcd import SearchParams
 from runner.config import MethodSpec, load_experiment_config
 from runner.methods import bound_owner, build_method
@@ -68,6 +70,8 @@ def test_method_specs_accept_names_and_search_mappings(tmp_path: Path):
         (lambda raw: raw.update(methods=[{"id": "P__x", "base": "search"}]), "single '_'"),
         (lambda raw: raw.update(methods=[{"id": "P", "base": "search", "params": {"repair": True}}]), "unknown search parameters"),
         (lambda raw: raw.update(methods=[{"id": "P", "base": "search", "bounds": "yes"}]), "bounds"),
+        (lambda raw: raw.update(methods=[{"id": "TRAN", "base": "TRAN", "params": {"alpha": 2}}]), "unknown TRAN parameters"),
+        (lambda raw: raw.update(methods=[{"id": "TRAN", "base": "TRAN", "params": {"theta": 1.5}}]), "theta must lie"),
         (lambda raw: raw["scenario_sets"].append(dict(raw["scenario_sets"][0])), "unique"),
         (lambda raw: raw["milp_crosscheck"].update(set_id="missing"), "milp_crosscheck.set_id"),
         (lambda raw: raw.update(realization_ids={"start": 3, "stop": 3}), "realization_ids"),
@@ -87,3 +91,14 @@ def test_scenario_sets_accept_a_replicate_filter(tmp_path: Path):
     for bad in ([], [-1], [1, 1], ["0"], True):
         with pytest.raises(ValueError, match=r"scenario_sets\[0\].replicates"):
             load_experiment_config(_write(tmp_path, lambda raw, bad=bad: raw["scenario_sets"][0].update(replicates=bad)))
+
+
+def test_tran_specs_parse_build_and_bound_inside_their_tasks(tmp_path: Path):
+    methods = ["B1", {"id": "TRAN", "base": "TRAN", "params": {"theta": 0.5, "mu": 10, "block_slots": 1}, "bounds": True}]
+    config = load_experiment_config(_write(tmp_path, lambda raw: raw.update(methods=methods)))
+    spec = config.methods[1]
+    assert spec == MethodSpec("TRAN", "TRAN", (("block_slots", 1), ("mu", 10), ("theta", 0.5)), True)
+    assert spec.tran_params() == TranParams(theta=0.5, mu=10.0, block_slots=1)
+    method = build_method(spec)
+    assert isinstance(method, TranHD) and method.name == "TRAN" and method.params == spec.tran_params()
+    assert bound_owner(spec) == ("trajectory", "TRAN")

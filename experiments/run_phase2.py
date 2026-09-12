@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import replace
 from pathlib import Path
 import sys
 
@@ -11,8 +12,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="run-phase2")
     parser.add_argument("--config", type=Path, default=Path("configs/experiments/phase2_pilot.yaml"))
     parser.add_argument("--workers", type=int)
+    parser.add_argument("--output-dir", type=Path, help="write results here instead of the configured output_dir")
     args = parser.parse_args(arguments)
     config = load_experiment_config(args.config)
+    if args.output_dir is not None:
+        config = replace(config, output_dir=args.output_dir)
     return run_experiment(config, args.config, workers=args.workers, argv=["experiments/run_phase2.py", *arguments])
 
 

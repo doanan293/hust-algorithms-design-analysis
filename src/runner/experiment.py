@@ -13,7 +13,7 @@ from models.paths import candidate_paths
 from models.scenario import load_scenario
 
 from .aggregate import crosscheck_violations, summarize, validity_violations
-from .config import SEARCH_BASE, ExperimentConfig
+from .config import PLANNED_TRAJECTORY_BASES, ExperimentConfig
 from .methods import bound_owner
 from .provenance import environment, file_sha256, git_state, source_hash
 from .tasks import CROSSCHECK_TRAJECTORY_METHOD, BoundTask, CrosscheckTask, MethodTask, Task, execute, task_hash
@@ -73,9 +73,9 @@ def scenario_refs(config: ExperimentConfig) -> list[ScenarioRef]:
 
 
 def build_tasks(config: ExperimentConfig, refs: Sequence[ScenarioRef]) -> list[Task]:
-    """Method tasks for every spec; bound tasks for B0/B1 trajectories (search methods bound inside their tasks)."""
+    """Method tasks for every spec; bound tasks for B0/B1 trajectories (search and TRAN methods bound inside their tasks)."""
     tasks: list[Task] = []
-    variants = sorted({bound_owner(spec) for spec in config.methods if spec.base != SEARCH_BASE})
+    variants = sorted({bound_owner(spec) for spec in config.methods if spec.base not in PLANNED_TRAJECTORY_BASES})
     for ref in refs:
         for spec in config.methods:
             tasks.append(MethodTask(ref.set_id, ref.scenario_id, str(ref.path), spec, config.realization_ids, config.tangents))
