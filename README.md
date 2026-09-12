@@ -115,3 +115,11 @@ uv run python experiments/phase2_statistics.py
 ```
 
 Tổng quan tài liệu, bảng so sánh và lý do chọn baseline từ tài liệu nằm ở `docs/literature/review.md`.
+
+Sinh dữ liệu báo cáo Pha 2 (bảng so sánh chính, thống kê, ablation, kết nối, thiết kế, dữ liệu hình ngân sách và độ nhạy, macro số liệu) rồi biên dịch báo cáo bằng script của skill LaTeX:
+
+```bash
+uv run python experiments/report_tables.py
+uv run python experiments/report_tables_phase2.py
+cd docs/report && bash ../../.claude/skills/latex-document-skill/scripts/compile_latex.sh main.tex --preview --preview-dir build/preview
+```
