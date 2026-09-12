@@ -4,13 +4,15 @@ from pathlib import Path
 import platform
 import subprocess
 
+import clarabel
+import cvxpy
 import numpy
 import scipy
 
 from bounds.solve import highs_version
 
 SRC_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_PACKAGES = ("models", "baselines", "bounds", "optimization", "runner")
+SOURCE_PACKAGES = ("models", "baselines", "bounds", "optimization", "literature", "runner")
 
 
 def source_hash(src_root: Path = SRC_ROOT, packages: tuple[str, ...] = SOURCE_PACKAGES) -> str:
@@ -51,6 +53,8 @@ def environment() -> dict[str, object]:
         "numpy": numpy.__version__,
         "scipy": scipy.__version__,
         "highs": highs_version(),
+        "cvxpy": cvxpy.__version__,
+        "clarabel": clarabel.__version__,
         "platform": platform.platform(),
         "cpu_count": os.cpu_count(),
     }

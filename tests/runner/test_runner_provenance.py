@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from runner.provenance import environment, git_state, source_hash
+from runner.provenance import SOURCE_PACKAGES, environment, git_state, source_hash
 
 
 def test_source_hash_tracks_file_content(tmp_path: Path):
@@ -15,5 +15,9 @@ def test_source_hash_tracks_file_content(tmp_path: Path):
 
 
 def test_environment_and_git_state_outside_a_repository(tmp_path: Path):
-    assert set(environment()) == {"python", "numpy", "scipy", "highs", "platform", "cpu_count"}
+    assert set(environment()) == {"python", "numpy", "scipy", "highs", "cvxpy", "clarabel", "platform", "cpu_count"}
     assert git_state(tmp_path) == (None, None)
+
+
+def test_source_hash_covers_the_literature_package():
+    assert "literature" in SOURCE_PACKAGES

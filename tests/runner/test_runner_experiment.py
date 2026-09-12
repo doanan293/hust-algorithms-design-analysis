@@ -34,7 +34,7 @@ def test_results_do_not_depend_on_worker_count(tmp_path: Path):
         "environment", "workers", "started_utc", "finished_utc", "command", "task_count",
     ):
         assert field in manifest
-    assert set(manifest["environment"]) == {"python", "numpy", "scipy", "highs", "platform", "cpu_count"}
+    assert set(manifest["environment"]) == {"python", "numpy", "scipy", "highs", "cvxpy", "clarabel", "platform", "cpu_count"}
 
 
 def test_rerun_skips_current_shards_and_recomputes_stale_ones(tmp_path: Path, capsys):

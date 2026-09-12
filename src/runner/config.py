@@ -6,9 +6,12 @@ import re
 import yaml
 
 from baselines import METHODS
+from literature.tran_model import TranParams
 from optimization.bcd import SearchParams
 
 SEARCH_BASE = "search"
+TRAN_BASE = "TRAN"
+PLANNED_TRAJECTORY_BASES = (SEARCH_BASE, TRAN_BASE)
 METHOD_ID_PATTERN = re.compile(r"^[A-Za-z0-9.-]+(_[A-Za-z0-9.-]+)*$")
 
 
@@ -40,7 +43,7 @@ class BootstrapConfig:
 
 @dataclass(frozen=True)
 class MethodSpec:
-    """B0 or B1 by name, or a search variant with sorted parameter pairs and in-task trajectory bounds."""
+    """B0 or B1 by name, or a search or TRAN variant with sorted parameter pairs and in-task trajectory bounds."""
 
     id: str
     base: str
@@ -49,6 +52,9 @@ class MethodSpec:
 
     def search_params(self) -> SearchParams:
         return SearchParams.from_mapping(dict(self.params))
+
+    def tran_params(self) -> TranParams:
+        return TranParams.from_mapping(dict(self.params))
 
 
 def _frozen(value: object) -> object:
@@ -85,8 +91,8 @@ def parse_method_spec(raw: object, index: int) -> MethodSpec:
         if method_id != base or "params" in raw or "bounds" in raw:
             raise ValueError(f"{label}: {base} takes no other id, params, or bounds; its bounds come from bound tasks")
         return MethodSpec(base, base)
-    if base != SEARCH_BASE:
-        raise ValueError(f"{label}: unknown base {base!r}; expected one of {[*sorted(METHODS), SEARCH_BASE]}")
+    if base not in PLANNED_TRAJECTORY_BASES:
+        raise ValueError(f"{label}: unknown base {base!r}; expected one of {[*sorted(METHODS), *PLANNED_TRAJECTORY_BASES]}")
     if not isinstance(method_id, str) or not METHOD_ID_PATTERN.match(method_id) or method_id in METHODS:
         raise ValueError(f"{label}: id {method_id!r} must use letters, digits, '.', '-', single '_' and not name a baseline")
     params, bounds = raw.get("params", {}), raw.get("bounds", False)
@@ -96,7 +102,7 @@ def parse_method_spec(raw: object, index: int) -> MethodSpec:
         raise ValueError(f"{label}.bounds: expected true or false")
     spec = MethodSpec(method_id, base, tuple(sorted((str(key), _frozen(value)) for key, value in params.items())), bounds)
     try:
-        spec.search_params()
+        spec.search_params() if base == SEARCH_BASE else spec.tran_params()
     except (TypeError, ValueError) as error:
         raise ValueError(f"{label}.params: {error}") from error
     return spec
