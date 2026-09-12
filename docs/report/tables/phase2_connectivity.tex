@@ -1,0 +1,15 @@
+% Theo mức kết nối mặt đất — hàng đọc từ data/phase2_connectivity.csv (sinh bởi experiments/report_tables_phase2.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Kết quả theo tỷ lệ nguồn có relay mặt đất trong tầm của scenario. Conn B0 là tỷ lệ nguồn có đường theo thời gian tới trung tâm khi không có UAV; cột cuối là mức tăng tỷ lệ đúng hạn của B2 so với B0.}
+\label{tab:phase2-connectivity}
+\begin{tabular}{@{}llcccccc@{}}
+\toprule
+\textbf{Họ} & \textbf{Nguồn nối được mặt đất} & \textbf{Scenario} & \textbf{Conn B0} & \textbf{B0} & \textbf{B1} & \textbf{B2} & \textbf{B2 $-$ B0} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase2_connectivity.csv}{1=\colset, 2=\colgroup, 3=\colscenarios, 4=\colconn, 5=\colbzero, 6=\colbone, 7=\colbtwo, 8=\colgain}{\colset & \colgroup & \colscenarios & \colconn & \colbzero & \colbone & \colbtwo & \colgain}
+\bottomrule
+\end{tabular}
+\end{table}

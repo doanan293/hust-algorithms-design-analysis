@@ -1,0 +1,15 @@
+% Kiểm định ghép cặp — hàng đọc từ data/phase2_statistics.csv (sinh bởi experiments/report_tables_phase2.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Tám so sánh chính theo cặp ở mức topology (10 topology). Chênh lệch là hiệu tỷ lệ đúng hạn trung bình; KTC 95\% lấy bằng bootstrap trên topology; $r$ là tương quan hạng biserial ghép cặp; $p$ từ kiểm định đổi dấu chính xác và $p_{\mathrm{Holm}}$ sau hiệu chỉnh Holm trên tám so sánh.}
+\label{tab:phase2-stats}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+\textbf{Họ} & \textbf{So sánh} & \textbf{Chênh lệch} & \textbf{KTC 95\%} & \textbf{$r$} & \textbf{$p$} & \textbf{$p_{\mathrm{Holm}}$} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase2_statistics.csv}{1=\colset, 2=\colcomparison, 3=\coldiff, 4=\colci, 5=\colr, 6=\colp, 7=\colholm}{\colset & \colcomparison & \coldiff & \colci & \colr & \colp & \colholm}
+\bottomrule
+\end{tabular}
+\end{table}

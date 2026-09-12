@@ -1,0 +1,15 @@
+% So sánh chính Pha 2 — hàng đọc từ data/phase2_main.csv (sinh bởi experiments/report_tables_phase2.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{So sánh chính trên 30 scenario đánh giá mỗi họ, mỗi scenario 30 realization kênh. Khoảng tin cậy 95\% lấy bằng bootstrap theo topology; gap riêng tính so với cận trên cùng thông tin (B0: cận chỉ mặt đất; các phương pháp dùng UAV: cận trên chính quỹ đạo của phương pháp), gap hợp tính so với cận hợp (giá trị lớn nhất của các cận quỹ đạo theo từng realization); thời gian lập kế hoạch tính bằng giây; ĐG là số lần đánh giá trung bình.}
+\label{tab:phase2-main}
+\begin{tabular}{@{}llcccccrr@{}}
+\toprule
+\textbf{Backhaul} & \textbf{PP} & \textbf{Đúng hạn} & \textbf{KTC 95\%} & \textbf{Conn} & \textbf{Gap riêng} & \textbf{Gap hợp} & \textbf{Lập KH} & \textbf{ĐG} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase2_main.csv}{2=\colbackhaul, 3=\colmethod, 4=\coltimely, 5=\colci, 6=\colconn, 7=\colgap, 8=\coluniongap, 9=\colplanning, 10=\colcalls}{\colbackhaul & \colmethod & \coltimely & \colci & \colconn & \colgap & \coluniongap & \colplanning & \colcalls}
+\bottomrule
+\end{tabular}
+\end{table}

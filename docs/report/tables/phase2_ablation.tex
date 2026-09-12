@@ -1,0 +1,17 @@
+% Ablation của P — hàng đọc từ data/phase2_ablation.csv (sinh bởi experiments/report_tables_phase2.py).
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\caption{Ablation của P trên hai họ scenario. Cột $\Delta$ là trung bình theo topology của hiệu tỷ lệ đúng hạn giữa biến thể và P, kèm KTC 95\% bootstrap.}
+\label{tab:phase2-ablation}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+& \multicolumn{2}{c}{\textbf{v0}} & \multicolumn{2}{c}{\textbf{v0-bh50}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Biến thể} & \textbf{Đúng hạn} & \textbf{$\Delta$ so với P [KTC]} & \textbf{Đúng hạn} & \textbf{$\Delta$ so với P [KTC]} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/phase2_ablation.csv}{1=\colvariant, 2=\coltimely, 3=\coldiff, 4=\coltimelybh, 5=\coldiffbh}{\colvariant & \coltimely & \coldiff & \coltimelybh & \coldiffbh}
+\bottomrule
+\end{tabular}
+\end{table}
