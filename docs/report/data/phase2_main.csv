@@ -1,0 +1,11 @@
+set;backhaul;method;timely;ci;conn;gap;uniongap;planning;calls
+v0;\qty{1000}{\kilo\bit\per\second};B0;\num{0.413};[\num{0.319}, \num{0.487}];\num{0.509};\num{0.171};\num{0.438};\num{0.0};\num{1}
+v0;\qty{1000}{\kilo\bit\per\second};B1;\num{0.494};[\num{0.391}, \num{0.582}];\num{1.000};\num{0.238};\num{0.318};\num{0.1};\num{1}
+v0;\qty{1000}{\kilo\bit\per\second};B2;\num{0.551};[\num{0.444}, \num{0.641}];\num{1.000};\num{0.210};\num{0.229};\num{150.1};\num{1933}
+v0;\qty{1000}{\kilo\bit\per\second};B3;\num{0.367};[\num{0.274}, \num{0.451}];\num{0.999};\num{0.478};\num{0.497};\num{175.0};\num{2001}
+v0;\qty{1000}{\kilo\bit\per\second};P;\num{0.553};[\num{0.445}, \num{0.644}];\num{1.000};\num{0.208};\num{0.227};\num{155.6};\num{1973}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B0;\num{0.370};[\num{0.283}, \num{0.437}];\num{0.509};\num{0.229};\num{0.467};\num{0.0};\num{1}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B1;\num{0.430};[\num{0.344}, \num{0.500}];\num{1.000};\num{0.287};\num{0.371};\num{0.1};\num{1}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B2;\num{0.509};[\num{0.417}, \num{0.585}];\num{1.000};\num{0.227};\num{0.245};\num{138.6};\num{1922}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B3;\num{0.331};[\num{0.270}, \num{0.382}];\num{1.000};\num{0.499};\num{0.512};\num{160.5};\num{2001}
+v0-bh50;\qty{50}{\kilo\bit\per\second};P;\num{0.507};[\num{0.415}, \num{0.584}];\num{1.000};\num{0.228};\num{0.248};\num{138.8};\num{1901}

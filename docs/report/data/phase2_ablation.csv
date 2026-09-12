@@ -1,0 +1,9 @@
+variant;timely;diff;timelybh;diffbh;calls
+P đầy đủ;\num{0.553};---;\num{0.507};---;\num{1973}
+Chỉ thao tác 1;\num{0.553};\num{0.000} [\num{-0.006}, \num{0.008}];\num{0.510};\num{0.002} [\num{-0.002}, \num{0.007}];\num{1961}
+Chỉ thao tác 2;\num{0.553};\num{0.000} [\num{-0.002}, \num{0.003}];\num{0.508};\num{0.000} [\num{-0.003}, \num{0.002}];\num{1961}
+Sửa lịch không dùng backlog;\num{0.553};\num{-0.001} [\num{-0.002}, \num{0.001}];\num{0.509};\num{0.001} [\num{0.000}, \num{0.002}];\num{1982}
+Không chạy khối đường;\num{0.504};\num{-0.050} [\num{-0.072}, \num{-0.032}];\num{0.443};\num{-0.065} [\num{-0.084}, \num{-0.048}];\num{597}
+Không chạy khối quỹ đạo;\num{0.505};\num{-0.048} [\num{-0.069}, \num{-0.032}];\num{0.459};\num{-0.048} [\num{-0.063}, \num{-0.037}];\num{1648}
+Không chạy khối băng thông;\num{0.555};\num{0.001} [\num{-0.007}, \num{0.011}];\num{0.510};\num{0.003} [\num{-0.003}, \num{0.010}];\num{958}
+Thiết kế trên tốc độ kỳ vọng;\num{0.518};\num{-0.035} [\num{-0.046}, \num{-0.027}];\num{0.481};\num{-0.027} [\num{-0.031}, \num{-0.022}];\num{1921}
