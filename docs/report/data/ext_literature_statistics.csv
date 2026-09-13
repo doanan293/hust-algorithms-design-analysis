@@ -1,0 +1,5 @@
+set;comparison;diff;ci;rankbiserial;p;pholm
+v0;P $-$ TRAN;\num{0.023};[\num{-0.025}, \num{0.065}];\num{0.38};\num{0.3574};\num{0.7148}
+v0;B2 $-$ TRAN;\num{0.021};[\num{-0.025}, \num{0.061}];\num{0.38};\num{0.3809};\num{0.7148}
+v0-bh50;P $-$ TRAN;\num{0.069};[\num{0.014}, \num{0.115}];\num{0.71};\num{0.0371};\num{0.1484}
+v0-bh50;B2 $-$ TRAN;\num{0.071};[\num{0.015}, \num{0.117}];\num{0.71};\num{0.0410};\num{0.1484}

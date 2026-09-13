@@ -1,0 +1,9 @@
+set;backhaul;method;timely;ci;gap;planning
+v0;\qty{1000}{\kilo\bit\per\second};B1;\num{0.494};[\num{0.391}, \num{0.582}];\num{0.238};\num{0.1}
+v0;\qty{1000}{\kilo\bit\per\second};B2;\num{0.551};[\num{0.444}, \num{0.641}];\num{0.210};\num{150.1}
+v0;\qty{1000}{\kilo\bit\per\second};P;\num{0.553};[\num{0.445}, \num{0.644}];\num{0.208};\num{155.6}
+v0;\qty{1000}{\kilo\bit\per\second};TRAN;\num{0.530};[\num{0.462}, \num{0.590}];\num{0.304};\num{266.2}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B1;\num{0.430};[\num{0.344}, \num{0.500}];\num{0.287};\num{0.1}
+v0-bh50;\qty{50}{\kilo\bit\per\second};B2;\num{0.509};[\num{0.417}, \num{0.585}];\num{0.227};\num{138.6}
+v0-bh50;\qty{50}{\kilo\bit\per\second};P;\num{0.507};[\num{0.415}, \num{0.584}];\num{0.228};\num{138.8}
+v0-bh50;\qty{50}{\kilo\bit\per\second};TRAN;\num{0.438};[\num{0.393}, \num{0.478}];\num{0.401};\num{268.7}
