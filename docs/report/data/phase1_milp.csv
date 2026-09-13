@@ -1,6 +1,6 @@
 scenario;alerts;method;plan;incumbent;dual;lp;status;runtime;tangent
-Agis-r2;10;\num{9};\num{9};\num{9};\num{9.00};\num{9.51};tối ưu;\num{3.3};\num{0.0242}
-Belnet2008-r0;10;\num{5};\num{5};\num{5};\num{5.00};\num{6.41};tối ưu;\num{1.8};\num{0.0242}
-BtNorthAmerica-r0;10;\num{2};\num{2};\num{2};\num{2.00};\num{3.89};tối ưu;\num{3.6};\num{0.0242}
-Digex-r1;10;\num{1};\num{1};\num{1};\num{1.00};\num{2.38};tối ưu;\num{0.6};\num{0.0242}
-Digex-r2;10;\num{3};\num{3};\num{4};\num{4.00};\num{5.32};tối ưu;\num{5.0};\num{0.0242}
+Agis-r2;10;\num{9};\num{9};\num{9};\num{9.00};\num{9.51};tối ưu;\num{3.7};\num{0.0242}
+Belnet2008-r0;10;\num{5};\num{5};\num{5};\num{5.00};\num{6.41};tối ưu;\num{2.0};\num{0.0242}
+BtNorthAmerica-r0;10;\num{2};\num{2};\num{2};\num{2.00};\num{3.89};tối ưu;\num{3.3};\num{0.0242}
+Digex-r1;10;\num{1};\num{1};\num{1};\num{1.00};\num{2.38};tối ưu;\num{0.5};\num{0.0242}
+Digex-r2;10;\num{3};\num{3};\num{4};\num{4.00};\num{5.32};tối ưu;\num{5.2};\num{0.0242}
