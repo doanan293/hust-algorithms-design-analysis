@@ -1,0 +1,101 @@
+{
+  "level": "experiments",
+  "subset": "Agis",
+  "passed": true,
+  "git_commit": "8684e885753078a61804d03767f3e4f7351e9d9f",
+  "git_dirty": false,
+  "environment": {
+    "python": "3.12.3",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "highs": "1.12.0",
+    "cvxpy": "1.9.2",
+    "clarabel": "0.11.1",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "cpu_count": 12
+  },
+  "started_utc": "2026-09-13T04:49:57.285799+00:00",
+  "finished_utc": "2026-09-13T05:41:33.643953+00:00",
+  "checks": [
+    {
+      "name": "results/phase1/method_realizations.csv",
+      "passed": true,
+      "detail": "360 rows match"
+    },
+    {
+      "name": "results/phase1/bounds.csv",
+      "passed": true,
+      "detail": "360 rows match"
+    },
+    {
+      "name": "phase2_pilot",
+      "passed": true,
+      "detail": "skipped: no dev scenario of topology Agis"
+    },
+    {
+      "name": "results/phase2/main/method_realizations.csv",
+      "passed": true,
+      "detail": "2160 rows match"
+    },
+    {
+      "name": "results/phase2/main/bounds.csv",
+      "passed": true,
+      "detail": "900 rows match"
+    },
+    {
+      "name": "results/phase2/budget/method_realizations.csv",
+      "passed": true,
+      "detail": "900 rows match"
+    },
+    {
+      "name": "results/phase2/budget/bounds.csv",
+      "passed": true,
+      "detail": "0 rows match"
+    },
+    {
+      "name": "results/phase2/sensitivity/method_realizations.csv",
+      "passed": true,
+      "detail": "1350 rows match"
+    },
+    {
+      "name": "results/phase2/sensitivity/bounds.csv",
+      "passed": true,
+      "detail": "450 rows match"
+    },
+    {
+      "name": "results/phase2/design/method_realizations.csv",
+      "passed": true,
+      "detail": "90 rows match"
+    },
+    {
+      "name": "results/phase2/design/bounds.csv",
+      "passed": true,
+      "detail": "0 rows match"
+    },
+    {
+      "name": "results/phase2/literature/method_realizations.csv",
+      "passed": true,
+      "detail": "360 rows match"
+    },
+    {
+      "name": "results/phase2/literature/bounds.csv",
+      "passed": true,
+      "detail": "360 rows match"
+    },
+    {
+      "name": "results/phase2/case_study/method_realizations.csv",
+      "passed": true,
+      "detail": "450 rows match"
+    },
+    {
+      "name": "results/phase2/case_study/bounds.csv",
+      "passed": true,
+      "detail": "450 rows match"
+    },
+    {
+      "name": "tran_pilot",
+      "passed": true,
+      "detail": "skipped: the pilot uses the development split"
+    }
+  ]
+}

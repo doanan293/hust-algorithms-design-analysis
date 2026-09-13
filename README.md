@@ -160,3 +160,13 @@ systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 uv run pyt
 ```
 
 Kết quả nằm trong `results/phase2/case_study/` và `results/phase2/case_study/trace/`.
+
+## Tái lập
+
+Gói tái lập được mô tả trong `docs/reproducibility.md`: môi trường, dữ liệu và giấy phép, bảng nguồn dữ liệu của từng bảng và hình, bảng đối chiếu tiêu chí nghiệm thu và thứ tự chạy lại toàn bộ. Ba mức kiểm tra tự động ghi kết quả vào `results/reproducibility/`:
+
+```bash
+uv run python experiments/reproduce.py --level tables
+uv run python experiments/reproduce.py --level scenarios
+systemd-run --user --scope --quiet -p MemoryMax=14G -p MemorySwapMax=0 uv run python experiments/reproduce.py --level experiments --subset Agis
+```

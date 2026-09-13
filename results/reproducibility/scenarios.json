@@ -1,0 +1,281 @@
+{
+  "level": "scenarios",
+  "subset": null,
+  "passed": true,
+  "git_commit": "8684e885753078a61804d03767f3e4f7351e9d9f",
+  "git_dirty": false,
+  "environment": {
+    "python": "3.12.3",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "highs": "1.12.0",
+    "cvxpy": "1.9.2",
+    "clarabel": "0.11.1",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "cpu_count": 12
+  },
+  "started_utc": "2026-09-13T03:16:15.870799+00:00",
+  "finished_utc": "2026-09-13T03:16:39.072460+00:00",
+  "checks": [
+    {
+      "name": "raw data verification",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "rescuenet targets",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest rescuenet_targets.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "manifest rescuenet_targets.json",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "scenarios rescuenet",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_rescuenet.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of rescuenet",
+      "passed": true,
+      "detail": "regenerated bb828acbae13, recorded ['bb828acbae13']"
+    },
+    {
+      "name": "scenarios sens-alerts20",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-alerts20.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-alerts20",
+      "passed": true,
+      "detail": "regenerated 3535f060b0a1, recorded ['3535f060b0a1']"
+    },
+    {
+      "name": "scenarios sens-alerts60",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-alerts60.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-alerts60",
+      "passed": true,
+      "detail": "regenerated fc18376e55d2, recorded ['fc18376e55d2']"
+    },
+    {
+      "name": "scenarios sens-bh100",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-bh100.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-bh100",
+      "passed": true,
+      "detail": "regenerated 8eca928a04f3, recorded ['8eca928a04f3']"
+    },
+    {
+      "name": "scenarios sens-btot05",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-btot05.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-btot05",
+      "passed": true,
+      "detail": "regenerated 534c19134d8a, recorded ['534c19134d8a']"
+    },
+    {
+      "name": "scenarios sens-btot2",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-btot2.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-btot2",
+      "passed": true,
+      "detail": "regenerated 531c48daf59e, recorded ['531c48daf59e']"
+    },
+    {
+      "name": "scenarios sens-deadline-long",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-deadline-long.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-deadline-long",
+      "passed": true,
+      "detail": "regenerated 0be9b014952f, recorded ['0be9b014952f']"
+    },
+    {
+      "name": "scenarios sens-deadline-short",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-deadline-short.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-deadline-short",
+      "passed": true,
+      "detail": "regenerated fd36c88aa8e1, recorded ['fd36c88aa8e1']"
+    },
+    {
+      "name": "scenarios sens-k2",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-k2.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-k2",
+      "passed": true,
+      "detail": "regenerated 58ca585cf0b9, recorded ['58ca585cf0b9']"
+    },
+    {
+      "name": "scenarios sens-k5",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-k5.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-k5",
+      "passed": true,
+      "detail": "regenerated e8be15a3c58b, recorded ['e8be15a3c58b']"
+    },
+    {
+      "name": "scenarios sens-lref125k",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-lref125k.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-lref125k",
+      "passed": true,
+      "detail": "regenerated 83a462ad76b0, recorded ['83a462ad76b0']"
+    },
+    {
+      "name": "scenarios sens-lref1m",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-lref1m.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-lref1m",
+      "passed": true,
+      "detail": "regenerated 40661ee972f9, recorded ['40661ee972f9']"
+    },
+    {
+      "name": "scenarios sens-lref500k",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-lref500k.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-lref500k",
+      "passed": true,
+      "detail": "regenerated d217ba81738f, recorded ['d217ba81738f']"
+    },
+    {
+      "name": "scenarios sens-physical",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_sens-physical.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of sens-physical",
+      "passed": true,
+      "detail": "regenerated e6c57451b0e1, recorded ['e6c57451b0e1']"
+    },
+    {
+      "name": "scenarios v0-bh50",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_v0-bh50.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of v0-bh50",
+      "passed": true,
+      "detail": "regenerated 00cef77c7f01, recorded ['00cef77c7f01']"
+    },
+    {
+      "name": "scenarios v0",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "manifest scenarios_v0.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "recorded hash of v0",
+      "passed": true,
+      "detail": "regenerated 7f2325b4e955, recorded ['7f2325b4e955']"
+    }
+  ]
+}
