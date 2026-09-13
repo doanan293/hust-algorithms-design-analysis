@@ -1,0 +1,15 @@
+% Kiểm định so với TRAN — hàng đọc từ data/ext_literature_statistics.csv (sinh bởi experiments/report_tables_extensions.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Bốn so sánh với TRAN theo cặp ở mức topology (10 topology), cùng quy ước với \cref{tab:phase2-stats}; $p_{\mathrm{Holm}}$ hiệu chỉnh trên bốn so sánh này.}
+\label{tab:literature-stats}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+\textbf{Họ} & \textbf{So sánh} & \textbf{Chênh lệch} & \textbf{KTC 95\%} & \textbf{$r$} & \textbf{$p$} & \textbf{$p_{\mathrm{Holm}}$} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/ext_literature_statistics.csv}{1=\colset, 2=\colcomparison, 3=\coldiff, 4=\colci, 5=\colr, 6=\colp, 7=\colholm}{\colset & \colcomparison & \coldiff & \colci & \colr & \colp & \colholm}
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,15 @@
+% So sánh với TRAN — hàng đọc từ data/ext_literature.csv (sinh bởi experiments/report_tables_extensions.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{So sánh với TRAN trên 30 scenario đánh giá mỗi họ, mỗi scenario 30 realization kênh. B1, B2 và P lấy từ thí nghiệm chính; khoảng tin cậy 95\% lấy bằng bootstrap theo topology; gap riêng tính so với cận trên chính quỹ đạo của phương pháp; thời gian lập kế hoạch tính bằng giây.}
+\label{tab:literature}
+\begin{tabular}{@{}llcccr@{}}
+\toprule
+\textbf{Backhaul} & \textbf{PP} & \textbf{Đúng hạn} & \textbf{KTC 95\%} & \textbf{Gap riêng} & \textbf{Lập KH} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/ext_literature.csv}{2=\colbackhaul, 3=\colmethod, 4=\coltimely, 5=\colci, 6=\colgap, 7=\colplanning}{\colbackhaul & \colmethod & \coltimely & \colci & \colgap & \colplanning}
+\bottomrule
+\end{tabular}
+\end{table}
