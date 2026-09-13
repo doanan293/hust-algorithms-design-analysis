@@ -1,0 +1,28 @@
+% Đối chiếu tiêu chí nghiệm thu — bảng viết tay (docs/issue.md Mục 14, docs/reproducibility.md Mục 6).
+\begin{table}[htbp]
+\centering
+\small
+\caption{Tiêu chí nghiệm thu của đề bài và bằng chứng tương ứng.}
+\label{tab:acceptance}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.45\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Tiêu chí} & \textbf{Bằng chứng} \\
+\midrule
+Có quỹ đạo, lựa chọn relay và phân bổ băng thông & \Cref{sec:model,sec:problem} \\
+Mục tiêu đúng hạn với thời điểm phát sinh, hạn, số bit và xác suất & \Cref{sec:problem}, \cref{eq:objective} \\
+Kết nối theo thời gian và đường tới trung tâm & \Cref{sec:problem} \\
+Bài của Huang dùng đúng vai trò, khác biệt được công khai & \Cref{sec:related,sec:algorithm} \\
+Dữ liệu có nguồn gốc, đơn vị và phép chuyển đổi tái lập & \Cref{sec:setup,sec:rescuenet,sec:appendix} \\
+Baseline chạy trên benchmark công khai; thiếu nguồn được báo đúng & \Cref{sec:baselines,sec:tran,sec:rescuenet} \\
+Ít nhất một cơ chế cải tiến và ablation chứng minh tác động & \Cref{sec:algorithm,sec:results-ablation} \\
+Luồng bảo toàn, buffer không âm, không dùng thông tin tương lai & Bộ kiểm tra độc lập (\cref{sec:complexity}) \\
+Tài nguyên tổng và quỹ đạo khả thi; không tăng công suất ngầm & \Cref{sec:model,sec:tran} \\
+20--30 seed, kiểm định, cỡ ảnh hưởng và độ bất định & \Cref{sec:setup,sec:results-stats,sec:results-literature} \\
+Thời gian chạy, độ bền, tính khả thi, khả năng mở rộng và độ nhạy & \Cref{sec:results-runtime,sec:results-sensitivity,sec:results-case-study}, \cref{tab:compute} \\
+Cận trên LP và gap trên mọi instance; đối chiếu MILP trên instance nhỏ & \Cref{sec:bound,sec:results-milp} \\
+Kết nối trên đồ thị mở rộng theo thời gian là mục tiêu phụ từ điển & \Cref{sec:problem} \\
+B2 kế thừa cấu trúc BCD của Huang; B3 tách tác dụng của mục tiêu & \Cref{sec:algorithm,sec:results-stats} \\
+Gói tái lập và báo cáo theo cấu trúc môn học & \Cref{sec:appendix} \\
+\bottomrule
+\end{tabularx}
+\end{table}
