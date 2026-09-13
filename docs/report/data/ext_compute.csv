@@ -1,0 +1,9 @@
+experiment;tasks;hours
+Pha 1: B0, B1, cận LP và MILP;3725;\num{3.3}
+So sánh chính và ablation;4320;\num{26.9}
+Ngân sách đánh giá;300;\num{6.9}
+Độ nhạy;4950;\num{13.8}
+Số realization thiết kế;30;\num{0.8}
+Pilot TRAN trên tập phát triển;36;\num{2.7}
+So sánh với TRAN;1920;\num{10.2}
+Case study RescueNet;1950;\num{9.7}
