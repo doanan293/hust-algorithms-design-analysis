@@ -1,0 +1,226 @@
+{
+  "level": "tables",
+  "subset": null,
+  "passed": true,
+  "git_commit": "8684e885753078a61804d03767f3e4f7351e9d9f",
+  "git_dirty": false,
+  "environment": {
+    "python": "3.12.3",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "highs": "1.12.0",
+    "cvxpy": "1.9.2",
+    "clarabel": "0.11.1",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "cpu_count": 12
+  },
+  "started_utc": "2026-09-13T03:16:10.055377+00:00",
+  "finished_utc": "2026-09-13T03:16:14.883602+00:00",
+  "checks": [
+    {
+      "name": "phase2_statistics",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "phase2_literature_statistics",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "report_tables",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "report_tables_phase2",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "report_tables_extensions",
+      "passed": true,
+      "detail": "exit 0"
+    },
+    {
+      "name": "statistics/statistics.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "statistics/statistics_literature.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_case_study.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_compute.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_literature.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_literature_statistics.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_center.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_edges_alive.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_edges_failed.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_relays.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_targets.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_trajectory_b1.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_trajectory_p.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_map_trajectory_tran.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_progress.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_quality_points.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/ext_results.tex",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/lp_runtime.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/params.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase1_main.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase1_milp.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase1_results.tex",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_ablation.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_budget_b2.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_budget_p.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_connectivity.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_design.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_main.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_results.tex",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_alerts.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_backhaul.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_btot.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_deadline.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_lref.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_sensitivity_paths.csv",
+      "passed": true,
+      "detail": "identical"
+    },
+    {
+      "name": "report data/phase2_statistics.csv",
+      "passed": true,
+      "detail": "identical"
+    }
+  ]
+}
