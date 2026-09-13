@@ -10,7 +10,7 @@ from typing import Mapping, Sequence
 
 import yaml
 
-from runner.provenance import source_hash
+from runner.provenance import result_provenance_problem
 
 DIGIT_WORDS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
 MILP_STATUS = {"optimal": "tối ưu", "time_limit": "hết giờ"}
@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"missing {manifest_path}; run experiments/run_phase1.py first", file=sys.stderr)
         return 1
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest["status"] != "complete" or manifest["source_hash"] != source_hash():
+    if result_provenance_problem(manifest):
         print("results are incomplete or were produced by different source code; rerun the experiment", file=sys.stderr)
         return 1
 

@@ -11,7 +11,7 @@ from typing import Mapping, Sequence
 
 from analysis.statistics import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, bootstrap_mean_ci, topology_means
 from report_tables import _read_rows, _write_semicolon, kbit, macro_name, num
-from runner.provenance import source_hash
+from runner.provenance import result_provenance_problem
 
 EXPERIMENTS = ("main", "budget", "sensitivity", "design")
 SETS = (("v0", 1000000.0), ("v0-bh50", 50000.0))
@@ -93,14 +93,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, default=Path("docs/report/data"))
     args = parser.parse_args(argv)
 
-    current = source_hash()
     for name in EXPERIMENTS:
         manifest_path = args.results / name / "manifest.json"
         if not manifest_path.exists():
             print(f"missing {manifest_path}; run experiments/run_phase2.py first", file=sys.stderr)
             return 1
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest["status"] != "complete" or manifest["source_hash"] != current:
+        if result_provenance_problem(manifest):
             print(f"{name} results are incomplete or were produced by different source code; rerun the experiment", file=sys.stderr)
             return 1
     summaries = {name: _read_rows(args.results / name / "summary.csv") for name in EXPERIMENTS}
