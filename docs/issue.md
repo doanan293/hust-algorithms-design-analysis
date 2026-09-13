@@ -490,30 +490,41 @@ Nếu thời gian hạn chế, giảm số mở rộng và quy mô trước; gi�
 
 ## 14. Tiêu chí nghiệm thu và giới hạn kết luận
 
-- [ ] Đúng đề số 5: có trajectory, relay selection và bandwidth allocation.
-- [ ] Objective đúng hạn được định nghĩa với release, deadline, số bit và xác suất.
-- [ ] Connectivity được định nghĩa theo thời gian và đường đến trung tâm.
-- [ ] Bài Huang được dùng đúng vai trò, khác biệt giao thức/mục tiêu được công khai.
-- [ ] Dữ liệu có provenance, đơn vị và phép chuyển đổi tái lập.
-- [ ] Baseline chạy trên benchmark công khai; thiếu nguồn nào được báo đúng.
-- [ ] Có ít nhất một cơ chế cải tiến và ablation chứng minh tác động.
-- [ ] Flow bảo toàn, buffer không âm, không dùng thông tin tương lai ngoài giả định.
-- [ ] Tài nguyên tổng và quỹ đạo khả thi; không tăng công suất ngầm theo quy mô.
-- [ ] Có 20–30 seed, kiểm định, effect size và uncertainty report.
-- [ ] Có runtime, robustness, feasibility, scalability và sensitivity.
-- [ ] Có cận trên LP và gap trên mọi instance; instance nhỏ đối chiếu với MILP chính xác.
-- [ ] Connectivity được định nghĩa trên time-expanded graph và là mục tiêu phụ từ điển, dùng thống nhất cho mọi phương pháp.
-- [ ] B2 kế thừa đúng cấu trúc BCD của bài Huang; B3 tách được tác dụng của objective.
-- [ ] Có gói tái lập và báo cáo theo cấu trúc môn học.
+- [x] Đúng đề số 5: có trajectory, relay selection và bandwidth allocation.
+- [x] Objective đúng hạn được định nghĩa với release, deadline, số bit và xác suất.
+- [x] Connectivity được định nghĩa theo thời gian và đường đến trung tâm.
+- [x] Bài Huang được dùng đúng vai trò, khác biệt giao thức/mục tiêu được công khai.
+- [x] Dữ liệu có provenance, đơn vị và phép chuyển đổi tái lập.
+- [x] Baseline chạy trên benchmark công khai; thiếu nguồn nào được báo đúng.
+- [x] Có ít nhất một cơ chế cải tiến và ablation chứng minh tác động.
+- [x] Flow bảo toàn, buffer không âm, không dùng thông tin tương lai ngoài giả định.
+- [x] Tài nguyên tổng và quỹ đạo khả thi; không tăng công suất ngầm theo quy mô.
+- [x] Có 20–30 seed, kiểm định, effect size và uncertainty report.
+- [x] Có runtime, robustness, feasibility, scalability và sensitivity.
+- [x] Có cận trên LP và gap trên mọi instance; instance nhỏ đối chiếu với MILP chính xác.
+- [x] Connectivity được định nghĩa trên time-expanded graph và là mục tiêu phụ từ điển, dùng thống nhất cho mọi phương pháp.
+- [x] B2 kế thừa đúng cấu trúc BCD của bài Huang; B3 tách được tác dụng của objective.
+- [x] Có gói tái lập và báo cáo theo cấu trúc môn học.
+
+Bằng chứng cho từng tiêu chí (file, bảng, mục báo cáo) nằm ở `docs/reproducibility.md` Mục 6 và bảng đối chiếu `tab:acceptance` trong phụ lục báo cáo. "Cơ chế cải tiến" được đánh giá bằng ablation cả khi kết quả âm tính: sửa lịch theo nguy cơ trễ hạn của P không cải thiện có ý nghĩa so với B2, và báo cáo ghi nhận điều đó.
 
 Không đặt điều kiện phải tăng trước một tỷ lệ phần trăm nhất định. Kết quả không cải thiện vẫn phải báo cáo và phân tích. Mô phỏng không chứng minh hiệu năng thực địa; ảnh 2D không đo kênh; objective mẫu không tự bảo đảm xác suất ngoài mẫu; phương pháp heuristic không tự có bảo đảm tối ưu.
 
 ## 15. Trạng thái và bước tiếp theo
 
-**Đã thống nhất:** phạm vi một UAV + relay mặt đất, mô phỏng, relay selection thực sự, deadline/connectivity theo đề số 5, phân rã và repair làm hướng phát triển; v0 cho Pha 1 (Mục 3.4); B2 kế thừa cấu trúc BCD của Huang và B3 dùng objective của Huang; cận trên LP và gap; connectivity là mục tiêu phụ từ điển; quy ước $L_{\mathrm{box}}=2$ km.
+**Trạng thái (2026-09-13): đã hoàn thành.** Bốn sub-project của roadmap (`docs/superpowers/specs/2026-09-11-implementation-roadmap.md`) đã được triển khai theo spec và plan trong `docs/superpowers/`, kiểm thử và merge vào `develop` và `main`:
 
-**Đề xuất cụ thể trong bản này:** hai pha cố định, công suất cố định, candidate paths hữu hạn, store-carry-forward, thiết kế trên tốc độ kỳ vọng ở Pha 1 và đánh giá ngoài mẫu trên realization. Những lựa chọn này cần được kiểm tra bằng pilot và điều chỉnh có ghi nhận nếu gặp bất nhất.
+- **A — Mô hình và evaluator** (`src/models`): kênh, quỹ đạo, lựa chọn đường, phân bổ băng thông, store-carry-forward và bộ kiểm tra flow/buffer độc lập.
+- **B — Hoàn thiện Pha 1:** B0, B1, cận trên LP theo từng realization và đối chiếu với MILP chính xác trên instance nhỏ.
+- **C — Lõi Pha 2:** B2 (BCD theo Huang), B3 (objective max–min của Huang), P (B2 cộng sửa lịch theo nguy cơ trễ hạn), ablation, độ nhạy, ngân sách tìm kiếm, số realization thiết kế và kiểm định cặp có hiệu chỉnh Holm và effect size.
+- **D — Mở rộng và bàn giao:** baseline TRAN chuyển thể từ Tran et al. 2022, case study với target lấy từ ảnh RescueNet, gói tái lập (`docs/reproducibility.md`, `experiments/reproduce.py`) và báo cáo cuối kỳ (`docs/report/`).
 
-**Chưa thực hiện:** tải dataset; tổng quan xác nhận novelty và baseline mạnh; xác minh hai kết quả lập lịch ở Mục 9.4 trên tài liệu gốc; cài mô hình/thuật toán; chạy thực nghiệm. Bản này thay thế định hướng một UAV chỉ tối ưu scheduling/max–min rate ở bản nháp trước.
+Các quyết định phạm vi của bản này (một UAV + relay mặt đất, hai pha, công suất cố định, candidate paths hữu hạn, cận LP và gap, connectivity là mục tiêu phụ từ điển, $L_{\mathrm{box}}=2$ km) được giữ nguyên; mọi điều chỉnh rút ra từ pilot được ghi ở mục điều chỉnh của từng spec.
 
-Bước tiếp theo là lập kế hoạch triển khai chi tiết cho v0, bắt đầu từ xác minh dataset và evaluator deadline/flow, sau khi rà soát đặc tả này.
+**Kết quả chính.** Trên mười topology đánh giá với backhaul thông thường, tỷ lệ cảnh báo giao đúng hạn là 0,413 khi không có UAV (B0), 0,494 với quỹ đạo cố định (B1), 0,551 với B2, 0,553 với P và 0,367 với B3. So với TRAN, P cao hơn 0,023 với backhaul thông thường và 0,069 với backhaul băng hẹp, nhưng không có ý nghĩa sau hiệu chỉnh Holm (0,71 và 0,15). Case study RescueNet (63 target) giữ nguyên thứ tự giữa các phương pháp. Mọi thí nghiệm đã commit ghi tổng cộng 74,3 giờ tính toán.
+
+**Tái lập.** Ba mức kiểm tra tự động đều đạt và báo cáo JSON được lưu trong `results/reproducibility/`: `tables` 41/41, `scenarios` 52/52 và `experiments --subset Agis` 16/16.
+
+**Giới hạn** (Mục Thảo luận của báo cáo): kết quả dựa trên mô phỏng; mạng backbone gốc được thu nhỏ về vùng 2 km nên chỉ còn mượn cấu trúc; kênh độc lập giữa các slot và công suất cố định; kiểm định chỉ dựa trên mười topology; case study dùng một bố cục điểm nguồn duy nhất lấy từ RescueNet; các phương pháp là heuristic và cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho.
+
+**Hướng tiếp theo** (nếu tiếp tục đề tài): cận chặt hơn, thao tác sửa lịch thay đổi đồng thời nhiều cảnh báo, thiết kế với nhiều realization hơn trong cùng thời gian tính, và case study trên nhiều khu vực với vị trí nạn nhân hoặc lưu lượng đo thực địa.
