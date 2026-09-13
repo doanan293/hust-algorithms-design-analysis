@@ -108,7 +108,15 @@
 \usepackage[unicode, colorlinks=true, linkcolor=blue!60!black,
             citecolor=blue!60!black, urlcolor=blue!60!black]{hyperref}
 \usepackage[nameinlink]{cleveref}
-% cleveref chưa có tiếng Việt, đặt tên bằng tay
+% cleveref chưa có tiếng Việt, đặt tên và từ nối bằng tay
+\newcommand{\crefpairconjunction}{ và }
+\newcommand{\crefmiddleconjunction}{, }
+\newcommand{\creflastconjunction}{ và }
+\newcommand{\crefpairgroupconjunction}{ và }
+\newcommand{\crefmiddlegroupconjunction}{, }
+\newcommand{\creflastgroupconjunction}{ và }
+\crefname{appendix}{Phụ lục}{Phụ lục}
+\Crefname{appendix}{Phụ lục}{Phụ lục}
 \crefname{figure}{Hình}{Hình}
 \Crefname{figure}{Hình}{Hình}
 \crefname{table}{Bảng}{Bảng}

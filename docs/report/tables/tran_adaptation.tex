@@ -1,0 +1,21 @@
+% Chuyển thể TRAN — bảng viết tay (spec D Mục 5.1).
+\begin{table}[htbp]
+\centering
+\small
+\caption{Chuyển thể thuật toán bán song công của Tran và cộng sự~\cite{tran2022relay} sang mô hình của đề tài.}
+\label{tab:tran-adaptation}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Bài gốc} & \textbf{Trong đề tài} \\
+\midrule
+Thiết bị $k$ có $S_k$ bit, thời điểm bắt đầu và hạn thu & Cảnh báo $a$ có $L_a$ bit, thời điểm $r_a$ và cửa sổ thu $[r_a,\,r_a+\lceil\theta W_a\rceil)$ \\
+Một gateway; chuyển xuống từ sau hạn thu tới hết nhiệm vụ & Gateway là nút vào của candidate có chi phí nhỏ nhất; chuyển xuống trong $[r_a+\lceil\theta W_a\rceil,\,d_a-b_a)$ \\
+Tối ưu công suất của thiết bị và UAV & Công suất cố định như mọi phương pháp \\
+Kênh Rician với suy hao $\omega_0 d^{-\alpha}$ & Luật công suất $\beta d^{-\alpha}$ khớp với độ lợi kỳ vọng PrLoS \\
+Bộ nhớ UAV hữu hạn & Không có, vì bộ đệm UAV không giới hạn trong mô hình \\
+Không giới hạn số downlink đồng thời & Mỗi slot giữ tối đa hai downlink có băng thông lớn nhất \\
+Bài toán tìm điểm khả thi để khởi tạo & Khởi tạo từ quỹ đạo B1, băng thông chia đều và $\lambda=0$, luôn khả thi \\
+Không cho giá trị $\mu$ và ngưỡng hội tụ & $\theta$ và $\mu$ chọn trên tập phát triển; dừng khi mục tiêu đổi dưới $10^{-3}$ hoặc sau 30 vòng \\
+\bottomrule
+\end{tabularx}
+\end{table}
