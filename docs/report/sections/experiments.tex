@@ -10,6 +10,8 @@ Mỗi phương pháp lập kế hoạch một lần cho mỗi scenario và đư�
 
 Kết quả được lấy trung bình theo realization rồi theo scenario; khoảng tin cậy 95\% dùng bootstrap theo cụm topology vì các replicate của một topology không độc lập. Tám so sánh chính (P $-$ B2, B2 $-$ B1, B2 $-$ B3 và P $-$ B1 trên mỗi họ) dùng mười cặp giá trị ở mức topology: kiểm định đổi dấu chính xác xét cả $2^{10}$ cách đổi dấu, giá trị $p$ được hiệu chỉnh Holm trên tám so sánh, khoảng tin cậy của chênh lệch dùng bootstrap trên topology với \num{10000} lần lấy mẫu, và cỡ ảnh hưởng là tương quan hạng biserial ghép cặp. Ablation và độ nhạy được báo cáo mô tả, không kiểm định thêm. Cả \ResultTwoLpOptimalCount{} trong \ResultTwoLpCount{} bài LP của thí nghiệm chính và độ nhạy được giải tối ưu; khi presolve của HiGHS không phân loại được một bài (hai bài ở lần chạy đầu tiên, do hệ số của ma trận trải từ khoảng $10^{-13}$ tới $10^{6}$), bài đó được giải lại khi tắt presolve. Thí nghiệm chạy bằng Python \ResultPythonVersion, \texttt{scipy} \ResultScipyVersion{} và HiGHS \ResultHighsVersion{} với \ResultWorkers{} tiến trình trên máy \ResultCpuCount{} CPU; tổng thời gian tính của các task Pha 2 là \ResultTwoComputeHours{} giờ.
 
+Thí nghiệm so sánh với phương pháp từ tài liệu chạy B1 và TRAN trên cùng scenario, realization và loại cận của thí nghiệm chính. B1 của lần chạy này trùng từng realization với B1 của thí nghiệm chính, nên TRAN được ghép cặp trực tiếp với kết quả đã có của B2 và P; bốn so sánh P $-$ TRAN và B2 $-$ TRAN trên hai họ dùng cùng kiểm định đổi dấu, hiệu chỉnh Holm trên bốn so sánh. Case study chạy B0, B1, B2, P và TRAN trên \ResultExtCaseScenarioCount{} scenario đánh giá của họ \texttt{rescuenet} và chỉ được báo cáo mô tả. Bài toán TRAN được giải bằng \texttt{cvxpy}~\ResultExtCvxpyVersion{} với Clarabel~\ResultExtClarabelVersion; \ResultExtLiteratureLpOptimalCount{} trong \ResultExtLiteratureLpCount{} bài LP của thí nghiệm so sánh và \ResultExtCaseLpOptimalCount{} trong \ResultExtCaseLpCount{} bài LP của case study được giải tối ưu.
+
 \input{tables/params}
 
 \subsection{So sánh chính}
@@ -27,6 +29,42 @@ Gap của B2 so với cận trên chính quỹ đạo của nó là \ResultTwoGa
 \input{tables/phase2_statistics}
 
 \Cref{tab:phase2-stats} cho thấy B2 hơn B1 trung bình \ResultTwoDiffVzeroBtwoBone{} (KTC 95\% [\ResultTwoDiffLowVzeroBtwoBone, \ResultTwoDiffHighVzeroBtwoBone]) trên v0 và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} trên v0-bh50, còn P hơn B1 \ResultTwoDiffVzeroPBone{} và \ResultTwoDiffVzeroBhfivezeroPBone. Các so sánh này và B2 $-$ B3 đều có $p_{\mathrm{Holm}}=\ResultTwoHolmFloor$, giá trị nhỏ nhất có thể với mười topology và tám so sánh ($8\cdot 2/2^{10}$): cả mười topology cùng chiều, và tương quan hạng biserial bằng một. Ngược lại, P $-$ B2 có chênh lệch \ResultTwoDiffVzeroPBtwo{} (KTC 95\% [\ResultTwoDiffLowVzeroPBtwo, \ResultTwoDiffHighVzeroPBtwo]) trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50, với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$: dữ liệu không cho thấy cơ chế sửa lịch làm tăng tỷ lệ đúng hạn so với B2.
+
+\subsection{So sánh với phương pháp từ tài liệu}
+\label{sec:results-literature}
+
+\input{tables/ext_literature}
+
+\Cref{tab:literature} đặt TRAN cạnh B1, B2 và P. Trên v0, TRAN giao đúng hạn \ResultExtTimelyVzeroTRAN{} số cảnh báo, cao hơn \ResultExtTimelyVzeroBone{} của B1 nhưng thấp hơn \ResultExtTimelyVzeroBtwo{} của B2 và \ResultExtTimelyVzeroP{} của P. Khi backhaul chỉ còn \qty{50}{\kilo\bit\per\second}, TRAN đạt \ResultExtTimelyVzeroBhfivezeroTRAN, gần bằng \ResultExtTimelyVzeroBhfivezeroBone{} của B1 và thấp hơn \ResultExtTimelyVzeroBhfivezeroBtwo{} của B2. Gap của TRAN so với cận trên chính quỹ đạo của nó là \ResultExtGapVzeroTRAN{} và \ResultExtGapVzeroBhfivezeroTRAN, lớn hơn gap của B2 trên cùng họ, và TRAN lập kế hoạch lâu hơn P (\ResultExtPlanningVzeroTRAN{} so với \ResultExtPlanningVzeroP{} giây trên v0).
+
+\input{tables/ext_literature_statistics}
+
+Theo \cref{tab:literature-stats}, P hơn TRAN trung bình \ResultExtDiffVzeroPTran{} trên v0 (KTC 95\% [\ResultExtDiffLowVzeroPTran, \ResultExtDiffHighVzeroPTran], $p_{\mathrm{Holm}}=\ResultExtHolmVzeroPTran$) và \ResultExtDiffVzeroBhfivezeroPTran{} trên v0-bh50 (KTC 95\% [\ResultExtDiffLowVzeroBhfivezeroPTran, \ResultExtDiffHighVzeroBhfivezeroPTran], $p_{\mathrm{Holm}}=\ResultExtHolmVzeroBhfivezeroPTran$); so sánh B2 $-$ TRAN cho kết quả tương tự. Trên v0-bh50, khoảng tin cậy bootstrap không chứa không và tương quan hạng biserial bằng \ResultExtRankBiserialVzeroBhfivezeroPTran, nhưng sau hiệu chỉnh Holm cho bốn so sánh, không chênh lệch nào có ý nghĩa ở mức 5\%. Kết quả phù hợp với cấu trúc của TRAN: phương pháp thiết kế trên một kênh hiệu dụng tất định với lịch băng thông tĩnh và không biết dung lượng backhaul, nên mất lợi thế rõ nhất ở họ có backhaul băng hẹp.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{semilogxaxis}[
+    width=0.8\textwidth, height=5.5cm, xmin=0.05, xmax=1000,
+    xlabel={Thời gian lập kế hoạch trung bình (s)}, ylabel={Tỷ lệ đúng hạn},
+    grid=major, legend pos=north west, /pgf/number format/use comma,
+    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+]
+\addplot[mark=*, color=blue!70!black] table[col sep=comma, x=planning, y=timely] {data/phase2_budget_b2.csv};
+\addlegendentry{B2, $E=250$--$4000$}
+\addplot[mark=square*, dashed, color=red!70!black] table[col sep=comma, x=planning, y=timely] {data/phase2_budget_p.csv};
+\addlegendentry{P, $E=250$--$4000$}
+\addplot[only marks, mark=triangle*, mark size=3pt, color=green!50!black, nodes near coords, point meta=explicit symbolic,
+    every node near coord/.append style={font=\footnotesize, anchor=south west}]
+    table[col sep=comma, x=planning, y=timely, meta=method] {data/ext_quality_points.csv};
+\addlegendentry{B1 và TRAN}
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{Tỷ lệ đúng hạn theo thời gian lập kế hoạch trên 30 scenario v0: đường B2 và P ứng với ngân sách đánh giá từ 250 đến 4000, điểm B1 và TRAN ứng với cấu hình mặc định.}
+\label{fig:quality-runtime}
+\end{figure}
+
+\Cref{fig:quality-runtime} đặt TRAN lên đường chất lượng--thời gian của B2 và P. Với ngân sách $E=500$, B2 đã đạt \ResultTwoBudgetBtwoFivezerozero, cao hơn TRAN, trong khi thời gian lập kế hoạch ngắn hơn nhiều; tăng ngân sách chỉ đưa B2 và P tới vùng bão hoà đã thấy ở \cref{sec:results-budget}.
 
 \subsection{Ablation}
 \label{sec:results-ablation}
@@ -116,6 +154,70 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
 
 \Cref{fig:sensitivity} cho thấy thứ tự B1 thấp hơn B2 và P giữ nguyên trên mọi họ không suy biến. Hạn ngắn thu hẹp lợi thế (B1 \ResultTwoSensSensDeadlineShortBone{} so với P \ResultTwoSensSensDeadlineShortP), còn hạn dài mở rộng lợi thế (B1 \ResultTwoSensSensDeadlineLongBone{} so với P \ResultTwoSensSensDeadlineLongP). Cảnh báo lớn hơn làm mọi phương pháp giảm mạnh: với $L_{\mathrm{ref}}=\qty{1}{\mega\bit}$, B1 đạt \ResultTwoSensSensLrefonemBone{} và P đạt \ResultTwoSensSensLrefonemP. Tăng số cảnh báo lên 60 hoặc giảm $B_{\mathrm{tot}}$ còn một nửa làm tỷ lệ đúng hạn giảm nhẹ (P \ResultTwoSensSensAlertssixzeroP{} và \ResultTwoSensSensBtotzerofiveP, so với \ResultTwoSensVzeroP{} của v0), còn số candidate $K$ ảnh hưởng ít. Họ dùng hằng số vật lý khác ($\beta_0=\qty{-40}{\dB}$, $N_0=\qty{-164}{\dBm\per\hertz}$) suy biến: mọi nguồn có relay mặt đất trong tầm và cả ba phương pháp đạt \ResultTwoSensSensPhysicalP, nên họ này không được dùng để kết luận về vai trò của UAV.
 
+\subsection{Case study RescueNet}
+\label{sec:results-case-study}
+
+\input{tables/ext_case_study}
+
+\Cref{tab:case-study} tóm tắt case study. Không có UAV, B0 chỉ giao đúng hạn \ResultExtCaseTimelyBzero{} số cảnh báo và chỉ \ResultExtCaseConnBzero{} số nguồn có đường theo thời gian tới trung tâm. Quỹ đạo cố định của B1 nâng tỷ lệ đúng hạn lên \ResultExtCaseTimelyBone; B2, P và TRAN đạt \ResultExtCaseTimelyBtwo, \ResultExtCaseTimelyP{} và \ResultExtCaseTimelyTRAN, với khoảng tin cậy chồng lấn nhau. Thứ tự này giống thí nghiệm chính: đồng tối ưu quỹ đạo và đường tăng tỷ lệ đúng hạn so với quỹ đạo cố định, sửa lịch không thêm lợi ích, còn TRAN gần B2 nhưng có gap lớn hơn (\ResultExtCaseGapTRAN{} so với \ResultExtCaseGapBtwo) và lập kế hoạch lâu hơn (\ResultExtCasePlanningTRAN{} so với \ResultExtCasePlanningBtwo{} giây). Dù ít nguồn có relay mặt đất trong tầm hơn v0, mức tăng của B1 và B2 so với B0 gần bằng mức tăng ở thí nghiệm chính.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.72\textwidth, height=0.72\textwidth, axis equal image, xmin=0, xmax=2, ymin=0, ymax=2,
+    xlabel={$x$ (km)}, ylabel={$y$ (km)}, /pgf/number format/use comma,
+    legend style={font=\footnotesize, at={(0.5,-0.13)}, anchor=north, legend columns=3},
+]
+\addplot[gray!45, unbounded coords=jump] table[col sep=comma, x=x, y=y] {data/ext_map_edges_alive.csv};
+\addlegendentry{Cạnh còn sống}
+\addplot[red!60, dashed, unbounded coords=jump] table[col sep=comma, x=x, y=y] {data/ext_map_edges_failed.csv};
+\addlegendentry{Cạnh hỏng}
+\addplot[only marks, mark=*, mark size=1.3pt, black!55] table[col sep=comma, x=x, y=y] {data/ext_map_relays.csv};
+\addlegendentry{Relay}
+\addplot[only marks, mark=square*, mark size=3pt, black] table[col sep=comma, x=x, y=y] {data/ext_map_center.csv};
+\addlegendentry{Trung tâm}
+\addplot[black!60, dotted, thick] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_b1.csv};
+\addlegendentry{Quỹ đạo B1}
+\addplot[blue!70!black, thick] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_p.csv};
+\addlegendentry{Quỹ đạo P}
+\addplot[green!50!black, thick, dashed] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_tran.csv};
+\addlegendentry{Quỹ đạo TRAN}
+\addplot[only marks, mark=o, orange!85!black] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{3:3}] {data/ext_map_targets.csv};
+\addlegendentry{Hư hại nhẹ}
+\addplot[only marks, mark=triangle*, red!70!black] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{4:4}] {data/ext_map_targets.csv};
+\addlegendentry{Hư hại nặng}
+\addplot[only marks, mark=x, thick, violet] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{5:5}] {data/ext_map_targets.csv};
+\addlegendentry{Sập hoàn toàn}
+\end{axis}
+\end{tikzpicture}
+\caption{Target, mạng relay và quỹ đạo của B1, P và TRAN trên scenario đại diện \ResultExtTraceScenario{} của case study.}
+\label{fig:case-map}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.8\textwidth, height=5.5cm, xmin=0, xmax=150, ymin=0,
+    xlabel={Slot}, ylabel={Tỷ lệ cảnh báo đã giao đúng hạn},
+    grid=major, legend pos=north west, /pgf/number format/use comma,
+    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+]
+\addplot[black!60, dotted, thick] table[col sep=comma, x=slot, y=B1] {data/ext_progress.csv};
+\addlegendentry{B1}
+\addplot[blue!70!black, thick] table[col sep=comma, x=slot, y=P] {data/ext_progress.csv};
+\addlegendentry{P}
+\addplot[green!50!black, thick, dashed] table[col sep=comma, x=slot, y=TRAN] {data/ext_progress.csv};
+\addlegendentry{TRAN}
+\end{axis}
+\end{tikzpicture}
+\caption{Tiến trình giao cảnh báo trên scenario \ResultExtTraceScenario: tỷ lệ trong \ResultExtTraceAlertCount{} cảnh báo đã tới trung tâm đúng hạn tính đến cuối mỗi slot, trung bình trên 30 realization.}
+\label{fig:case-progress}
+\end{figure}
+
+\Cref{fig:case-map} vẽ scenario đại diện \ResultExtTraceScenario, là scenario có tỷ lệ đúng hạn của P gần trung vị nhất. P đi qua cùng các vùng như B1 nhưng dừng ở mỗi vùng theo lịch khác, còn TRAN bay theo một đường liên tục và vươn rộng hơn về hai phía của vùng target. Trên scenario này, B1, P và TRAN giao đúng hạn \ResultExtTraceBone, \ResultExtTraceP{} và \ResultExtTraceTRAN{} số cảnh báo. \Cref{fig:case-progress} cho thấy cả ba phương pháp giao theo từng đợt khi UAV tới gần các cụm nguồn; B1 gần như ngừng tăng sau khoảng slot 100, trong khi P và TRAN còn giao thêm nhiều cảnh báo có hạn muộn và kết thúc cao hơn.
+
 \subsection{Độ chặt của cận trên}
 \label{sec:results-milp}
 
@@ -147,12 +249,12 @@ Lập kế hoạch B0 gần như tức thời, còn B1 mất trung bình \Result
 \subsection{Trả lời các câu hỏi nghiên cứu}
 \label{sec:rq}
 
-\textbf{RQ1 --- đồng tối ưu so với tối ưu từng phần.} Đồng tối ưu quỹ đạo, đường và băng thông (B2) tăng tỷ lệ đúng hạn so với quỹ đạo cố định (B1) trên cả hai họ, với chênh lệch \ResultTwoDiffVzeroBtwoBone{} và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} cùng chiều trên cả mười topology. Ablation chỉ ra phần lợi ích này đến từ khối đường và khối quỹ đạo; khối băng thông gần như không đóng góp khi băng thông đã chia theo backlog.
+\textbf{RQ1 --- đồng tối ưu so với tối ưu từng phần.} Đồng tối ưu quỹ đạo, đường và băng thông (B2) tăng tỷ lệ đúng hạn so với quỹ đạo cố định (B1) trên cả hai họ, với chênh lệch \ResultTwoDiffVzeroBtwoBone{} và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} cùng chiều trên cả mười topology. Ablation chỉ ra phần lợi ích này đến từ khối đường và khối quỹ đạo; khối băng thông gần như không đóng góp khi băng thông đã chia theo backlog. So với phương pháp mạnh từ tài liệu (TRAN), B2 và P cao hơn trên cả hai họ, rõ nhất khi backhaul băng hẹp, nhưng chênh lệch không có ý nghĩa sau hiệu chỉnh Holm.
 
 \textbf{RQ2 --- sửa lịch theo nguy cơ trễ hạn.} Không đo được lợi ích: P $-$ B2 bằng \ResultTwoDiffVzeroPBtwo{} trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50 với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$, các biến thể chỉ giữ một thao tác hoặc bỏ thông tin backlog cho kết quả như P, và kết luận không đổi khi tăng ngân sách.
 
-\textbf{RQ3 --- khi nào UAV khôi phục việc chuyển dữ liệu.} UAV đưa khả năng kết nối từ \ResultTwoConnVzeroBzero{} lên gần một và tăng tỷ lệ đúng hạn ở mọi mức kết nối mặt đất, với mức tăng tương tự nhau giữa các nhóm; lợi ích biến mất khi mọi nguồn đã có relay mặt đất trong tầm, như ở họ dùng hằng số vật lý khác.
+\textbf{RQ3 --- khi nào UAV khôi phục việc chuyển dữ liệu.} UAV đưa khả năng kết nối từ \ResultTwoConnVzeroBzero{} lên gần một và tăng tỷ lệ đúng hạn ở mọi mức kết nối mặt đất, với mức tăng tương tự nhau giữa các nhóm; lợi ích biến mất khi mọi nguồn đã có relay mặt đất trong tầm, như ở họ dùng hằng số vật lý khác. Trong case study RescueNet, UAV nâng khả năng kết nối từ \ResultExtCaseConnBzero{} lên gần một.
 
 \textbf{RQ4 --- suy giảm theo điều kiện.} Tỷ lệ đúng hạn giảm mạnh nhất khi cảnh báo lớn hơn hoặc hạn ngắn hơn, giảm nhẹ khi tăng số cảnh báo hoặc giảm phổ; thứ tự giữa các phương pháp giữ nguyên. Sai lệch mô hình kênh khi thiết kế, thể hiện qua việc thiết kế trên tốc độ kỳ vọng thay cho realization lấy mẫu, làm tỷ lệ đúng hạn của P thay đổi \ResultTwoAblationDiffVzeroPExpectedDesign.
 
-\textbf{RQ5 --- độ bền của kết luận.} Các chênh lệch có ý nghĩa đều cùng chiều trên cả mười topology, và thứ tự B1 thấp hơn B2, P giữ nguyên trên mọi họ độ nhạy không suy biến. Báo cáo chưa thay đổi quy tắc sinh vùng hư hại, điểm nguồn và cảnh báo, nên độ bền theo quy tắc tạo target chưa được kiểm chứng.
+\textbf{RQ5 --- độ bền của kết luận.} Các chênh lệch có ý nghĩa đều cùng chiều trên cả mười topology, và thứ tự B1 thấp hơn B2, P giữ nguyên trên mọi họ độ nhạy không suy biến. Case study RescueNet thay quy tắc sinh điểm nguồn bằng vị trí công trình hư hại thật và giữ nguyên thứ tự B0 thấp hơn B1, B1 thấp hơn B2, P và TRAN; kiểm chứng này chỉ dựa trên một bố cục địa lý, còn quy tắc sinh cảnh báo chưa được thay đổi.

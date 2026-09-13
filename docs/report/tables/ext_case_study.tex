@@ -1,0 +1,15 @@
+% Case study RescueNet — hàng đọc từ data/ext_case_study.csv (sinh bởi experiments/report_tables_extensions.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Case study RescueNet trên 30 scenario đánh giá, mỗi scenario 30 realization kênh. Khoảng tin cậy 95\% lấy bằng bootstrap theo topology; gap riêng tính như ở \cref{tab:phase2-main}; thời gian lập kế hoạch tính bằng giây.}
+\label{tab:case-study}
+\begin{tabular}{@{}lccccr@{}}
+\toprule
+\textbf{PP} & \textbf{Đúng hạn} & \textbf{KTC 95\%} & \textbf{Conn} & \textbf{Gap riêng} & \textbf{Lập KH} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/ext_case_study.csv}{1=\colmethod, 2=\coltimely, 3=\colci, 4=\colconn, 5=\colgap, 6=\colplanning}{\colmethod & \coltimely & \colci & \colconn & \colgap & \colplanning}
+\bottomrule
+\end{tabular}
+\end{table}
