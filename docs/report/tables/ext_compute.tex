@@ -1,0 +1,15 @@
+% Thời gian tính — hàng đọc từ data/ext_compute.csv (sinh bởi experiments/report_tables_extensions.py).
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Thời gian tính đã ghi của từng thí nghiệm, bằng tổng thời gian lập kế hoạch, đánh giá và giải cận của các task (với 12 tiến trình song song, thời gian thực ngắn hơn nhiều).}
+\label{tab:compute}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Thí nghiệm} & \textbf{Số task} & \textbf{Giờ tính} \\
+\midrule
+\csvreader[separator=semicolon, late after line=\\]{data/ext_compute.csv}{1=\colexperiment, 2=\coltasks, 3=\colhours}{\colexperiment & \coltasks & \colhours}
+\bottomrule
+\end{tabular}
+\end{table}

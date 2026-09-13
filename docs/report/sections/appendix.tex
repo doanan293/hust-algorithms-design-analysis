@@ -1,0 +1,10 @@
+\section{Gói tái lập}
+\label{sec:appendix}
+
+Mã nguồn, cấu hình, manifest dữ liệu, kết quả và dữ liệu của báo cáo nằm trong cùng kho mã; tài liệu \texttt{docs/reproducibility.md} mô tả môi trường, dữ liệu và giấy phép, nguồn của từng bảng và hình, và thứ tự chạy lại toàn bộ. Script \texttt{experiments/reproduce.py} kiểm tra ba mức. Mức \texttt{tables} chạy lại thống kê và các script sinh dữ liệu báo cáo, rồi so từng byte với các file đã lưu. Mức \texttt{scenarios} kiểm tra checksum của dữ liệu thô, sinh lại manifest target RescueNet và mọi họ kịch bản trong một thư mục tạm, rồi so với manifest đã lưu và với mã băm ghi trong kết quả. Mức \texttt{experiments} chạy lại các thí nghiệm, trên toàn bộ hoặc trên các kịch bản của một topology, và so từng dòng kết quả trên các cột không phải thời gian chạy. Kết quả của mỗi mức được ghi trong thư mục \texttt{results/reproducibility}.
+
+Mỗi thí nghiệm lưu cấu hình, mã băm của mã nguồn và của manifest kịch bản, commit, môi trường và thời gian chạy. Script sinh dữ liệu báo cáo chỉ đọc một thí nghiệm khi kết quả mô tả mã hiện tại: mã băm trùng, hoặc kết quả đến từ một commit sạch là tổ tiên của phiên bản hiện tại và không file nào của các package quyết định kết quả bị sửa kể từ commit đó. \Cref{tab:compute} liệt kê thời gian tính đã ghi của từng thí nghiệm, tổng cộng \ResultExtComputeHours{} giờ; \cref{tab:acceptance} đối chiếu tiêu chí nghiệm thu của đề bài với các mục của báo cáo.
+
+\input{tables/ext_compute}
+
+\input{tables/acceptance}
