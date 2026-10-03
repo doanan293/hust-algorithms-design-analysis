@@ -1,218 +1,237 @@
-\section{Mô hình và phương pháp}
+\section{Proposed Algorithm}
 \label{sec:method}
 
-\subsection{Mô hình hệ thống}
-\label{sec:model}
+This section presents the proposed sample-scored block search, which we denote B2, and its schedule-repair variant P. Both methods take a scenario and its candidate paths as input and output a plan $(q,x,w)$: a trajectory, a path selection, and bandwidth weights. \Cref{fig:pipeline} summarizes the pipeline. We first explain why the blocks are not solved as convex subproblems, then introduce the two ingredients shared by all blocks, namely the weighted bandwidth rule and the design scorer, and finally describe the blocks of B2, the repair loop of P, and a leximin variant used to isolate the effect of the objective.
 
-Mạng relay mặt đất sau thiên tai được biểu diễn bằng đồ thị $G=(V,E)$ lấy từ Topology Zoo~\cite{knight2011zoo} và chuẩn hoá vào vùng vuông cạnh $L_{\mathrm{box}}$ với cùng một hệ số tỷ lệ trên hai trục. Nút $c\in V$ là trung tâm cứu hộ, mọi nút còn lại là relay. Cạnh $e\in E$ còn hoạt động có dung lượng backhaul $C_e$; cạnh hỏng có dung lượng bằng $0$. Các điểm phát cảnh báo tạo thành tập $S$; chúng không thuộc $G$ và chỉ truyền được bằng vô tuyến. Mỗi cảnh báo $a\in A$ có nguồn $s_a\in S$, slot phát sinh $r_a$, hạn $d_a$ và kích thước $L_a$ bit. Nhiệm vụ gồm $N$ slot độ dài $\Delta$; mỗi slot chia thành nửa \emph{truy nhập} dài $\tau\Delta$, trong đó nguồn gửi tới relay hoặc UAV, và nửa \emph{downlink} dài $(1-\tau)\Delta$, trong đó UAV gửi xuống một nút của $G$.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>={Stealth[length=2mm]}, node distance=0.45cm,
+    blk/.style={draw=black!70, rounded corners=2pt, fill=blue!7, text width=4.6cm, minimum height=0.85cm, align=center, font=\footnotesize},
+    rep/.style={blk, fill=orange!12, dashed},
+    io/.style={draw=black!70, fill=black!5, text width=4.6cm, minimum height=0.85cm, align=center, font=\footnotesize},
+    sc/.style={draw=green!40!black, rounded corners=2pt, fill=green!8, text width=4.2cm, align=center, font=\footnotesize, inner sep=5pt}]
+  \node[io] (init) {Initial plan\\B1 trajectory, $w\equiv 1$};
+  \node[blk, below=0.8cm of init] (path) {Path block\\$x$: skip or each candidate};
+  \node[blk, below=of path] (bw) {Bandwidth block\\$w_e\gets 2w_e$ or $w_e/2$};
+  \node[blk, below=of bw] (traj) {Trajectory block\\tour from the feasible family};
+  \node[rep, below=of traj] (repair) {Risk-driven repair (P only)};
+  \node[io, below=0.6cm of repair] (out) {Plan $(q,x,w)$};
+  \node[sc, right=1.0cm of bw] (scorer) {\textbf{Design scorer}\\EDF simulation on $M_d=5$ design realizations; lexicographic key \eqref{eq:objective}; one call $=$ one evaluation};
+  \node[sc, right=1.0cm of out, fill=black!5, draw=black!70] (eval) {Out-of-sample evaluation on $M=30$ realizations; LP bound on $q$};
+  \node[sc, left=1.2cm of out, text width=3.8cm, fill=yellow!10, draw=black!50] (rule) {Accept a change only if the key increases strictly; stop when a round accepts nothing or the budget $E$ is spent};
+  \draw[->] (init) -- (path);
+  \draw[->] (path) -- (bw);
+  \draw[->] (bw) -- (traj);
+  \draw[->] (traj) -- (repair);
+  \draw[->] (repair) -- (out);
+  \draw[->] (out) -- (eval);
+  \draw[->] (repair.west) -- ++(-0.45,0) |- node[pos=0.25, sloped, above, font=\footnotesize] {next round} (path.west);
+  \draw[<->, dashed, green!40!black] (scorer.west) ++(0,0.3) -- ++(-0.65,0) |- (path.east);
+  \draw[<->, dashed, green!40!black] (scorer.west) -- (bw.east);
+  \draw[<->, dashed, green!40!black] (scorer.west) ++(0,-0.3) -- ++(-0.65,0) |- (traj.east);
+  \begin{scope}[on background layer]
+    \node[draw=black!40, dashed, rounded corners=4pt, fit=(path)(bw)(traj)(repair), inner xsep=14pt, inner ysep=6pt, label={[font=\footnotesize, text=black!60, anchor=south east]north east:$\le I_{\max}=10$ rounds}] (loop) {};
+  \end{scope}
+\end{tikzpicture}
+\caption{Pipeline of the proposed block search.}
+\label{fig:pipeline}
+\end{figure}
 
-UAV bay ở độ cao cố định $H$ theo quỹ đạo $q[0],\dots,q[N]\in\R^2$ thoả
-\begin{equation}
-\label{eq:mobility}
-q[0]=q_s,\qquad q[N]=q_t,\qquad \norm{q[n+1]-q[n]}\le V_{\max}\Delta,\quad n=0,\dots,N-1,
-\end{equation}
-và vị trí đại diện của slot $n$ là trung điểm $\bar q[n]=\bigl(q[n]+q[n+1]\bigr)/2$.
-
-\paragraph{Kênh.}
-Liên kết giữa UAV và điểm mặt đất $k$ ở toạ độ $w_k$ dùng mô hình xác suất tầm nhìn thẳng (PrLoS) của~\cite{huang2025ddatsap}:
-\begin{equation}
-\label{eq:geometry}
-\begin{aligned}
-d_k[n]&=\sqrt{\norm{\bar q[n]-w_k}^2+H^2},\qquad
-\theta_k[n]=\frac{180}{\pi}\operatorname{atan2}\bigl(H,\norm{\bar q[n]-w_k}\bigr),\\
-P_k^{L}[n]&=\frac{1}{1+a\exp\bigl[-b(\theta_k[n]-a)\bigr]},
-\end{aligned}
-\end{equation}
-với độ lợi $g^{L}=\beta_0 d^{-\alpha_L}$ khi có tầm nhìn thẳng và $g^{N}=\mu\beta_0 d^{-\alpha_N}$ khi không. Với công suất phát $p$ và mật độ phổ nhiễu $N_0$, đặt $s=pg/N_0$ (đơn vị Hz); tốc độ khi cấp băng thông $b$ là
-\begin{equation}
-\label{eq:rate}
-R(b,s)=b\log_2\!\Bigl(1+\frac{s}{b}\Bigr),\qquad R(0,s)=0.
-\end{equation}
-Trong realization $\omega$, trạng thái LoS/NLoS của liên kết tới điểm $k$ ở slot $n$ được lấy mẫu độc lập với xác suất $P_k^{L}[n]$ tính trên chính quỹ đạo đang xét; mọi kế hoạch được so sánh trên cùng các số ngẫu nhiên. Liên kết từ nguồn tới relay mặt đất có độ lợi tất định $\beta_0 d^{-\alpha_G}$ và chỉ tồn tại khi $R(B_{\mathrm{tot}},s)\ge R_{\min}$. Nguồn phát công suất $p_s$; UAV có tổng công suất $P_U$ chia đều cho tối đa hai downlink hoạt động trong một slot, nên ngân sách công suất không tăng theo quy mô.
-
-\paragraph{Đường chuyển tiếp.}
-Mỗi cảnh báo có tối đa $K$ candidate path thuộc hai loại: đường \emph{mặt đất} $s_a\to v\leadsto c$ qua một relay $v$ trong tầm, và đường \emph{UAV} $s_a\to\text{UAV}\to u\leadsto c$ với nút thả $u\in V$. Đoạn $v\leadsto c$ là đường backhaul ít chặng nhất trên các cạnh còn hoạt động. Tập candidate gồm tối đa hai đường mặt đất có chi phí ước lượng thấp nhất, bổ sung bằng các đường UAV có chi phí thấp nhất; tập này cố định trước khi lập kế hoạch và mọi phương pháp dùng chung.
-
-\subsection{Phát biểu bài toán}
-\label{sec:problem}
-
-Một kế hoạch gồm quỹ đạo $q$ thoả \eqref{eq:mobility}, lựa chọn đường $x_{a,p}\in\set{0,1}$ với $\sum_p x_{a,p}\le 1$ (cho phép không phục vụ cảnh báo), và băng thông $b_{e,n}\ge 0$ trên các liên kết vô tuyến. Kế hoạch được lập trước nhiệm vụ chỉ từ tốc độ kỳ vọng và được đánh giá trên các realization kênh độc lập. Khi thực thi, trong mỗi slot $n$:
-\begin{enumerate}
-\item \emph{Phổ:} tổng băng thông của các liên kết truy nhập và của các downlink đều không vượt $B_{\mathrm{tot}}$; có tối đa hai downlink hoạt động.
-\item \emph{Dung lượng:} liên kết vô tuyến $e$ mang tối đa $t_e\Delta\,R(b_{e,n},s_{e,n})$ bit, với $t_e=\tau$ cho truy nhập và $t_e=1-\tau$ cho downlink; cạnh backhaul mang tối đa $\Delta C_e$ bit, chia chung cho mọi cảnh báo đi qua.
-\item \emph{Nhân quả:} bit của $a$ có mặt ở nguồn từ đầu slot $r_a$; truyền trong slot $n$ chỉ dùng dữ liệu có trong buffer ở đầu slot $n$, nên bit nhận trong slot $n$ chỉ được chuyển tiếp từ slot $n+1$; bit chỉ đi trên đường đã chọn và buffer không âm.
-\item \emph{Hạn:} ở đầu slot $d_a$, mọi bit còn lại của $a$ bị huỷ.
-\end{enumerate}
-Mọi phương pháp dùng chung bộ điều phối phục vụ mỗi hàng đợi theo thứ tự hạn sớm nhất (EDF).
-
-\begin{definition}[Cảnh báo đúng hạn]
-\label[definition]{def:timely}
-Cảnh báo $a$ \emph{đúng hạn} trong realization $\omega$, ký hiệu $z_{a,\omega}=1$, nếu ít nhất $L_a$ bit của nó tới trung tâm $c$ không muộn hơn cuối slot $d_a-1$; ngược lại $z_{a,\omega}=0$.
-\end{definition}
-
-Gọi $D_{a,\omega}$ là số bit của $a$ tới $c$ trước hạn. Các kế hoạch được so sánh theo thứ tự từ điển của
-\begin{equation}
-\label{eq:objective}
-\Bigl(\hat P_{\mathrm{timely}},\ \mathrm{Conn},\ -\sum_{\omega}\sum_{a}\frac{L_a-D_{a,\omega}}{L_a}\Bigr),
-\qquad
-\hat P_{\mathrm{timely}}=\frac{1}{M\abs{A}}\sum_{\omega=1}^{M}\sum_{a\in A}z_{a,\omega},
-\end{equation}
-trong đó $\mathrm{Conn}$ là tỷ lệ nguồn có đường theo thời gian tới $c$ trên đồ thị mở rộng theo thời gian: mỗi bước truyền tốn một slot, được phép chờ trong buffer, và liên kết UAV dùng được ở slot $n$ khi $R(B_{\mathrm{tot}},s_{e,n})\ge R_{\min}$.
-
-\begin{remark}
-Thành phần thứ ba là tỷ lệ dữ liệu còn thiếu tại hạn (shortfall), thay cho tổng độ trễ: vì cảnh báo quá hạn bị huỷ, cảnh báo trễ không có thời điểm hoàn thành để tính độ trễ.
-\end{remark}
-
-\subsection{Phương pháp cơ sở}
-\label{sec:baselines}
-
-Hai phương pháp cơ sở dùng chung tập candidate, bộ điều phối EDF và quy tắc chia đều $B_{\mathrm{tot}}$ cho các liên kết đang có dữ liệu chờ trong mỗi nửa slot; chúng chỉ khác nhau ở vai trò của UAV. Cả hai lập kế hoạch từ tốc độ kỳ vọng và không dùng các realization đánh giá.
-
-\paragraph{B0 --- không có UAV.}
-UAV đứng yên tại điểm xuất phát và không được giao cảnh báo nào. Mỗi cảnh báo đi theo đường mặt đất có chi phí ước lượng thấp nhất; nguồn không có relay nào trong tầm thì cảnh báo không được phục vụ. Với B0, $\mathrm{Conn}$ được tính trên đồ thị không có liên kết UAV. Chi phí lập kế hoạch là $O(\abs{A}K)$.
-
-\paragraph{B1 --- UAV bay theo quỹ đạo cố định.}
-UAV xuất phát từ trung tâm, lần lượt bay tới tâm các vùng hư hại theo thứ tự láng giềng gần nhất với tốc độ $V_{\max}$, chia đều thời gian còn lại để lơ lửng tại các vùng, rồi trở về; vùng được thêm sau cùng bị bỏ nếu hành trình không vừa $N$ slot. Với mỗi cảnh báo, mọi candidate được mô phỏng riêng cho cảnh báo đó trên quỹ đạo này với tốc độ kỳ vọng và toàn bộ băng thông; B1 chọn candidate giao xong sớm nhất (hoà thì lấy chỉ số nhỏ hơn) và không phục vụ cảnh báo nếu không candidate nào kịp hạn. Chi phí lập kế hoạch là $O(\abs{A}KNH_{\max})$, với $H_{\max}$ là số chặng lớn nhất của một candidate.
-
-\subsection{Cận trên theo từng realization}
-\label{sec:bound}
-
-Cố định quỹ đạo $q$, tập candidate và realization $\omega$; khi đó $s_{e,n}$ đã biết. Với chặng $h$ của candidate $p$ và slot $n\in[r_a+h,\,d_a-1]$, gọi $f_{a,p,h,n}$ là số bit đi qua chặng và $B_{a,p,h,n}$ là buffer ở đầu slot. Chọn các điểm tiếp tuyến $b_k=B_{\mathrm{tot}}2^{-k}$, $k=0,\dots,9$, và xét bài toán quy hoạch tuyến tính
-\begin{subequations}
-\label{eq:lp}
-\begin{align}
-\max\quad & \textstyle\sum_{a\in A} z_a \label{eq:lp-objective}\\
-\text{s.t.}\quad
-& \textstyle\sum_{p} x_{a,p}\le 1, \label{eq:lp-choice}\\
-& B_{a,p,0,r_a}=L_a x_{a,p},\qquad B_{a,p,h,r_a+h}=f_{a,p,h-1,r_a+h-1}\ (h\ge 1), \label{eq:lp-init}\\
-& B_{a,p,h,n+1}=B_{a,p,h,n}-f_{a,p,h,n}+f_{a,p,h-1,n},\qquad f_{a,p,h,n}\le B_{a,p,h,n}, \label{eq:lp-buffer}\\
-& L_a z_a\le \textstyle\sum_{p}\sum_{n} f_{a,p,H_p-1,n}, \label{eq:lp-deadline}\\
-& \textstyle\sum_{(a,p,h)\,\text{qua}\,e} f_{a,p,h,n}\le t_e\Delta\bigl(R(b_k,s_{e,n})+R'(b_k,s_{e,n})(b_{e,n}-b_k)\bigr)\quad \forall k, \label{eq:lp-radio}\\
-& \textstyle\sum_{(a,p,h)\,\text{qua}\,e} f_{a,p,h,n}\le \Delta C_e, \label{eq:lp-backhaul}\\
-& \textstyle\sum_{e\,\text{truy nhập}} b_{e,n}\le B_{\mathrm{tot}},\qquad \sum_{e\,\text{downlink}} b_{e,n}\le B_{\mathrm{tot}}, \label{eq:lp-spectrum}\\
-& x,z\in[0,1],\qquad f,B,b\ge 0, \label{eq:lp-domain}
-\end{align}
-\end{subequations}
-trong đó $f_{a,p,-1,n}\equiv 0$, $H_p$ là số chặng của candidate $p$, \eqref{eq:lp-buffer} áp dụng khi $n+1\le d_a-1$, \eqref{eq:lp-radio} áp dụng cho liên kết vô tuyến có $s_{e,n}>0$ (nếu $s_{e,n}=0$ thì luồng qua liên kết bằng $0$) và \eqref{eq:lp-backhaul} cho cạnh backhaul. Gọi $\mathrm{UB}_\omega(q)$ là giá trị tối ưu.
-
-\begin{proposition}[Cận trên]
-\label[proposition]{prop:ub}
-Với quỹ đạo $q$, tập candidate và realization $\omega$ cố định, $\mathrm{UB}_\omega(q)$ không nhỏ hơn số cảnh báo đúng hạn của mọi kế hoạch có quỹ đạo $q$ khi thực thi trên $\omega$.
-\end{proposition}
-
-\begin{proof}
-Với $s>0$ cố định, $R(b,s)=b\,\phi(1/b)$ với $\phi(t)=\log_2(1+st)$ lõm, nên $R(\cdot,s)$ là phép phối cảnh của một hàm lõm và do đó lõm trên $b>0$~\cite{boyd2004convex}. Một hàm lõm nằm dưới mọi tiếp tuyến, nên $R(b,s)\le R(b_k,s)+R'(b_k,s)(b-b_k)$ với mọi $k$.
-Xét một kế hoạch bất kỳ có quỹ đạo $q$ và quá trình thực thi của nó trên $\omega$. Đặt $x_{a,p}=1$ cho đường được chọn, $z_a=z_{a,\omega}$, $f_{a,p,h,n}$ bằng số bit truyền qua chặng $h$ trong slot $n$, $B_{a,p,h,n}$ bằng buffer ở đầu slot và $b_{e,n}$ bằng băng thông được cấp. Ràng buộc nhân quả và buffer cho \eqref{eq:lp-init}--\eqref{eq:lp-buffer}; \cref{def:timely} cho \eqref{eq:lp-deadline}; ràng buộc phổ và dung lượng cho \eqref{eq:lp-spectrum} và \eqref{eq:lp-backhaul}; bất đẳng thức tiếp tuyến cho \eqref{eq:lp-radio}. Điểm này khả thi và có giá trị mục tiêu bằng số cảnh báo đúng hạn, nên không vượt $\mathrm{UB}_\omega(q)$.
-\end{proof}
-
-Bài toán \eqref{eq:lp} còn nới lỏng tính nguyên của $x,z$, thứ tự EDF, giới hạn hai downlink và biết trước kênh; mỗi nới lỏng chỉ làm miền khả thi rộng thêm. Cận chỉ hợp lệ với quỹ đạo và tập candidate đã cho, không phải cận toàn cục trên mọi quỹ đạo. Với mỗi scenario, cận được lấy trung bình trên các realization và chia cho $\abs{A}$; gap của một phương pháp là $(\overline{\mathrm{UB}}-\overline{P})/\overline{\mathrm{UB}}$. B1 được so với cận trên quỹ đạo B1; B0 được so với cận của cùng bài toán khi chỉ giữ các candidate mặt đất.
-
-Để đo độ chặt, trên các instance thu nhỏ bài toán \eqref{eq:lp} được giải lại với $x,z$ nhị phân (MILP). Kế hoạch dựng từ nghiệm MILP --- đường đã chọn và băng thông của nghiệm, giữ hai downlink lớn nhất nếu vượt giới hạn --- được thực thi trên cùng $\omega$, cho chuỗi
-\begin{equation}
-\label{eq:sandwich}
-P_\omega(\text{kế hoạch MILP})\ \le\ \mathrm{OPT}_\omega(q)\ \le\ \mathrm{UB}^{\mathrm{MILP}}_\omega(q)\ \le\ \mathrm{UB}_\omega(q).
-\end{equation}
-Kế hoạch MILP biết trước kênh nên chỉ dùng để đo độ chặt của cận, không dùng để so sánh phương pháp.
-
-\subsection{Độ khó của bài toán}
-\label{sec:hardness}
-
-\begin{proposition}
-\label[proposition]{prop:hardness}
-Ngay cả khi quỹ đạo cố định, dữ liệu được chia nhỏ tuỳ ý giữa các slot, mạng chỉ có hai relay và mỗi cảnh báo có hai candidate path, bài toán tối đa số cảnh báo đúng hạn là NP-khó.
-\end{proposition}
-
-\begin{proof}
-Quy dẫn từ PARTITION: cho các số nguyên dương $s_1,\dots,s_m$ có tổng $2Q$, hỏi có tập con có tổng $Q$ hay không. Dựng mạng gồm trung tâm $c$, hai relay $v_1,v_2$ và hai cạnh backhaul $(v_j,c)$ có $\Delta C_{(v_j,c)}=Q$ bit. Một nguồn nằm trong tầm của cả hai relay, với độ lợi đủ lớn để $\tau\Delta\,R(B_{\mathrm{tot}}/2,s)\ge 2Q$. Cảnh báo $i$ có $L_i=s_i$, $r_i=0$, $d_i=2$ và hai candidate: qua $v_1$ hoặc qua $v_2$. Theo quy ước nhân quả, bit của cảnh báo đúng hạn phải được gửi lên relay trong slot $0$ và đi qua backhaul trong slot $1$.
-Nếu tồn tại tập con có tổng $Q$, cho các cảnh báo tương ứng đi qua $v_1$, phần còn lại qua $v_2$, và cấp $B_{\mathrm{tot}}/2$ cho mỗi liên kết truy nhập trong slot $0$: mỗi liên kết truy nhập mang được $2Q$ bit và mỗi cạnh backhaul mang đúng $Q$ bit trong slot $1$, nên cả $m$ cảnh báo đúng hạn.
-Ngược lại, nếu cả $m$ cảnh báo đúng hạn thì tổng kích thước các cảnh báo qua $v_j$ không vượt $Q$ với $j=1,2$, trong khi tổng hai phần bằng $2Q$; vậy mỗi phần bằng $Q$ và PARTITION có lời giải. Phép dựng thực hiện trong thời gian đa thức, nên quyết định ``có ít nhất $m$ cảnh báo đúng hạn hay không'' là NP-khó.
-\end{proof}
-
-\begin{remark}
-\Cref{prop:hardness} chỉ khẳng định NP-khó theo nghĩa yếu; báo cáo không khẳng định bài toán thuộc NP (băng thông là biến liên tục) và không xét trường hợp $K=1$. Độ khó đến từ ràng buộc mỗi cảnh báo đi theo đúng một đường, không đến từ việc lập lịch trên một liên kết: khi chỉ có một liên kết và dữ liệu được chia nhỏ theo slot, bài toán tương ứng với lập lịch một máy có ngắt quãng $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$, vốn giải được trong thời gian đa thức~\cite{lawler1990preemptive}. Phiên bản không ngắt quãng $1\,|\,r_j\,|\,\sum U_j$ là NP-khó mạnh~\cite{lenstra2020elements}, nhưng mô hình ở đây cho phép chia bit theo slot nên kết quả đó không áp dụng trực tiếp.
-\end{remark}
-
-\subsection{Độ phức tạp tính toán}
-\label{sec:complexity}
-
-Sinh candidate path tốn $O(\abs{V}+\abs{E})$ cho một lần tìm kiếm theo chiều rộng từ $c$ và $O(\abs{A}\abs{V}\log\abs{V})$ cho việc xếp hạng. Đánh giá một kế hoạch trên $M$ realization tốn $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, với $\mathcal L$ là tập liên kết; bộ kiểm tra độc lập có cùng bậc, còn $\mathrm{Conn}$ tốn $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. B0 lập kế hoạch trong $O(\abs{A}K)$ và B1 trong $O(\abs{A}KNH_{\max})$. Bài toán \eqref{eq:lp} có $\sum_a\sum_p H_p(d_a-r_a)$ biến luồng và cùng số biến buffer, tối đa $\abs{\mathcal L_{\mathrm{vt}}}N$ biến băng thông và tối đa $10\abs{\mathcal L_{\mathrm{vt}}}N$ ràng buộc tiếp tuyến, với $\mathcal L_{\mathrm{vt}}$ là các liên kết vô tuyến của tập candidate. Cận được giải bằng HiGHS qua \texttt{scipy}; báo cáo không đưa ra cận thời gian đa thức cho bộ giải mà đo thời gian thực của mọi bài toán LP (\cref{sec:experiments}).
-
-\subsection{Phương pháp tìm kiếm theo khối và sửa lịch}
+\subsection{Design Rationale}
 \label{sec:algorithm}
 
-\paragraph{Vì sao các khối không là bài toán lồi.}
-Cấu trúc ba khối của~\cite{huang2025ddatsap} được giữ lại, nhưng mỗi khối không được giải bằng một bài toán lồi. Ba thử nghiệm sơ bộ trên sáu scenario đánh giá với mười realization cho thấy lý do. Băng thông lấy từ nghiệm LP ở \cref{sec:bound}, dùng làm lịch tĩnh, làm tỷ lệ đúng hạn giảm từ \num{0.410} của B1 xuống \num{0.128}; dùng làm trọng số chia băng thông đạt \num{0.404}; đường chọn theo nghiệm LP đạt \num{0.412}. Như vậy chỉ dẫn từ LP không chuyển được sang bộ điều phối EDF, còn khối quỹ đạo dưới kênh PrLoS không có hàm thay thế lồi hợp lệ cho mục tiêu đếm cảnh báo. Ngược lại, tìm kiếm cục bộ được chấm điểm bằng chính bộ đánh giá nâng tỷ lệ này lên \num{0.427} khi chấm trên tốc độ kỳ vọng và \num{0.449} khi chấm trên năm realization lấy mẫu; chấm trên tốc độ kỳ vọng còn làm một scenario giảm từ \num{0.372} xuống \num{0.305}. Vì vậy mỗi khối ở đây là một bước tìm kiếm cục bộ có đánh giá.
+We keep the three-block structure of~\cite{huang2025ddatsap} but do not solve each block as a convex problem, a choice motivated by three preliminary tests on six evaluation scenarios with ten realizations each. When the bandwidths of the LP solution \eqref{eq:lp} were used as a static schedule, the timely-delivery ratio fell from \num{0.410} for the fixed-trajectory baseline B1 to \num{0.128}; used as bandwidth-sharing weights, they reached \num{0.404}, and paths taken from the LP solution reached \num{0.412}. Guidance from the LP therefore does not carry over to the EDF scheduler, and under the PrLoS channel the trajectory block admits no valid convex surrogate for an objective that counts alerts. Local search scored by the evaluator itself, by contrast, raised the ratio to \num{0.427} when scoring on expected rates and to \num{0.449} when scoring on five sampled realizations, while scoring on expected rates even lowered one scenario from \num{0.372} to \num{0.305}. We therefore implement each block as an evaluated local-search step. Compared with a surrogate-based decomposition, this design measures every accepted change on the exact objective and scheduler used for evaluation, and it requires only samples of the channel rather than a convex surrogate of it.
 
-\paragraph{Chia băng thông theo trọng số.}
-Kế hoạch mang trọng số $w_{e,n}\ge 0$ cho mỗi liên kết vô tuyến $e$ và slot $n$. Trong mỗi nửa slot, gọi $\mathcal B_n$ là tập liên kết truy nhập có dữ liệu chờ, hoặc tập tối đa hai downlink có hạn đầu hàng đợi sớm nhất; băng thông được cấp là
+\subsection{Plan Representation and Design Scoring}
+\label{sec:weights}
+
+A plan carries a weight $w_{e,n}\ge 0$ for every radio link $e$ and slot $n$ instead of an explicit bandwidth schedule. In each phase of a slot, let $\mathcal B_n$ be the set of access links with queued data, or the set of at most two downlinks whose queue heads have the earliest deadlines. As illustrated in \cref{fig:slot}, the bandwidth allocated to a link $e\in\mathcal B_n$ is
 \begin{equation}
 \label{eq:weights}
-b_{e,n}=B_{\mathrm{tot}}\frac{w_{e,n}}{\sum_{e'\in\mathcal B_n}w_{e',n}},\qquad e\in\mathcal B_n,
+b_{e,n}=B_{\mathrm{tot}}\frac{w_{e,n}}{\sum_{e'\in\mathcal B_n}w_{e',n}},
 \end{equation}
-\noindent và chia đều khi tổng trọng số bằng $0$. Quy tắc chia đều của B0, B1 là trường hợp mọi trọng số bằng $1$. Trọng số cố định trước nhiệm vụ, còn băng thông thực tế chỉ phụ thuộc hàng đợi hiện tại, nên chính sách không dùng thông tin tương lai.
+\noindent with equal sharing when the weights sum to $0$. The equal-sharing rule of the baselines is the special case in which all weights equal $1$. The weights are fixed before the mission, whereas the actual bandwidth depends only on the current queues, so the policy uses no future information. Unlike a static bandwidth schedule, which falls out of step with how the EDF scheduler serves the queues, this rule follows the backlog in every slot while still letting the search shift spectrum toward specific links.
 
-\paragraph{Chấm điểm thiết kế.}
-Phương pháp tìm kiếm không bao giờ dùng các realization đánh giá. Nó chấm một kế hoạch trên $M_d=5$ realization thiết kế, lấy từ một luồng số ngẫu nhiên khác với luồng đánh giá, theo khoá từ điển \eqref{eq:objective} cộng trên các realization đó. Mỗi lần chấm là một lần đánh giá, và tổng số lần đánh giá bị giới hạn bởi ngân sách $E=2000$; khi hết ngân sách, phương pháp trả về kế hoạch tốt nhất đang có. Một thay đổi chỉ được nhận khi khoá tăng chặt, nên khoá của kế hoạch hiện tại không bao giờ giảm. Khi chấm thiết kế, bộ kiểm tra độc lập được bỏ qua và $\mathrm{Conn}$ được ghi nhớ theo quỹ đạo và realization, vì cả hai không ảnh hưởng tới quyết định tìm kiếm; cách này giữ nguyên kế hoạch trả về và nhanh hơn khoảng \num{2.9} lần. Lần đánh giá cuối trên các realization đánh giá vẫn chạy bộ kiểm tra.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, >={Stealth[length=2mm]},
+    slot/.style={draw=black!60, fill=black!6, minimum width=2.1cm, minimum height=0.7cm, font=\footnotesize},
+    seg/.style={draw=black!60, minimum height=0.62cm, font=\scriptsize, inner sep=1pt},
+    lbl/.style={font=\footnotesize, align=center},
+    small/.style={font=\scriptsize, align=left}]
+  % slot timeline
+  \node[slot] (s1) at (1.2,0) {slot $n-1$};
+  \node[slot, fill=blue!12, draw=blue!60!black, thick] (s2) at (3.6,0) {slot $n$};
+  \node[slot] (s3) at (6.0,0) {slot $n+1$};
+  \node[lbl] at (7.7,0) {$\cdots$};
+  \node[slot, fill=red!8] (s4) at (9.4,0) {slot $d_a$};
+  \draw[->, black!70] (s2.north) to[bend left=35] node[above, small] {bits received in slot $n$ are forwarded from slot $n+1$} (s3.north);
+  \node[small, text=red!60!black, anchor=west] at (10.6,0) {remaining bits\\of alert $a$ dropped};
+  % zoom box
+  \draw[blue!60!black, dashed] (s2.south west) -- (0,-1.1);
+  \draw[blue!60!black, dashed] (s2.south east) -- (14.6,-1.1);
+  \draw[draw=blue!60!black, rounded corners=3pt] (0,-1.1) rectangle (14.6,-5.0);
+  % access phase
+  \node[lbl, anchor=west] at (0.2,-1.45) {\textbf{Access phase} ($\tau\Delta$)};
+  \node[small, anchor=west, text=black!65] at (0.2,-1.8) {links with queued data share $B_{\mathrm{tot}}$ by weight};
+  \node[seg, fill=green!30, minimum width=3.3cm, anchor=west] (a1) at (0.3,-2.45) {$e_1$: $w=2$ $\to$ 50\%};
+  \node[seg, fill=green!18, minimum width=1.65cm, anchor=west] (a2) at (a1.east) {$e_2$: 25\%};
+  \node[seg, fill=green!8, minimum width=1.65cm, anchor=west] (a3) at (a2.east) {$e_3$: 25\%};
+  \draw[|<->|, black!60] (0.3,-2.95) -- node[below, small] {$B_{\mathrm{tot}}$} (6.9,-2.95);
+  \node[small, anchor=north west, text width=6.6cm] at (0.3,-3.45) {$w_{e_1}=2$, $w_{e_2}=w_{e_3}=1$; link $e_4$ has no queued data and receives nothing. With all weights equal to $1$, the rule reduces to equal sharing.};
+  % downlink phase
+  \draw[black!30] (7.3,-1.25) -- (7.3,-4.85);
+  \node[lbl, anchor=west] at (7.45,-1.45) {\textbf{Downlink phase} ($(1-\tau)\Delta$)};
+  \node[small, anchor=west, text=black!65] at (7.45,-1.8) {two downlinks with the earliest queue heads (EDF)};
+  \node[small, anchor=west] (q1) at (7.6,-2.2) {$u_1$: head deadline $9$ $\to$ \textcolor{green!50!black}{selected}};
+  \node[small, anchor=west] (q2) at (7.6,-2.55) {$u_2$: head deadline $12$ $\to$ \textcolor{green!50!black}{selected}};
+  \node[small, anchor=west, text=black!50] (q3) at (7.6,-2.9) {$u_3$: head deadline $20$ $\to$ not served};
+  \node[seg, fill=blue!12, minimum width=1.65cm, anchor=west] (d1) at (7.75,-3.65) {$u_1$: 25\%};
+  \node[seg, fill=blue!28, minimum width=4.95cm, anchor=west] (d2) at (d1.east) {$u_2$: $w=3$ $\to$ 75\%};
+  \draw[|<->|, black!60] (7.75,-4.15) -- node[below, small] {$B_{\mathrm{tot}}$} (14.35,-4.15);
+\end{tikzpicture}
+\caption{Slot structure and weighted bandwidth sharing with illustrative values.}
+\label{fig:slot}
+\end{figure}
 
-\paragraph{Chấm điểm như một xấp xỉ trung bình mẫu.}
-Mục tiêu thực của bài toán là kỳ vọng của khoá từ điển theo phân phối kênh. Cộng khoá trên $M_d$ realization thiết kế là một xấp xỉ trung bình mẫu (sample average approximation, SAA) của kỳ vọng đó với cỡ mẫu $M_d=5$, còn chấm trên tốc độ kỳ vọng là bài toán tương đương tất định. Vì realization thiết kế và realization đánh giá lấy từ hai luồng số ngẫu nhiên khác nhau, tỷ lệ đúng hạn ở \cref{sec:experiments} là ước lượng ngoài mẫu. Thí nghiệm số realization thiết kế ở \cref{sec:results-budget} là khảo sát cỡ mẫu của SAA này; báo cáo không thêm phương pháp SAA nào khác.
+\label{sec:scoring}
+The search never uses the evaluation realizations. It scores a plan on $M_d=5$ \emph{design realizations}, drawn from a random stream distinct from the evaluation stream, by summing the lexicographic key \eqref{eq:objective} over these realizations. Each scoring call counts as one evaluation, and the total number of evaluations is capped by a budget $E=2000$; when the budget is exhausted, the method returns the best plan found so far. A change is accepted only if the key increases strictly, so the key of the current plan never decreases. During design scoring, the independent ledger checker is skipped and $\mathrm{Conn}$ is cached per trajectory and realization, since neither affects the search decisions; this leaves the returned plan unchanged and speeds up the search by a factor of about \num{2.9}. The final evaluation on the evaluation realizations still runs the checker.
 
-\paragraph{Ba khối của B2.}
-B2 khởi tạo từ kế hoạch B1 với mọi trọng số bằng $1$ và lặp tối đa mười vòng. \emph{Khối đường} duyệt cảnh báo theo hạn tăng dần và thử lần lượt các lựa chọn không phục vụ và từng candidate. \emph{Khối băng thông} duyệt các liên kết vô tuyến đang được dùng theo tổng kích thước cảnh báo đi qua, giảm dần, và thử nhân toàn bộ trọng số của liên kết với $2$, rồi với $1/2$ nếu phép nhân đôi bị từ chối. \emph{Khối quỹ đạo} duyệt một họ hành trình khả thi theo cấu tạo: UAV rời trung tâm, bay thẳng với tốc độ $V_{\max}$ qua một tập con có thứ tự của các vùng hư hại, lơ lửng tại mỗi điểm dừng rồi quay về. Thời gian còn dư được chia cho các điểm dừng đều nhau, theo số cảnh báo của vùng, hoặc theo tổng $1/(d_a-r_a)$ của vùng; điểm dừng là tâm vùng hoặc trọng tâm các nguồn trong vùng. Với ba vùng, họ này có tối đa $90$ hành trình và chứa quỹ đạo của B1. Vòng lặp dừng khi một vòng không nhận thay đổi nào.
+The true objective is the expectation of the lexicographic key over the channel distribution. Summing the key over $M_d$ design realizations is a sample average approximation (SAA) of this expectation with sample size $M_d=5$, whereas scoring on expected rates corresponds to the deterministic equivalent problem. Because design and evaluation realizations come from different random streams, all reported timely-delivery ratios are out-of-sample estimates. Our experiments on the number of design realizations examine the sample size of this SAA.
 
-\paragraph{B3: mục tiêu leximin.}
-B3 giống B2 nhưng dùng khoá khác. Với $\bar f_a$ là tỷ lệ bit của $a$ tới trung tâm trước hạn, lấy trung bình trên các realization thiết kế, tốc độ giao trung bình của $a$ chia cho tốc độ yêu cầu $L_a/((d_a-r_a)\Delta)$ bằng đúng $\bar f_a$, nên đây là phiên bản chuẩn hoá của mục tiêu max--min của~\cite{huang2025ddatsap}. Vì chỉ một cảnh báo không thể giao cũng làm $\min_a\bar f_a=0$ với mọi kế hoạch, B3 so sánh theo leximin:
-\begin{equation}
-\label{eq:leximin}
-\bigl(\bar f_{(1)},\bar f_{(2)},\dots,\bar f_{(\abs{A})},\ \textstyle\sum_{\omega}\sum_a z_{a,\omega},\ \mathrm{Conn}\bigr),\qquad \bar f_{(1)}\le\bar f_{(2)}\le\dots\le\bar f_{(\abs{A})},
-\end{equation}
-\noindent trong đó cảnh báo không được phục vụ có $\bar f_a=0$. Chênh lệch giữa B2 và B3 đo cái giá của việc tối ưu công bằng thay cho số cảnh báo đúng hạn.
+\subsection{Block Search and Schedule Repair}
+\label{sec:b2}
+B2 starts from the plan of B1 with all weights equal to $1$ and performs at most ten rounds of three blocks. The \emph{path block} visits the alerts in increasing order of deadline and tries, in turn, leaving each alert unserved and assigning it to each of its candidates. The \emph{bandwidth block} visits the radio links in use in decreasing order of the total size of the alerts they carry and tries to multiply all weights of a link by $2$, or by $1/2$ if doubling is rejected. The \emph{trajectory block} scans the family of tours illustrated in \cref{fig:tours}, which are feasible by construction: the UAV leaves the center, flies in straight lines at speed $V_{\max}$ through an ordered subset of the damage zones, hovers at each stop, and returns. The remaining time is split among the stops equally, in proportion to the number of alerts of each zone, or in proportion to the sum of $1/(d_a-r_a)$ over the zone, and each stop is either the zone center or the centroid of the sources in the zone. With three zones, the family contains at most $90$ tours, including the trajectory of B1. The search stops when a round accepts no change. Restricting the trajectory to this family gives up the continuous freedom of SCA-based trajectory design, but in return every candidate tour satisfies \eqref{eq:mobility} and can be evaluated directly on the exact objective.
 
-\paragraph{P: sửa lịch theo nguy cơ trễ hạn.}
-P là B2 thêm một vòng sửa lịch sau khối quỹ đạo của mỗi vòng lặp. Một lần đánh giá có ghi sổ trên kế hoạch hiện tại cho biết, với mỗi cảnh báo và realization thiết kế, độ dư thời gian $d_a-1-t_a$ (bằng $-1$ nếu trễ, với $t_a$ là slot giao xong), chặng giữ dữ liệu của cảnh báo trong nhiều slot nhất và các liên kết đã dùng hết dung lượng. Nguy cơ của một cảnh báo là tỷ lệ realization thiết kế trong đó nó trễ hoặc có độ dư không quá $\theta=2$ slot; tối đa $R=10$ cảnh báo có nguy cơ cao nhất được xét. \emph{Thao tác 1} nhân đôi trọng số của chặng thắt cổ chai, nếu đó là liên kết vô tuyến, chỉ trong các slot $[r_a,d_a)$, nên băng thông được chuyển từ các liên kết khác cùng nửa slot sang cảnh báo này. \emph{Thao tác 2} thử các candidate khác của cảnh báo theo số liên kết nghẽn trong cửa sổ của nó, rồi theo chi phí ước lượng, và nhận candidate đầu tiên làm khoá tăng. Mọi thao tác dùng chung ngân sách với ba khối, nên P và B2 có cùng số lần đánh giá tối đa. \Cref{alg:bcd-repair} tóm tắt phương pháp.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, >={Stealth[length=1.8mm]},
+    zone/.style={circle, fill=red!8, draw=red!40, minimum size=1.5cm},
+    ctr/.style={rectangle, fill=black!75, minimum size=6pt, inner sep=0pt},
+    src/.style={regular polygon, regular polygon sides=3, fill=orange!60, draw=red!60!black, inner sep=0.8pt},
+    stopc/.style={circle, fill=blue!65!black, inner sep=1.6pt},
+    stopg/.style={cross out, draw=blue!65!black, thick, inner sep=1.8pt},
+    lbl/.style={font=\footnotesize, align=center},
+    small/.style={font=\scriptsize, align=center}]
+  \foreach \ox/\title in {0/{(a) Tour of B1}, 7.6/{(b) Other tours in the family}} {
+    \begin{scope}[shift={(\ox,0)}]
+      \node[lbl] at (3.0,4.0) {\title};
+      \node[zone] (Z1) at (1.4,2.6) {};
+      \node[zone] (Z2) at (4.6,3.0) {};
+      \node[zone] (Z3) at (4.0,0.6) {};
+      \node[small, text=red!60!black] at (0.45,3.35) {$Z_1$};
+      \node[small, text=red!60!black] at (5.65,3.65) {$Z_2$};
+      \node[small, text=red!60!black] at (5.05,0.0) {$Z_3$};
+      \foreach \p in {(1.1,2.9),(1.7,2.3),(1.6,2.9),(4.3,3.3),(4.9,2.7),(4.4,2.75),(3.7,0.4),(4.3,0.85),(4.25,0.35),(3.85,0.9)} \node[src] at \p {};
+      \node[ctr] (c) at (0.6,0.4) {};
+      \node[small, anchor=north] at (0.6,0.25) {center $c$};
+    \end{scope}
+  }
+  % (a) nearest-neighbor tour through all zone centers, equal hover
+  \draw[->, blue!65!black, thick] (0.6,0.4) -- (1.4,2.6);
+  \draw[->, blue!65!black, thick] (1.4,2.6) -- (4.6,3.0);
+  \draw[->, blue!65!black, thick] (4.6,3.0) -- (4.0,0.6);
+  \draw[->, blue!65!black, thick] (4.0,0.6) -- (0.6,0.4);
+  \foreach \p in {(1.4,2.6),(4.6,3.0),(4.0,0.6)} \node[stopc] at \p {};
+  \node[small, text width=5.6cm] at (3.0,-0.75) {nearest-neighbor order, zone centers,\\equal hover time at every stop};
+  % (b) two alternative tours
+  \begin{scope}[shift={(7.6,0)}]
+    \draw[->, blue!65!black, thick] (0.6,0.4) -- (4.05,0.62);
+    \draw[->, blue!65!black, thick] (4.05,0.62) -- (4.55,2.95);
+    \draw[->, blue!65!black, thick] (4.55,2.95) -- (0.6,0.4);
+    \node[stopg] at (4.05,0.62) {};
+    \node[stopg] at (4.55,2.95) {};
+    \draw[->, green!45!black, thick, dashed] (0.6,0.4) -- (1.45,2.7);
+    \draw[->, green!45!black, thick, dashed] (1.45,2.7) -- (0.6,0.4);
+    \node[stopc, fill=green!45!black] at (1.45,2.7) {};
+    \node[small, text width=6.4cm] at (3.0,-0.75) {\textcolor{blue!65!black}{ordered subset $(Z_3,Z_2)$, source centroids ($\times$), hover $\propto$ number of alerts}; \textcolor{green!45!black}{subset $(Z_1)$, zone center, hover $\propto\sum 1/(d_a-r_a)$}};
+  \end{scope}
+\end{tikzpicture}
+\caption{Family of feasible tours scanned by the trajectory block.}
+\label{fig:tours}
+\end{figure}
+
+\label{sec:repair}
+The blocks of B2 change one decision at a time without regard to which alerts are about to miss their deadlines. P targets these alerts directly by adding a repair loop after the trajectory block of every round, as illustrated in \cref{fig:repair}. A ledger evaluation of the current plan records, for each alert and design realization, its slack $d_a-1-t_a$, where $t_a$ is the completion slot and the slack is set to $-1$ for late alerts, together with the hop that holds the alert's data for the most slots and the links whose capacity is exhausted. The risk of an alert is the fraction of design realizations in which it is late or has a slack of at most $\theta=2$ slots, and the loop considers at most $R=10$ alerts with the highest risk. If the bottleneck hop of such an alert is a radio link, \emph{Operator~1} doubles its weight within the slots $[r_a,d_a)$ only, which moves bandwidth from the other links of the same phase to this alert. \emph{Operator~2} tries the other candidates of the alert, ranked first by the number of congested links in its window and then by estimated cost, and accepts the first one that increases the key. All operators share the budget with the three blocks, so P and B2 have the same maximum number of evaluations. The mechanism follows the destroy-and-repair principle of large neighborhood search~\cite{ropke2006alns}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, >={Stealth[length=1.8mm]},
+    lbl/.style={font=\footnotesize, align=center},
+    small/.style={font=\scriptsize, align=center},
+    nd/.style={circle, draw=black!70, fill=black!12, inner sep=1.5pt},
+    late/.style={circle, fill=red!70!black, inner sep=1.6pt},
+    ontime/.style={circle, fill=green!50!black, inner sep=1.6pt}]
+  % (a) risk detection
+  \node[lbl] at (3.2,3.3) {(a) Risk detection on design realizations};
+  \fill[orange!15] (4.4,0.0) rectangle (5.4,2.6);
+  \draw[->, black!70] (0,0) -- (6.6,0) node[right, small] {slot};
+  \draw[black!70] (0.3,-0.1) -- (0.3,2.6); \node[small, anchor=north] at (0.3,-0.1) {$r_a$};
+  \draw[red!60!black, thick] (5.4,-0.1) -- (5.4,2.6); \node[small, anchor=north, text=red!60!black] at (5.4,-0.1) {$d_a$};
+  \node[small, anchor=north, text=orange!60!black] at (4.9,-0.35) {slack $\le\theta$};
+  \foreach \y/\x/\st [count=\i] in {2.3/2.6/ontime, 1.85/4.7/ontime, 1.4/6.0/late, 0.95/3.4/ontime, 0.5/4.9/ontime} {
+    \node[small, anchor=east] at (0.2,\y) {$\omega_{\i}$};
+    \draw[black!25] (0.3,\y) -- (\x,\y);
+    \node[\st] at (\x,\y) {};
+  }
+  \node[small, text width=6.4cm, anchor=north] at (3.2,-0.8) {completion slot $t_a$ in each design realization; risk $=$ share of realizations that are late or have slack $d_a-1-t_a\le\theta$ (here $3/5$)};
+  % (b) operators
+  \begin{scope}[shift={(8.0,0)}]
+    \node[lbl] at (3.2,3.3) {(b) Repair operators for an at-risk alert};
+    \node[nd, fill=orange!60, regular polygon, regular polygon sides=3, inner sep=1pt] (s) at (0.3,0.9) {};
+    \node[small, anchor=north] at (0.3,0.6) {$s_a$};
+    \node[draw=blue!65!black, fill=blue!10, rounded corners=2pt, font=\scriptsize, inner sep=2pt] (uav) at (2.2,2.4) {UAV};
+    \node[nd] (u) at (3.9,1.6) {}; \node[small, anchor=south] at (3.9,1.7) {$u$};
+    \node[nd] (v) at (2.4,0.1) {}; \node[small, anchor=north] at (2.4,0.0) {$v$};
+    \node[rectangle, fill=black!75, minimum size=6pt, inner sep=0pt] (c) at (5.9,0.9) {}; \node[small, anchor=west] at (6.0,0.9) {$c$};
+    \draw[->, blue!65!black] (s) -- (uav);
+    \draw[->, red!70!black, line width=1.6pt] (uav) -- node[above right, small, text=red!70!black] {bottleneck} (u);
+    \draw[->, black!60] (u) -- (c);
+    \draw[->, green!45!black, dashed, thick] (s) -- (v);
+    \draw[->, green!45!black, dashed, thick] (v) -- (c);
+    \node[small, text width=6.6cm, anchor=north] at (3.2,-0.8) {\textcolor{red!70!black}{Operator 1}: double the weight of the bottleneck hop only within $[r_a,d_a)$;\\ \textcolor{green!45!black}{Operator 2}: switch to another candidate, ranked by congested links, then cost};
+  \end{scope}
+\end{tikzpicture}
+\caption{Risk-driven schedule repair in P: (a)~risk detection; (b)~repair operators.}
+\label{fig:repair}
+\end{figure}
+
+\subsection{Overall Algorithm and Complexity}
+\label{sec:overall}
+
+\Cref{alg:bcd-repair} summarizes the method; B2 is obtained with repair disabled and P with repair enabled.
 
 \begin{algorithm}[htbp]
-\caption{Tìm kiếm theo khối có đánh giá, kết hợp sửa lịch (B2 khi tắt sửa lịch, P khi bật)}
+\caption{Sample-scored block search with schedule repair.}
 \label{alg:bcd-repair}
 \begin{algorithmic}[1]
-\Require Scenario, tập candidate, realization thiết kế, ngân sách $E$, số vòng tối đa $I_{\max}=10$
-\Ensure Quỹ đạo $q$, lựa chọn đường $x$, trọng số băng thông $w$
-\State $(q,x)\gets$ kế hoạch B1; $w\gets 1$; $\kappa\gets$ khoá của $(q,x,w)$
+\Require Scenario, candidate set, design realizations, budget $E$, maximum rounds $I_{\max}=10$
+\Ensure Trajectory $q$, path selection $x$, bandwidth weights $w$
+\State $(q,x)\gets$ plan of B1; $w\gets 1$; $\kappa\gets$ key of $(q,x,w)$
 \For{$i=1,\dots,I_{\max}$}
-    \State Khối đường: với từng cảnh báo theo hạn, thử không phục vụ và từng candidate
-    \State Khối băng thông: với từng liên kết đang dùng, thử $w_e\gets 2w_e$, sau đó $w_e\gets w_e/2$
-    \State Khối quỹ đạo: thử từng hành trình trong họ hành trình khả thi
-    \If{sửa lịch được bật}
-        \State Đánh giá có ghi sổ; chọn tối đa $R$ cảnh báo có nguy cơ trễ hạn cao nhất
-        \ForAll{cảnh báo $a$ có nguy cơ}
-            \State Thao tác 1: nhân đôi trọng số chặng thắt cổ chai trong $[r_a,d_a)$
-            \State Thao tác 2: thử các candidate khác theo số liên kết nghẽn, rồi chi phí
+    \State Path block: for each alert in deadline order, try skipping it and each candidate
+    \State Bandwidth block: for each link in use, try $w_e\gets 2w_e$, then $w_e\gets w_e/2$
+    \State Trajectory block: try each tour in the family of feasible tours
+    \If{repair is enabled}
+        \State Ledger evaluation; select at most $R$ alerts with the highest deadline risk
+        \ForAll{at-risk alerts $a$}
+            \State Operator 1: double the weight of the bottleneck hop within $[r_a,d_a)$
+            \State Operator 2: try other candidates by number of congested links, then by cost
         \EndFor
     \EndIf
-    \State Mỗi phép thử được nhận khi khoá tăng chặt; dừng ngay khi hết ngân sách $E$
-    \If{vòng này không nhận thay đổi nào} \textbf{break} \EndIf
+    \State Accept each trial iff the key increases strictly; stop as soon as the budget $E$ is spent
+    \If{no change was accepted in this round} \textbf{break} \EndIf
 \EndFor
 \State \Return $(q,x,w)$
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Độ phức tạp.}
-Một vòng lặp dùng tối đa $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ lần đánh giá cho ba khối, cộng $1+RK$ lần cho vòng sửa lịch của P, với $\mathcal L_{\mathrm{used}}$ là các liên kết vô tuyến đang được dùng. Mỗi lần đánh giá tốn $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, còn phát hiện nguy cơ duyệt sổ ghi trong $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$ với $T$ là số bản ghi truyền. Ngân sách chặn tổng số lần đánh giá, nên thời gian lập kế hoạch của B2, B3 và P là $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, không phụ thuộc số vòng lặp thực tế. Phương pháp chỉ bảo đảm khoá của kế hoạch không giảm; nó không bảo đảm tối ưu, và cận LP ở \cref{sec:bound}, giải trên chính quỹ đạo mà mỗi phương pháp chọn, đo phần còn có thể cải thiện.
+One round uses at most $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ evaluations for the three blocks plus $1+RK$ for the repair loop of P, where $\mathcal L_{\mathrm{used}}$ is the set of radio links in use. Each evaluation costs $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, and risk detection scans the ledger in $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$, where $T$ is the number of transmission records. The budget caps the total number of evaluations, so the planning time of B2, B3, and P is $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, independent of the actual number of rounds. The method only guarantees that the key of the plan does not decrease; it does not guarantee optimality, and the LP bound \eqref{eq:lp}, solved on the trajectory chosen by each method, measures the remaining room for improvement.
 
-\subsection{Phương pháp từ tài liệu: TRAN}
-\label{sec:tran}
-
-Phương pháp mạnh từ tài liệu là thuật toán xấp xỉ trong (inner approximation) của Tran và cộng sự~\cite{tran2022relay} cho chế độ bán song công, gọi là TRAN. Bài gốc tối đa số thiết bị được phục vụ: thiết bị $k$ tải $S_k$ bit lên UAV trong cửa sổ thu, UAV lưu dữ liệu rồi chuyển xuống gateway trong cửa sổ sau đó, và biến nhị phân $\lambda_k$ bằng một khi cả hai chặng đủ dữ liệu. Biến $\lambda_k$ được nới lỏng về $[0,1]$ kèm hàm phạt $\mu\sum_k\lambda_k(\lambda_k-1)$; mỗi vòng lặp tuyến tính hoá hàm phạt, thay tốc độ bằng cận dưới lõm quanh điểm hiện tại và giải một bài toán lồi theo quỹ đạo, băng thông và $\lambda$. \Cref{tab:tran-adaptation} liệt kê các điểm chuyển thể sang mô hình ở \cref{sec:model}. Các điểm này giữ nguyên cấu trúc thuật toán nhưng có thể làm phương pháp bất lợi, vì bài gốc không mô hình backhaul hữu hạn hay bộ điều phối EDF.
-
-\input{tables/tran_adaptation}
-
-Mỗi cảnh báo là một thiết bị và đi theo candidate có chi phí ước lượng nhỏ nhất; nút vào mạng mặt đất của candidate đó là gateway riêng của cảnh báo. Với $b_a$ slot trễ backhaul và $W_a=d_a-b_a-r_a$, cửa sổ thu là $[r_a,\,r_a+\lceil\theta W_a\rceil)$ và cửa sổ chuyển xuống là $[r_a+\lceil\theta W_a\rceil,\,d_a-b_a)$, để dữ liệu còn kịp qua backhaul trước hạn đầu--cuối. Cảnh báo đi đường mặt đất chỉ có chặng thu với tốc độ không phụ thuộc quỹ đạo. Công suất cố định như mọi phương pháp khác. Kênh Rician của bài gốc được thay bằng luật công suất $\beta d^{-\alpha}$ khớp bình phương tối thiểu với độ lợi kỳ vọng của mô hình PrLoS; trên các scenario phát triển, số mũ khớp nằm trong khoảng \ResultExtFitAlphaMin{}--\ResultExtFitAlphaMax{} với $R^2\ge\ResultExtFitRsquaredMin$.
-
-Mỗi vòng lặp dựng lại bài toán nón bậc hai với điểm tuyến tính hoá là hằng số, xấp xỉ ràng buộc luỹ thừa bằng các nón bậc hai của \texttt{cvxpy} và giải bằng Clarabel với dung sai khoảng cách đối ngẫu $10^{-6}$ và dung sai khả thi $10^{-7}$. Thuật toán khởi tạo từ quỹ đạo của B1, băng thông chia đều và $\lambda=0$, là một điểm khả thi của bài toán lồi, và dừng khi mục tiêu nới lỏng thay đổi tương đối dưới $10^{-3}$ hoặc sau 30 vòng. Nghiệm được đổi thành lịch băng thông tĩnh, và mỗi slot chỉ giữ tối đa hai downlink có băng thông lớn nhất. Tham số được chọn trên \ResultExtPilotScenarioCount{} scenario phát triển từ lưới $\theta\in\{1/3,1/2,2/3\}$ và $\mu\in\{1,10\}$: cặp $\theta=\ResultExtPilotTheta$, $\mu=\ResultExtPilotMu$ đạt tỷ lệ đúng hạn trung bình cao nhất (\ResultExtPilotTimely) dù các ô lưới chỉ chênh nhau tối đa \ResultExtPilotGridSpread, và TRAN tốt hơn điểm khởi tạo trên cả \ResultExtPilotBetterCount{} scenario. Theo bài gốc, mỗi vòng lặp giải một bài toán lồi có $O(NK)$ biến và ràng buộc với $K$ thiết bị, nên một vòng tốn $O\bigl((NK)^{3.5}\bigr)$ bằng phương pháp điểm trong; dùng chung biến khoảng cách cho các cảnh báo cùng điểm mặt đất làm số biến thực tế nhỏ hơn nhiều.
-
-\subsection{Kịch bản case study từ RescueNet}
-\label{sec:rescuenet}
-
-Case study thay quy tắc sinh điểm nguồn bằng vị trí công trình hư hại trong bộ dữ liệu RescueNet~\cite{rahnemoonfar2023rescuenet}, gồm ảnh UAV chụp sau bão Michael tại Mexico Beach kèm mask phân vùng. Trên \ResultExtImageCount{} cặp ảnh--mask đã chọn, các vùng liên thông tám hướng của ba lớp hư hại (nhẹ, nặng, sập hoàn toàn) có diện tích dưới \qty{10}{\metre\squared} bị loại; điểm đại diện là điểm ảnh của vùng gần tâm vùng nhất, nên luôn nằm trên công trình. Bài báo không cho độ phân giải mặt đất, nhưng metadata của từng ảnh có toạ độ GPS, độ cao tương đối, hướng gimbal và tiêu cự hiệu chuẩn. Kích thước một điểm ảnh bằng độ cao chia tiêu cự tính theo điểm ảnh, từ \ResultExtGsdMin{} đến \ResultExtGsdMax~\unit{\centi\metre}; ảnh duy nhất thiếu tiêu cự hiệu chuẩn (cặp \ResultExtFallbackPairs) dùng tiêu cự danh định của camera. Mỗi điểm đại diện được chiếu sang hệ UTM vùng 16N theo toạ độ tâm ảnh và hướng gimbal. Các ảnh chồng lên nhau, nên một công trình có thể xuất hiện ở hai ảnh với vị trí lệch nhau \ResultExtMergeDistanceMin{}--\ResultExtMergeDistanceMax~\unit{\metre}; các điểm cách nhau không quá \qty{10}{\metre} được gộp và giữ điểm của vùng lớn nhất. Từ \ResultExtRegionCount{} vùng hư hại thu được \ResultExtTargetCount{} target, được chuẩn hoá cùng tỷ lệ trên hai trục về vùng \qty{2}{\kilo\metre} (hệ số \ResultExtNormalizationScale).
-
-Họ kịch bản \texttt{rescuenet} giống v0 ở mọi quy tắc khác: cùng mười topology đánh giá và ba replicate, cùng luồng số ngẫu nhiên cho cảnh báo và cạnh hỏng, nhưng mỗi target là một nguồn và ba vùng hư hại là ba cụm k-means của các target. Target trải khắp vùng thay vì tụ quanh ba tâm, nên tỷ lệ nguồn có relay mặt đất trong tầm của các kịch bản đánh giá giảm từ \ResultExtGroundFractionVzero{} ở v0 xuống \ResultExtGroundFractionRescuenet. Bố cục target là một bố cục địa lý duy nhất, lấy từ các ảnh không độc lập với nhau, nên kết quả case study mang tính mô tả. Ảnh và mask không được phân phối lại; kho mã chỉ lưu manifest target.
+\label{sec:variants}
+To separate the effect of the objective from that of the search, B3 runs the same search as B2 with a different key. Let $\bar f_a$ be the fraction of the bits of $a$ that reach the center before the deadline, averaged over the design realizations. The average delivery rate of $a$ divided by its required rate $L_a/((d_a-r_a)\Delta)$ equals exactly $\bar f_a$, so $\min_a \bar f_a$ is a normalized version of the max--min objective of~\cite{huang2025ddatsap}. Because a single undeliverable alert forces $\min_a\bar f_a=0$ for every plan, B3 compares plans in leximin order:
+\begin{equation}
+\label{eq:leximin}
+\bigl(\bar f_{(1)},\bar f_{(2)},\dots,\bar f_{(\abs{A})},\ \textstyle\sum_{\omega}\sum_a z_{a,\omega},\ \mathrm{Conn}\bigr),\qquad \bar f_{(1)}\le\bar f_{(2)}\le\dots\le\bar f_{(\abs{A})},
+\end{equation}
+\noindent where an unserved alert has $\bar f_a=0$. The difference between B2 and B3 measures the cost of optimizing fairness instead of the number of timely alerts.

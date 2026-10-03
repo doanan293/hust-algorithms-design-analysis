@@ -1,0 +1,103 @@
+\section{Problem Formulation}
+\label{sec:problem}
+
+A plan consists of a trajectory $q$ that satisfies \eqref{eq:mobility}, a path selection $x_{a,p}\in\set{0,1}$ with $\sum_p x_{a,p}\le 1$, which allows an alert to be left unserved, and bandwidths $b_{e,n}\ge 0$ on the radio links. Plans are computed before the mission without access to the evaluation realizations and are then evaluated on independent channel realizations. During execution, every slot $n$ must satisfy the following constraints:
+\begin{enumerate}
+\item \emph{Spectrum:} the total bandwidth of the access links and that of the downlinks each do not exceed $B_{\mathrm{tot}}$, and at most two downlinks are active.
+\item \emph{Capacity:} a radio link $e$ carries at most $t_e\Delta\,R(b_{e,n},s_{e,n})$ bits, with $t_e=\tau$ for access links and $t_e=1-\tau$ for downlinks; a backhaul edge carries at most $\Delta C_e$ bits, shared by all alerts that traverse it.
+\item \emph{Causality:} the bits of alert $a$ are available at its source from the beginning of slot $r_a$; a transmission in slot $n$ uses only data held in the buffer at the beginning of slot $n$, so bits received in slot $n$ can be forwarded from slot $n+1$ on; bits travel only along the selected path, and buffers are non-negative.
+\item \emph{Deadline:} at the beginning of slot $d_a$, all remaining bits of $a$ are dropped.
+\end{enumerate}
+All methods share the same scheduler, which serves each queue in earliest-deadline-first (EDF) order.
+
+\begin{definition}[Timely alert]
+\label[definition]{def:timely}
+Alert $a$ is \emph{timely} in realization $\omega$, denoted $z_{a,\omega}=1$, if at least $L_a$ of its bits reach the center $c$ no later than the end of slot $d_a-1$; otherwise $z_{a,\omega}=0$.
+\end{definition}
+
+Let $D_{a,\omega}$ be the number of bits of $a$ that reach $c$ before the deadline. Plans are compared in lexicographic order of
+\begin{equation}
+\label{eq:objective}
+\Bigl(\hat P_{\mathrm{timely}},\ \mathrm{Conn},\ -\sum_{\omega}\sum_{a}\frac{L_a-D_{a,\omega}}{L_a}\Bigr),
+\qquad
+\hat P_{\mathrm{timely}}=\frac{1}{M\abs{A}}\sum_{\omega=1}^{M}\sum_{a\in A}z_{a,\omega},
+\end{equation}
+where $\mathrm{Conn}$ is the fraction of sources with a time-respecting path to $c$ on the time-expanded graph: every transmission hop takes one slot, waiting in a buffer is allowed, and a UAV link is usable in slot $n$ if $R(B_{\mathrm{tot}},s_{e,n})\ge R_{\min}$. Since the key is evaluated on random channel realizations, the planning problem targets its expectation over the channel distribution:
+\begin{equation}
+\label{eq:p1}
+\begin{aligned}
+\text{(P1)}\qquad \operatorname*{lex\,max}_{q,\,x,\,b}\quad & \E_{\omega}\Bigl[\Bigl(\tfrac{1}{\abs{A}}\textstyle\sum_{a} z_{a,\omega},\ \mathrm{Conn}_\omega,\ -\sum_{a}\tfrac{L_a-D_{a,\omega}}{L_a}\Bigr)\Bigr]\\
+\text{s.t.}\quad & \eqref{eq:mobility},\quad \textstyle\sum_p x_{a,p}\le 1,\quad x_{a,p}\in\set{0,1},\quad b_{e,n}\ge 0,\quad \text{and constraints 1--4},
+\end{aligned}
+\end{equation}
+and \eqref{eq:objective} is its empirical counterpart on $M$ evaluation realizations. Problem (P1) combines binary path choices, a non-convex dependence on the trajectory through the PrLoS probabilities, and an objective that counts discrete events, so standard convex methods do not apply directly.
+
+It is worth noting that we adopt the timely-delivery ratio as the primary objective rather than the max--min average rate of~\cite{huang2025ddatsap}, for two reasons tied to the rescue setting. First, an alert has value only if it arrives complete before its deadline, so a design that raises average rates while delivering each alert partially or late does not help the rescue operation. Second, a max--min objective is held at zero by a single alert that cannot be delivered under any plan, and it then no longer distinguishes between plans; we therefore evaluate a leximin version of this objective and quantify its cost experimentally. Connectivity enters as the secondary objective because it measures whether each source can reach the center at all, independently of the particular alerts in the workload.
+
+\begin{remark}
+The third component of \eqref{eq:objective} measures the shortfall, that is, the fraction of data still missing at the deadline, rather than the total delay, because late alerts are dropped and therefore have no completion time from which a delay could be computed.
+\end{remark}
+
+\label{sec:analysis}
+Before designing an algorithm, we establish why (P1) calls for a heuristic and how its solutions can be judged: the problem is NP-hard even when the trajectory is fixed, and an upper bound is available against which any plan can be measured.
+
+\subsection{NP-Hardness}
+\label{sec:hardness}
+
+\begin{proposition}
+\label[proposition]{prop:hardness}
+Maximizing the number of timely alerts is NP-hard, even when the trajectory is fixed, data can be split arbitrarily across slots, the network has only two relays, and every alert has two candidate paths.
+\end{proposition}
+
+\begin{proof}
+We reduce from PARTITION: given positive integers $s_1,\dots,s_m$ that sum to $2Q$, decide whether some subset sums to $Q$. Build a network with center $c$, two relays $v_1,v_2$, and two backhaul edges $(v_j,c)$ with $\Delta C_{(v_j,c)}=Q$ bits. A single source lies within range of both relays, with a gain large enough that $\tau\Delta\,R(B_{\mathrm{tot}}/2,s)\ge 2Q$. Alert $i$ has $L_i=s_i$, $r_i=0$, $d_i=2$, and two candidates: via $v_1$ or via $v_2$. By the causality convention, the bits of a timely alert must be sent to the relay in slot $0$ and cross the backhaul in slot $1$.
+If a subset with sum $Q$ exists, route the corresponding alerts via $v_1$ and the rest via $v_2$, and allocate $B_{\mathrm{tot}}/2$ to each access link in slot $0$: each access link carries up to $2Q$ bits and each backhaul edge carries exactly $Q$ bits in slot $1$, so all $m$ alerts are timely.
+Conversely, if all $m$ alerts are timely, the total size of the alerts routed via $v_j$ is at most $Q$ for $j=1,2$, while the two parts sum to $2Q$; hence each part equals $Q$ and PARTITION has a solution. The construction takes polynomial time, so deciding whether at least $m$ alerts can be timely is NP-hard.
+\end{proof}
+
+\begin{remark}
+\Cref{prop:hardness} establishes NP-hardness in the weak sense only; we do not claim membership in NP, since bandwidth is a continuous variable, and we do not consider the case $K=1$. The hardness stems from the requirement that each alert follow exactly one path, not from scheduling on a single link: with one link and data split across slots, the problem corresponds to preemptive single-machine scheduling $1\,|\,r_j,\mathrm{pmtn}\,|\,\sum U_j$, which is solvable in polynomial time~\cite{lawler1990preemptive}. The non-preemptive version $1\,|\,r_j\,|\,\sum U_j$ is strongly NP-hard~\cite{lenstra2020elements}, but our model allows bits to be split across slots, so that result does not apply directly.
+\end{remark}
+
+\subsection{Per-Realization Upper Bound}
+\label{sec:bound}
+
+Fix a trajectory $q$, the candidate set, and a realization $\omega$, so that $s_{e,n}$ is known. For hop $h$ of candidate $p$ and slot $n\in[r_a+h,\,d_a-1]$, let $f_{a,p,h,n}$ be the number of bits crossing the hop and $B_{a,p,h,n}$ the buffer at the beginning of the slot. Choose tangent points $b_k=B_{\mathrm{tot}}2^{-k}$, $k=0,\dots,9$, and consider the linear program
+\begin{subequations}
+\label{eq:lp}
+\begin{align}
+\max\quad & \textstyle\sum_{a\in A} z_a \label{eq:lp-objective}\\
+\text{s.t.}\quad
+& \textstyle\sum_{p} x_{a,p}\le 1, \label{eq:lp-choice}\\
+& B_{a,p,0,r_a}=L_a x_{a,p},\qquad B_{a,p,h,r_a+h}=f_{a,p,h-1,r_a+h-1}\ (h\ge 1), \label{eq:lp-init}\\
+& B_{a,p,h,n+1}=B_{a,p,h,n}-f_{a,p,h,n}+f_{a,p,h-1,n},\qquad f_{a,p,h,n}\le B_{a,p,h,n}, \label{eq:lp-buffer}\\
+& L_a z_a\le \textstyle\sum_{p}\sum_{n} f_{a,p,H_p-1,n}, \label{eq:lp-deadline}\\
+& \textstyle\sum_{(a,p,h)\,\text{via}\,e} f_{a,p,h,n}\le t_e\Delta\bigl(R(b_k,s_{e,n})+R'(b_k,s_{e,n})(b_{e,n}-b_k)\bigr)\quad \forall k, \label{eq:lp-radio}\\
+& \textstyle\sum_{(a,p,h)\,\text{via}\,e} f_{a,p,h,n}\le \Delta C_e, \label{eq:lp-backhaul}\\
+& \textstyle\sum_{e\,\text{access}} b_{e,n}\le B_{\mathrm{tot}},\qquad \sum_{e\,\text{downlink}} b_{e,n}\le B_{\mathrm{tot}}, \label{eq:lp-spectrum}\\
+& x,z\in[0,1],\qquad f,B,b\ge 0, \label{eq:lp-domain}
+\end{align}
+\end{subequations}
+where $f_{a,p,-1,n}\equiv 0$, $H_p$ is the number of hops of candidate $p$, \eqref{eq:lp-buffer} applies when $n+1\le d_a-1$, \eqref{eq:lp-radio} applies to radio links with $s_{e,n}>0$, the flow on a radio link with $s_{e,n}=0$ is fixed to zero, and \eqref{eq:lp-backhaul} applies to backhaul edges. Let $\mathrm{UB}_\omega(q)$ denote its optimal value.
+
+\begin{proposition}[Upper bound]
+\label[proposition]{prop:ub}
+For a fixed trajectory $q$, candidate set, and realization $\omega$, $\mathrm{UB}_\omega(q)$ is no smaller than the number of timely alerts of any plan with trajectory $q$ executed on $\omega$.
+\end{proposition}
+
+\begin{proof}
+For fixed $s>0$, $R(b,s)=b\,\phi(1/b)$ with $\phi(t)=\log_2(1+st)$ concave, so $R(\cdot,s)$ is the perspective of a concave function and is therefore concave on $b>0$~\cite{boyd2004convex}. A concave function lies below each of its tangents, hence $R(b,s)\le R(b_k,s)+R'(b_k,s)(b-b_k)$ for every $k$.
+Consider any plan with trajectory $q$ and its execution on $\omega$. Set $x_{a,p}=1$ for the selected path, $z_a=z_{a,\omega}$, $f_{a,p,h,n}$ to the number of bits sent over hop $h$ in slot $n$, $B_{a,p,h,n}$ to the buffer at the beginning of the slot, and $b_{e,n}$ to the allocated bandwidth. The causality and buffer constraints yield \eqref{eq:lp-init}--\eqref{eq:lp-buffer}; \cref{def:timely} yields \eqref{eq:lp-deadline}; the spectrum and capacity constraints yield \eqref{eq:lp-spectrum} and \eqref{eq:lp-backhaul}; and the tangent inequality yields \eqref{eq:lp-radio}. This point is feasible and its objective value equals the number of timely alerts, which therefore cannot exceed $\mathrm{UB}_\omega(q)$.
+\end{proof}
+
+Problem \eqref{eq:lp} further relaxes the integrality of $x$ and $z$, the EDF order, the limit of two downlinks, and the causality of channel knowledge, since the bound knows the realization in advance; each relaxation only enlarges the feasible region. The bound holds only for the given trajectory and candidate set and is not a global bound over all trajectories. For each scenario, the bound is averaged over realizations and divided by $\abs{A}$, and the gap of a method is $(\overline{\mathrm{UB}}-\overline{P})/\overline{\mathrm{UB}}$. Each method that uses the UAV is compared with the bound on its own trajectory, and the baseline without a UAV is compared with the bound of the same problem restricted to ground candidates.
+
+To measure the tightness of the bound, we re-solve \eqref{eq:lp} as an MILP with binary $x$ and $z$ on reduced instances. We then build a plan from the MILP solution, using its selected paths and bandwidths and keeping the two largest downlinks whenever the limit is exceeded, and execute this plan on the same $\omega$, which gives the chain
+\begin{equation}
+\label{eq:sandwich}
+P_\omega(\text{MILP plan})\ \le\ \mathrm{OPT}_\omega(q)\ \le\ \mathrm{UB}^{\mathrm{MILP}}_\omega(q)\ \le\ \mathrm{UB}_\omega(q).
+\end{equation}
+The MILP plan knows the channel in advance, so it serves only to measure the tightness of the bound and is not compared with the other methods.
+
+\label{sec:complexity}
+Finally, we consider the computational cost of evaluating plans and computing the bound. Generating candidate paths requires one breadth-first search from $c$, which takes $O(\abs{V}+\abs{E})$ time, and ranking them takes $O(\abs{A}\abs{V}\log\abs{V})$. Evaluating a plan on $M$ realizations costs $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, where $\mathcal L$ is the set of links, and computing $\mathrm{Conn}$ costs $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. The evaluator records every transmission in a ledger, on which an independent checker verifies flow conservation, non-negative buffers, and the absence of future information at the same cost. Problem \eqref{eq:lp} has $\sum_a\sum_p H_p(d_a-r_a)$ flow variables and as many buffer variables, at most $\abs{\mathcal L_{\mathrm{r}}}N$ bandwidth variables, and at most $10\abs{\mathcal L_{\mathrm{r}}}N$ tangent constraints, where $\mathcal L_{\mathrm{r}}$ is the set of radio links of the candidate set. We solve the bound with HiGHS through \texttt{scipy} and, instead of stating a polynomial bound for the solver, report its measured solve times with the numerical results.

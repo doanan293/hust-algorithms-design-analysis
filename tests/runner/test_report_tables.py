@@ -64,7 +64,7 @@ def test_report_files_cover_config_values_and_results(tmp_path: Path):
     assert main_rows[1][:5] == ["v0", "\\qty{1000}{\\kilo\\bit\\per\\second}", "B1", "\\num{0.250}", "[\\num{0.200}, \\num{0.300}]"]
     milp_rows = _semicolon_rows(output / "phase1_milp.csv")
     assert milp_rows[1][:5] == ["Agis-r0", "10", "\\num{4}", "\\num{3}", "\\num{4}"]
-    assert milp_rows[1][7] == "tối ưu" and len(milp_rows[1]) == 10
+    assert milp_rows[1][7] == "optimal" and len(milp_rows[1]) == 10
     assert (output / "lp_runtime.csv").read_text(encoding="utf-8").splitlines() == ["variables,runtime", "30000,1.250000"]
     macros = (output / "phase1_results.tex").read_text(encoding="utf-8")
     assert "\\newcommand{\\ResultTimelyVzeroBone}{\\num{0.250}}" in macros

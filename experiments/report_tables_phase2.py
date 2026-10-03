@@ -18,13 +18,13 @@ SETS = (("v0", 1000000.0), ("v0-bh50", 50000.0))
 MAIN_METHODS = ("B0", "B1", "B2", "B3", "P")
 COMPARISON_LABELS = {"P - B2": "P $-$ B2", "B2 - B1": "B2 $-$ B1", "B2 - B3": "B2 $-$ B3", "P - B1": "P $-$ B1"}
 ABLATIONS = (
-    ("P_op1", "Chỉ thao tác 1"),
-    ("P_op2", "Chỉ thao tác 2"),
-    ("P_no_backlog", "Sửa lịch không dùng backlog"),
-    ("P_fixed_paths", "Không chạy khối đường"),
-    ("P_fixed_trajectory", "Không chạy khối quỹ đạo"),
-    ("P_equal_bandwidth", "Không chạy khối băng thông"),
-    ("P_expected_design", "Thiết kế trên tốc độ kỳ vọng"),
+    ("P_op1", "Operator 1 only"),
+    ("P_op2", "Operator 2 only"),
+    ("P_no_backlog", "Repair without backlog"),
+    ("P_fixed_paths", "No path block"),
+    ("P_fixed_trajectory", "No trajectory block"),
+    ("P_equal_bandwidth", "No bandwidth block"),
+    ("P_expected_design", "Expected-rate design"),
 )
 BUDGETS = (250, 500, 1000, 2000, 4000)
 SENSITIVITY_PANELS = (
@@ -35,8 +35,8 @@ SENSITIVITY_PANELS = (
     ("alerts", (("sens-alerts20", 20), ("v0", 40), ("sens-alerts60", 60))),
     ("paths", (("sens-k2", 2), ("v0", 3), ("sens-k5", 5))),
 )
-DESIGN_POINTS = (("P_design_expected", "design", "Tốc độ kỳ vọng"), ("P_design1", "design", "1"), ("P", "sensitivity", "5"), ("P_design10", "design", "10"))
-TERCILES = (("low", "Tối đa 1/3"), ("middle", "Từ 1/3 đến 2/3"), ("high", "Từ 2/3"))
+DESIGN_POINTS = (("P_design_expected", "design", "Expected rate"), ("P_design1", "design", "1"), ("P", "sensitivity", "5"), ("P_design10", "design", "10"))
+TERCILES = (("low", "At most 1/3"), ("middle", "1/3 to 2/3"), ("high", "Above 2/3"))
 
 
 def macro(*parts: str) -> str:
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     macros.append(("ResultTwoHolmFloor", number(min(float(row["p_holm"]) for row in _read_rows(args.results / "statistics.csv")), 4)))
 
     ablation_rows = []
-    for method, label in (("P", "P đầy đủ"), *ABLATIONS):
+    for method, label in (("P", "Full P"), *ABLATIONS):
         cells = [label]
         for set_id, _ in SETS:
             row = summary["main"][(set_id, method)]
@@ -210,8 +210,8 @@ def main(argv: list[str] | None = None) -> int:
     for method, experiment, label in DESIGN_POINTS:
         row = summary[experiment][("v0", method)]
         design_rows.append([label, number(row["timely_ratio_mean"]), number(row["planning_runtime_s_mean"], 1), number(row["evaluate_calls_mean"], 0)])
-        macros.append((macro("Design", label.replace("Tốc độ kỳ vọng", "expected")), number(row["timely_ratio_mean"])))
-        macros.append((macro("DesignPlanning", label.replace("Tốc độ kỳ vọng", "expected")), number(row["planning_runtime_s_mean"], 1)))
+        macros.append((macro("Design", label.replace("Expected rate", "expected")), number(row["timely_ratio_mean"])))
+        macros.append((macro("DesignPlanning", label.replace("Expected rate", "expected")), number(row["planning_runtime_s_mean"], 1)))
     _write_semicolon(args.output / "phase2_design.csv", ["design", "timely", "planning", "calls"], design_rows)
 
     bound_rows = [row for name in ("main", "sensitivity") for row in _read_rows(args.results / name / "bounds.csv")]

@@ -1,13 +1,13 @@
-% Bảng tham số — hàng đọc từ data/params.csv (sinh bởi experiments/report_tables.py).
+% Parameter table — rows read from data/params.csv (written by experiments/report_tables.py).
 \begin{table}[htbp]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{Tham số của bộ scenario v0, họ v0-bh50 và thí nghiệm Pha 1.}
+\caption{Simulation parameters.}
 \label{tab:params}
 \begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{Tham số} & \textbf{Ký hiệu} & \textbf{Giá trị} \\
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
 \midrule
 \csvreader[separator=semicolon, late after line=\\]{data/params.csv}{1=\colparameter, 2=\colsymbol, 3=\colvalue}{\colparameter & \colsymbol & \colvalue}
 \bottomrule

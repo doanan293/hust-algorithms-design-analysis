@@ -112,7 +112,7 @@ def test_extension_report_files_follow_the_results(tmp_path: Path):
     assert _lines(output / "ext_map_trajectory_tran.csv") == ["x,y", "0.0000,0.0000", "0.1000,0.0000", "0.2000,0.0000"]
     assert _lines(output / "ext_progress.csv") == ["slot,B1,P,TRAN", "0,0.000000,0.000000,0.000000", "1,0.250000,0.250000,0.250000"]
     compute = [line.split(";") for line in _lines(output / "ext_compute.csv")]
-    assert [row[0] for row in compute[1:]][5] == "Pilot TRAN trên tập phát triển" and compute[6][1:] == ["2", "\\num{1.0}"]
+    assert [row[0] for row in compute[1:]][5] == "TRAN pilot on development set" and compute[6][1:] == ["2", "\\num{1.0}"]
     assert compute[1][1:] == ["10", "\\num{2.5}"] and len(compute) == 9
     macros = (output / "ext_results.tex").read_text(encoding="utf-8")
     for expected in (

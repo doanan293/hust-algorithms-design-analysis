@@ -506,7 +506,7 @@ Nếu thời gian hạn chế, giảm số mở rộng và quy mô trước; gi�
 - [x] B2 kế thừa đúng cấu trúc BCD của bài Huang; B3 tách được tác dụng của objective.
 - [x] Có gói tái lập và báo cáo theo cấu trúc môn học.
 
-Bằng chứng cho từng tiêu chí (file, bảng, mục báo cáo) nằm ở `docs/reproducibility.md` Mục 6 và bảng đối chiếu `tab:acceptance` trong phụ lục báo cáo. "Cơ chế cải tiến" được đánh giá bằng ablation cả khi kết quả âm tính: sửa lịch theo nguy cơ trễ hạn của P không cải thiện có ý nghĩa so với B2, và báo cáo ghi nhận điều đó.
+Bằng chứng cho từng tiêu chí (file, bảng, mục báo cáo) nằm ở `docs/reproducibility.md` Mục 6 (báo cáo không đưa bảng đối chiếu nội bộ này vào). "Cơ chế cải tiến" được đánh giá bằng ablation cả khi kết quả âm tính: sửa lịch theo nguy cơ trễ hạn của P không cải thiện có ý nghĩa so với B2, và báo cáo ghi nhận điều đó.
 
 Không đặt điều kiện phải tăng trước một tỷ lệ phần trăm nhất định. Kết quả không cải thiện vẫn phải báo cáo và phân tích. Mô phỏng không chứng minh hiệu năng thực địa; ảnh 2D không đo kênh; objective mẫu không tự bảo đảm xác suất ngoài mẫu; phương pháp heuristic không tự có bảo đảm tối ưu.
 

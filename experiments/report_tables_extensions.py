@@ -16,13 +16,13 @@ CASE_METHODS = ("B0", "B1", "B2", "P", "TRAN")
 TRACE_METHODS = ("B1", "P", "TRAN")
 COMPARISON_LABELS = {"P - TRAN": "P $-$ TRAN", "B2 - TRAN": "B2 $-$ TRAN"}
 COMPUTE_EXPERIMENTS = (
-    ("phase1", "Pha 1: B0, B1, cận LP và MILP"),
-    ("phase2/main", "So sánh chính và ablation"),
-    ("phase2/budget", "Ngân sách đánh giá"),
-    ("phase2/sensitivity", "Độ nhạy"),
-    ("phase2/design", "Số realization thiết kế"),
-    ("phase2/literature", "So sánh với TRAN"),
-    ("phase2/case_study", "Case study RescueNet"),
+    ("phase1", "Baselines B0 and B1, LP bounds, and MILP"),
+    ("phase2/main", "Main comparison and ablation"),
+    ("phase2/budget", "Evaluation budget"),
+    ("phase2/sensitivity", "Sensitivity"),
+    ("phase2/design", "Number of design realizations"),
+    ("phase2/literature", "Comparison with TRAN"),
+    ("phase2/case_study", "RescueNet case study"),
 )
 
 
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
         total_hours += minutes / 60.0
     jobs = pilot_jobs(runs)
     pilot_hours = sum(jobs.values()) / 3600.0
-    compute_rows.insert(5, ["Pilot TRAN trên tập phát triển", str(len(jobs)), number(pilot_hours, 1)])
+    compute_rows.insert(5, ["TRAN pilot on development set", str(len(jobs)), number(pilot_hours, 1)])
     total_hours += pilot_hours
     _write_semicolon(args.output / "ext_compute.csv", ["experiment", "tasks", "hours"], compute_rows)
     macros.append(("ResultExtComputeHours", number(total_hours, 1)))

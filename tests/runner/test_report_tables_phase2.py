@@ -79,17 +79,17 @@ def test_phase2_report_files_follow_the_results(tmp_path: Path):
     statistics_rows = _semicolon(output / "phase2_statistics.csv")
     assert statistics_rows[1] == ["v0", "P $-$ B2", "\\num{0.125}", "[\\num{0.100}, \\num{0.150}]", "\\num{1.00}", "\\num{0.0020}", "\\num{0.0156}"]
     ablation = _semicolon(output / "phase2_ablation.csv")
-    assert [row[0] for row in ablation[1:]] == ["P đầy đủ", "Chỉ thao tác 1", "Chỉ thao tác 2", "Sửa lịch không dùng backlog", "Không chạy khối đường",
-                                                 "Không chạy khối quỹ đạo", "Không chạy khối băng thông", "Thiết kế trên tốc độ kỳ vọng"]
+    assert [row[0] for row in ablation[1:]] == ["Full P", "Operator 1 only", "Operator 2 only", "Repair without backlog", "No path block",
+                                                 "No trajectory block", "No bandwidth block", "Expected-rate design"]
     assert ablation[2][2] == "\\num{0.000} [\\num{0.000}, \\num{0.000}]"
     assert ablation[5][1:5] == ["\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]", "\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]"]
     connectivity = _semicolon(output / "phase2_connectivity.csv")
-    assert [row[1:3] for row in connectivity[1:4]] == [["Tối đa 1/3", "3"], ["Từ 1/3 đến 2/3", "4"], ["Từ 2/3", "3"]]
+    assert [row[1:3] for row in connectivity[1:4]] == [["At most 1/3", "3"], ["1/3 to 2/3", "4"], ["Above 2/3", "3"]]
     assert connectivity[1][3:] == ["\\num{0.500}", "\\num{0.250}", "\\num{0.375}", "\\num{0.500}", "\\num{0.250}"]
     assert (output / "phase2_budget_b2.csv").read_text(encoding="utf-8").splitlines()[:2] == ["budget,timely,calls,planning", "250,0.402500,2001.0,60.000"]
     assert (output / "phase2_sensitivity_lref.csv").read_text(encoding="utf-8").splitlines() == [
         "x,B1,B2,P", "125,0.300000,0.400000,0.450000", "250,0.300000,0.400000,0.450000", "500,0.300000,0.400000,0.450000", "1000,0.300000,0.400000,0.450000"]
-    assert [row[0] for row in _semicolon(output / "phase2_design.csv")[1:]] == ["Tốc độ kỳ vọng", "1", "5", "10"]
+    assert [row[0] for row in _semicolon(output / "phase2_design.csv")[1:]] == ["Expected rate", "1", "5", "10"]
     macros = (output / "phase2_results.tex").read_text(encoding="utf-8")
     for expected in (
         "\\newcommand{\\ResultTwoTimelyVzeroBtwo}{\\num{0.500}}", "\\newcommand{\\ResultTwoHigherVzeroBtwoBzero}{10}",

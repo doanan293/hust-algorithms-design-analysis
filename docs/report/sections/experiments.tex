@@ -1,53 +1,71 @@
-\section{Kết quả thực nghiệm}
+\section{Numerical Results}
 \label{sec:experiments}
 
-\subsection{Thiết lập}
+This section evaluates the proposed algorithm in simulation. The experiments address four questions: whether jointly optimizing trajectory, paths, and bandwidth improves the timely-delivery ratio over partial optimization and over a strong method from the literature, which design choices produce the gain, when the UAV matters, and whether the conclusions survive parameter changes and a realistic source layout.
+
+\subsection{Simulation Setup}
 \label{sec:setup}
-
-Bộ kịch bản v0 được sinh tất định từ 130 topology Topology Zoo có 15--40 nút, có toạ độ và liên thông. Các topology được chia tầng theo số nút; mười topology được dùng để đánh giá với ba replicate mỗi topology, ba topology khác dành cho phát triển với hai replicate. Kích thước cảnh báo lấy tỷ lệ tương đối từ demand của instance SNDlib \texttt{abilene}~\cite{orlowski2010sndlib}; vùng hư hại, điểm nguồn, thời điểm phát sinh, hạn và cạnh hỏng được sinh bằng các luồng số ngẫu nhiên có seed riêng. Họ v0-bh50 giữ nguyên mọi seed và chỉ giảm dung lượng backhaul, nên hai họ cùng topology, cảnh báo và mẫu cạnh hỏng. \Cref{tab:params} liệt kê các tham số. Mọi kết hợp là kịch bản tổng hợp từ dữ liệu công khai, không phải mạng cứu hộ đo thực địa.
-
-Mỗi phương pháp lập kế hoạch một lần cho mỗi scenario và được đánh giá trên 30 realization kênh dùng chung số ngẫu nhiên. Các topology phát triển chỉ được dùng cho một lần chạy thử để xác nhận ngân sách $E=2000$ và $M_d=5$; không tham số nào được chỉnh trên tập đánh giá. Thí nghiệm chính chạy B0, B1, B2, B3, P và bảy biến thể ablation của P trên \ResultTwoScenarioCount{} scenario đánh giá của mỗi họ. Cận trên LP được giải cho từng realization trên chính quỹ đạo của B1, B2, B3 và P; \emph{cận hợp} của một realization là giá trị lớn nhất trong các cận đó. Thí nghiệm ngân sách chạy B2 và P với $E$ từ 250 đến 4000 trên v0. Thí nghiệm độ nhạy thay đổi từng tham số một so với v0 trên replicate đầu của mỗi topology đánh giá (\ResultTwoSensitivityScenarioCount{} scenario mỗi họ), và thí nghiệm số realization thiết kế chạy P trên cùng các scenario đó.
-
-Kết quả được lấy trung bình theo realization rồi theo scenario; khoảng tin cậy 95\% dùng bootstrap theo cụm topology vì các replicate của một topology không độc lập. Tám so sánh chính (P $-$ B2, B2 $-$ B1, B2 $-$ B3 và P $-$ B1 trên mỗi họ) dùng mười cặp giá trị ở mức topology: kiểm định đổi dấu chính xác xét cả $2^{10}$ cách đổi dấu, giá trị $p$ được hiệu chỉnh Holm trên tám so sánh, khoảng tin cậy của chênh lệch dùng bootstrap trên topology với \num{10000} lần lấy mẫu, và cỡ ảnh hưởng là tương quan hạng biserial ghép cặp. Ablation và độ nhạy được báo cáo mô tả, không kiểm định thêm. Cả \ResultTwoLpOptimalCount{} trong \ResultTwoLpCount{} bài LP của thí nghiệm chính và độ nhạy được giải tối ưu; khi presolve của HiGHS không phân loại được một bài (hai bài ở lần chạy đầu tiên, do hệ số của ma trận trải từ khoảng $10^{-13}$ tới $10^{6}$), bài đó được giải lại khi tắt presolve. Thí nghiệm chạy bằng Python \ResultPythonVersion, \texttt{scipy} \ResultScipyVersion{} và HiGHS \ResultHighsVersion{} với \ResultWorkers{} tiến trình trên máy \ResultCpuCount{} CPU; tổng thời gian tính của các task Pha 2 là \ResultTwoComputeHours{} giờ.
-
-Thí nghiệm so sánh với phương pháp từ tài liệu chạy B1 và TRAN trên cùng scenario, realization và loại cận của thí nghiệm chính. B1 của lần chạy này trùng từng realization với B1 của thí nghiệm chính, nên TRAN được ghép cặp trực tiếp với kết quả đã có của B2 và P; bốn so sánh P $-$ TRAN và B2 $-$ TRAN trên hai họ dùng cùng kiểm định đổi dấu, hiệu chỉnh Holm trên bốn so sánh. Case study chạy B0, B1, B2, P và TRAN trên \ResultExtCaseScenarioCount{} scenario đánh giá của họ \texttt{rescuenet} và chỉ được báo cáo mô tả. Bài toán TRAN được giải bằng \texttt{cvxpy}~\ResultExtCvxpyVersion{} với Clarabel~\ResultExtClarabelVersion; \ResultExtLiteratureLpOptimalCount{} trong \ResultExtLiteratureLpCount{} bài LP của thí nghiệm so sánh và \ResultExtCaseLpOptimalCount{} trong \ResultExtCaseLpCount{} bài LP của case study được giải tối ưu.
+The default scenario family, denoted v0, is generated deterministically from the 130 Topology Zoo topologies that have between 15 and 40 nodes, geographic coordinates, and a connected graph. After stratifying them by node count, we use ten topologies for evaluation with three replicates each and reserve three others for development with two replicates each. Alert sizes inherit their relative proportions from the demands of the SNDlib instance \texttt{abilene}~\cite{orlowski2010sndlib}, whereas damage zones, source positions, release times, deadlines, and failed edges are drawn from seeded random streams. The narrow-backhaul family v0-bh50 keeps every seed and only lowers the backhaul capacity from \qty{1000}{\kilo\bit\per\second} to \qty{50}{\kilo\bit\per\second}, so that both families share the same topologies, alerts, and failure patterns. \Cref{tab:params} lists the simulation parameters, whose channel constants follow those of~\cite{huang2025ddatsap}. All scenarios are synthesized from public data and do not represent measured rescue networks.
 
 \input{tables/params}
 
-\subsection{So sánh chính}
+\label{sec:rescuenet}
+For the case study, the sources are instead placed at damaged buildings in the RescueNet dataset~\cite{rahnemoonfar2023rescuenet}, which contains UAV images of Mexico Beach taken after Hurricane Michael together with segmentation masks. On \ResultExtImageCount{} image--mask pairs, we extract the 8-connected regions labeled as minor damage, major damage, or total destruction, discard those smaller than \qty{10}{\metre\squared}, and represent each remaining region by its pixel closest to the centroid. Because the dataset does not report the ground sampling distance, we derive the pixel size from the altitude and calibrated focal length stored in the image metadata, which gives values between \ResultExtGsdMin{} and \ResultExtGsdMax~\unit{\centi\metre}, and we project every point into UTM zone 16N using the GPS position and gimbal orientation. Merging points from overlapping images that lie within \qty{10}{\metre} of each other reduces the \ResultExtRegionCount{} damaged regions to \ResultExtTargetCount{} targets, which are then normalized into a \qty{2}{\kilo\metre} region with the same scale on both axes.
+
+The resulting family, called \texttt{rescuenet}, follows every other rule of v0: it uses the same ten evaluation topologies, three replicates, and random streams for alerts and failed edges, but every target becomes a source and the three damage zones are obtained by k-means clustering of the targets. Since the targets spread over the whole region rather than clustering around three centers, only \ResultExtGroundFractionRescuenet{} of the sources have a ground relay in range, compared with \ResultExtGroundFractionVzero{} in v0. All targets come from a single geographic layout observed in overlapping images, so we report the case-study results descriptively.
+
+\label{sec:baselines}
+We compare the proposed methods B2 and P with the following benchmark schemes:
+\begin{itemize}
+\item \textbf{B0} (no UAV): only ground paths are used.
+\item \textbf{B1} (fixed trajectory): the UAV follows a fixed tour of the damage zones, and paths are chosen per alert.
+\item \textbf{B3} (leximin objective): the search of B2 with the fairness key \eqref{eq:leximin}.
+\item \textbf{TRAN}: the inner approximation algorithm of Tran et al.~\cite{tran2022relay}, adapted to our model as described below.
+\end{itemize}
+B0 and B1 share the candidate set, the EDF scheduler, and equal bandwidth sharing, and both plan from expected rates. B0 routes each alert over its lowest-cost ground path and leaves an alert unserved when its source has no relay in range, at a planning cost of $O(\abs{A}K)$. B1 flies the UAV to the zone centers in nearest-neighbor order with equal hover times, as shown in \cref{fig:tours}a, and assigns each alert to the candidate that completes earliest when simulated alone on this trajectory; an alert is left unserved if no candidate meets its deadline. Its planning cost is $O(\abs{A}KNH_{\max})$, where $H_{\max}$ is the largest number of hops of a candidate.
+
+\label{sec:tran}
+TRAN, the half-duplex algorithm of Tran et al.~\cite{tran2022relay}, maximizes the number of devices whose data are uploaded to the UAV within an upload window and then offloaded to a gateway, with a binary variable $\lambda_k$ indicating whether device $k$ is served. The algorithm relaxes $\lambda_k$ to $[0,1]$ and adds the penalty $\mu\sum_k\lambda_k(\lambda_k-1)$; each iteration then linearizes the penalty, replaces the rates by concave lower bounds around the current point, and solves a convex problem in trajectory, bandwidth, and $\lambda$. \Cref{tab:tran-adaptation} lists the changes required by our model. They preserve the structure of the algorithm but may put it at a disadvantage, because the original work models neither a finite backhaul nor an EDF scheduler.
+
+\input{tables/tran_adaptation}
+
+In the adapted version, each alert plays the role of a device, and its gateway is the node where its lowest-cost candidate enters the ground network. Given $b_a$ slots of backhaul delay and $W_a=d_a-b_a-r_a$, the upload window is $[r_a,\,r_a+\lceil\theta W_a\rceil)$ and the offloading window ends at $d_a-b_a$, which leaves enough time for the data to cross the backhaul before the deadline. The Rician channel of the original work is replaced by a power law $\beta d^{-\alpha}$ fitted by least squares to the expected PrLoS gain; on the development scenarios, the fitted exponent lies between \ResultExtFitAlphaMin{} and \ResultExtFitAlphaMax{} with $R^2$ of at least \ResultExtFitRsquaredMin. Each iteration solves a second-order cone program with \texttt{cvxpy} and Clarabel. The algorithm starts from the B1 trajectory with equal bandwidths and $\lambda=0$, stops when the relaxed objective changes by less than $10^{-3}$ or after 30 iterations, and converts its solution into a static bandwidth schedule that keeps at most two downlinks per slot. We selected $\theta=\ResultExtPilotTheta$ and $\mu=\ResultExtPilotMu$ on \ResultExtPilotScenarioCount{} development scenarios from the grid $\theta\in\{1/3,1/2,2/3\}$, $\mu\in\{1,10\}$, although all grid cells were within \ResultExtPilotGridSpread{} of each other in timely-delivery ratio.
+
+\label{sec:protocol}
+Each method plans once per scenario, and its plan is evaluated on 30 channel realizations with common random numbers. The development topologies were used only in a single preliminary run that confirmed $E=2000$ and $M_d=5$, and no parameter was tuned on the evaluation set. The main experiment runs B0, B1, B2, B3, P, TRAN, and seven ablation variants of P on the \ResultTwoScenarioCount{} evaluation scenarios of each family, and it solves the LP bound for every realization on the trajectory of each method. For each realization, the \emph{envelope bound} is the largest of the bounds on the trajectories of B1, B2, B3, and P, and the envelope gap of a method is measured against it in the same way as the gap to its own bound. The result tables report planning times in seconds and the mean number of evaluations used by the search. Two further experiments vary the budget $E$ from 250 to 4000 on v0 and vary one parameter at a time on the first replicate of each evaluation topology.
+
+Results are averaged first over realizations and then over scenarios. Because the replicates of a topology are not independent, 95\% confidence intervals (CIs) are computed with a bootstrap clustered by topology, and paired comparisons are based on the ten topology-level differences. Each comparison uses an exact sign-flip test over all $2^{10}$ sign assignments, a bootstrap CI with \num{10000} resamples, and the matched-pairs rank-biserial correlation as effect size, and its $p$-value is Holm-corrected within its group, namely the eight comparisons among our methods or the four comparisons against TRAN. Ablation, sensitivity, and case-study results are reported descriptively. All bound LPs were solved to optimality with HiGHS. The implementation uses Python \ResultPythonVersion, \texttt{scipy} \ResultScipyVersion, HiGHS \ResultHighsVersion, \texttt{cvxpy}~\ResultExtCvxpyVersion, and Clarabel~\ResultExtClarabelVersion, runs \ResultWorkers{} worker processes on a \ResultCpuCount-CPU machine, and consumed \ResultExtComputeHours{} compute hours for all experiments together.
+
+\subsection{Comparison with Benchmark Schemes}
 \label{sec:results-main}
 
 \input{tables/phase2_main}
 
-\Cref{tab:phase2-main} tóm tắt so sánh chính. Trên họ v0, B2 giao đúng hạn \ResultTwoTimelyVzeroBtwo{} số cảnh báo, so với \ResultTwoTimelyVzeroBone{} của B1 và \ResultTwoTimelyVzeroBzero{} của B0; B2 cao hơn B0 trên \ResultTwoHigherVzeroBtwoBzero{} và cao hơn B1 trên \ResultTwoHigherVzeroBtwoBone{} trong \ResultTwoScenarioCount{} scenario. P đạt \ResultTwoTimelyVzeroP, gần như bằng B2: P cao hơn B2 trên \ResultTwoHigherVzeroPBtwo{} scenario, bằng trên \ResultTwoEqualVzeroPBtwo{} và thấp hơn trên \ResultTwoLowerVzeroPBtwo. B3 chỉ đạt \ResultTwoTimelyVzeroBthree, thấp hơn cả B1, dù mọi phương pháp dùng UAV đều đưa khả năng kết nối lên gần bằng một. Khi backhaul chỉ còn \qty{50}{\kilo\bit\per\second}, thứ tự không đổi: B2 đạt \ResultTwoTimelyVzeroBhfivezeroBtwo{} và P đạt \ResultTwoTimelyVzeroBhfivezeroP, so với \ResultTwoTimelyVzeroBhfivezeroBone{} của B1 và \ResultTwoTimelyVzeroBhfivezeroBzero{} của B0.
+As \cref{tab:phase2-main} shows, jointly optimizing the plan pays off clearly over both baselines. On v0, B2 delivers \ResultTwoTimelyVzeroBtwo{} of the alerts on time, against \ResultTwoTimelyVzeroBone{} for B1 and \ResultTwoTimelyVzeroBzero{} for B0, and it outperforms B0 on \ResultTwoHigherVzeroBtwoBzero{} and B1 on \ResultTwoHigherVzeroBtwoBone{} of the \ResultTwoScenarioCount{} scenarios. The repair variant P reaches \ResultTwoTimelyVzeroP, practically the same as B2: it is better on \ResultTwoHigherVzeroPBtwo{} scenarios, equal on \ResultTwoEqualVzeroPBtwo{}, and worse on \ResultTwoLowerVzeroPBtwo. B3 reaches only \ResultTwoTimelyVzeroBthree, below even B1, although every method that uses the UAV brings connectivity close to one. Reducing the backhaul to \qty{50}{\kilo\bit\per\second} lowers all ratios but leaves the ranking unchanged, with B2 at \ResultTwoTimelyVzeroBhfivezeroBtwo, P at \ResultTwoTimelyVzeroBhfivezeroP, B1 at \ResultTwoTimelyVzeroBhfivezeroBone, and B0 at \ResultTwoTimelyVzeroBhfivezeroBzero.
 
-Gap của B2 so với cận trên chính quỹ đạo của nó là \ResultTwoGapVzeroBtwo, nhỏ hơn gap \ResultTwoGapVzeroBone{} của B1 trên quỹ đạo B1, vì B2 vừa giao được nhiều cảnh báo hơn vừa chọn quỹ đạo có cận cao hơn. So với cận hợp \ResultTwoUnionBoundVzeroBtwo, B2 còn cách \ResultTwoUnionGapVzeroBtwo{} và B1 cách \ResultTwoUnionGapVzeroBone. B3 có gap riêng \ResultTwoGapVzeroBthree{} dù cận trên quỹ đạo của nó gần bằng của B2, nên phần thua kém đến từ lựa chọn đường và băng thông theo mục tiêu leximin chứ không từ quỹ đạo.
+The relative gaps to the upper bounds point in the same direction. The gap of B2 to the bound on its own trajectory is \ResultTwoGapVzeroBtwo, whereas that of B1 to the bound on the B1 trajectory is \ResultTwoGapVzeroBone, because B2 delivers more alerts and also chooses trajectories with higher bounds. Relative to the envelope bound of \ResultTwoUnionBoundVzeroBtwo, the gaps are \ResultTwoUnionGapVzeroBtwo{} for B2 and \ResultTwoUnionGapVzeroBone{} for B1. B3 shows a gap of \ResultTwoGapVzeroBthree{} even though its trajectory has nearly the same bound as that of B2, which indicates that its loss stems from the path and bandwidth choices made under the leximin objective rather than from the trajectory.
 
-\subsection{Kiểm định thống kê}
 \label{sec:results-stats}
-
 \input{tables/phase2_statistics}
 
-\Cref{tab:phase2-stats} cho thấy B2 hơn B1 trung bình \ResultTwoDiffVzeroBtwoBone{} (KTC 95\% [\ResultTwoDiffLowVzeroBtwoBone, \ResultTwoDiffHighVzeroBtwoBone]) trên v0 và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} trên v0-bh50, còn P hơn B1 \ResultTwoDiffVzeroPBone{} và \ResultTwoDiffVzeroBhfivezeroPBone. Các so sánh này và B2 $-$ B3 đều có $p_{\mathrm{Holm}}=\ResultTwoHolmFloor$, giá trị nhỏ nhất có thể với mười topology và tám so sánh ($8\cdot 2/2^{10}$): cả mười topology cùng chiều, và tương quan hạng biserial bằng một. Ngược lại, P $-$ B2 có chênh lệch \ResultTwoDiffVzeroPBtwo{} (KTC 95\% [\ResultTwoDiffLowVzeroPBtwo, \ResultTwoDiffHighVzeroPBtwo]) trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50, với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$: dữ liệu không cho thấy cơ chế sửa lịch làm tăng tỷ lệ đúng hạn so với B2.
+The paired tests in \cref{tab:phase2-stats} confirm that these differences are systematic. B2 exceeds B1 by \ResultTwoDiffVzeroBtwoBone{} on average on v0, with a 95\% CI of [\ResultTwoDiffLowVzeroBtwoBone, \ResultTwoDiffHighVzeroBtwoBone], and by \ResultTwoDiffVzeroBhfivezeroBtwoBone{} on v0-bh50, while P exceeds B1 by \ResultTwoDiffVzeroPBone{} and \ResultTwoDiffVzeroBhfivezeroPBone, respectively. These comparisons and B2 $-$ B3 all reach $p_{\mathrm{Holm}}=\ResultTwoHolmFloor$, the smallest value attainable with ten topologies and eight comparisons, because all ten topologies agree in sign and the rank-biserial correlation equals one. The difference between P and B2, in contrast, is only \ResultTwoDiffVzeroPBtwo{} on v0, with a CI of [\ResultTwoDiffLowVzeroPBtwo, \ResultTwoDiffHighVzeroPBtwo] that contains zero, and \ResultTwoDiffVzeroBhfivezeroPBtwo{} on v0-bh50, with $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$ in both cases; the data therefore provide no evidence that schedule repair improves on B2.
 
-\subsection{So sánh với phương pháp từ tài liệu}
 \label{sec:results-literature}
-
 \input{tables/ext_literature}
 
-\Cref{tab:literature} đặt TRAN cạnh B1, B2 và P. Trên v0, TRAN giao đúng hạn \ResultExtTimelyVzeroTRAN{} số cảnh báo, cao hơn \ResultExtTimelyVzeroBone{} của B1 nhưng thấp hơn \ResultExtTimelyVzeroBtwo{} của B2 và \ResultExtTimelyVzeroP{} của P. Khi backhaul chỉ còn \qty{50}{\kilo\bit\per\second}, TRAN đạt \ResultExtTimelyVzeroBhfivezeroTRAN, gần bằng \ResultExtTimelyVzeroBhfivezeroBone{} của B1 và thấp hơn \ResultExtTimelyVzeroBhfivezeroBtwo{} của B2. Gap của TRAN so với cận trên chính quỹ đạo của nó là \ResultExtGapVzeroTRAN{} và \ResultExtGapVzeroBhfivezeroTRAN, lớn hơn gap của B2 trên cùng họ, và TRAN lập kế hoạch lâu hơn P (\ResultExtPlanningVzeroTRAN{} so với \ResultExtPlanningVzeroP{} giây trên v0).
+\Cref{tab:literature} reports the results of TRAN, which can be read against those of B1, B2, and P in \cref{tab:phase2-main}. On v0, TRAN delivers \ResultExtTimelyVzeroTRAN{} of the alerts on time, more than B1 at \ResultExtTimelyVzeroBone{} but fewer than B2 at \ResultExtTimelyVzeroBtwo{} and P at \ResultExtTimelyVzeroP. Under narrow backhaul, its ratio of \ResultExtTimelyVzeroBhfivezeroTRAN{} falls close to that of B1 at \ResultExtTimelyVzeroBhfivezeroBone{} and clearly below that of B2 at \ResultExtTimelyVzeroBhfivezeroBtwo. TRAN also lies farther from the bound on its own trajectory, with gaps of \ResultExtGapVzeroTRAN{} and \ResultExtGapVzeroBhfivezeroTRAN, and it plans longer than P, taking \ResultExtPlanningVzeroTRAN{} instead of \ResultExtPlanningVzeroP{} seconds per scenario on v0.
 
 \input{tables/ext_literature_statistics}
 
-Theo \cref{tab:literature-stats}, P hơn TRAN trung bình \ResultExtDiffVzeroPTran{} trên v0 (KTC 95\% [\ResultExtDiffLowVzeroPTran, \ResultExtDiffHighVzeroPTran], $p_{\mathrm{Holm}}=\ResultExtHolmVzeroPTran$) và \ResultExtDiffVzeroBhfivezeroPTran{} trên v0-bh50 (KTC 95\% [\ResultExtDiffLowVzeroBhfivezeroPTran, \ResultExtDiffHighVzeroBhfivezeroPTran], $p_{\mathrm{Holm}}=\ResultExtHolmVzeroBhfivezeroPTran$); so sánh B2 $-$ TRAN cho kết quả tương tự. Trên v0-bh50, khoảng tin cậy bootstrap không chứa không và tương quan hạng biserial bằng \ResultExtRankBiserialVzeroBhfivezeroPTran, nhưng sau hiệu chỉnh Holm cho bốn so sánh, không chênh lệch nào có ý nghĩa ở mức 5\%. Kết quả phù hợp với cấu trúc của TRAN: phương pháp thiết kế trên một kênh hiệu dụng tất định với lịch băng thông tĩnh và không biết dung lượng backhaul, nên mất lợi thế rõ nhất ở họ có backhaul băng hẹp.
+\Cref{tab:literature-stats} quantifies these differences. On v0, P exceeds TRAN by \ResultExtDiffVzeroPTran{} on average, with a CI of [\ResultExtDiffLowVzeroPTran, \ResultExtDiffHighVzeroPTran] and $p_{\mathrm{Holm}}=\ResultExtHolmVzeroPTran$; on v0-bh50, the advantage grows to \ResultExtDiffVzeroBhfivezeroPTran, with a CI of [\ResultExtDiffLowVzeroBhfivezeroPTran, \ResultExtDiffHighVzeroBhfivezeroPTran] and $p_{\mathrm{Holm}}=\ResultExtHolmVzeroBhfivezeroPTran$, and B2 behaves similarly. Under narrow backhaul, the bootstrap CI excludes zero and the rank-biserial correlation reaches \ResultExtRankBiserialVzeroBhfivezeroPTran, yet no difference remains significant at the 5\% level after Holm correction for the four comparisons. This pattern is consistent with the design of TRAN, which plans on a deterministic effective channel with a static bandwidth schedule and without knowledge of the backhaul capacity, and therefore loses most of its advantage when the backhaul is narrow.
 
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{semilogxaxis}[
-    width=0.8\textwidth, height=5.5cm, xmin=0.05, xmax=1000,
-    xlabel={Thời gian lập kế hoạch trung bình (s)}, ylabel={Tỷ lệ đúng hạn},
-    grid=major, legend pos=north west, /pgf/number format/use comma,
+    width=0.75\textwidth, height=4.6cm, xmin=0.05, xmax=1000,
+    xlabel={Mean planning time (s)}, ylabel={Timely-delivery ratio},
+    grid=major, legend style={font=\footnotesize, at={(0.5,-0.42)}, anchor=north, legend columns=3, column sep=6pt},
     yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
 ]
 \addplot[mark=*, color=blue!70!black] table[col sep=comma, x=planning, y=timely] {data/phase2_budget_b2.csv};
@@ -57,40 +75,36 @@ Theo \cref{tab:literature-stats}, P hơn TRAN trung bình \ResultExtDiffVzeroPTr
 \addplot[only marks, mark=triangle*, mark size=3pt, color=green!50!black, nodes near coords, point meta=explicit symbolic,
     every node near coord/.append style={font=\footnotesize, anchor=south west}]
     table[col sep=comma, x=planning, y=timely, meta=method] {data/ext_quality_points.csv};
-\addlegendentry{B1 và TRAN}
+\addlegendentry{B1 and TRAN}
 \end{semilogxaxis}
 \end{tikzpicture}
-\caption{Tỷ lệ đúng hạn theo thời gian lập kế hoạch trên 30 scenario v0: đường B2 và P ứng với ngân sách đánh giá từ 250 đến 4000, điểm B1 và TRAN ứng với cấu hình mặc định.}
+\caption{Timely-delivery ratio versus planning time on v0.}
 \label{fig:quality-runtime}
 \end{figure}
 
-\Cref{fig:quality-runtime} đặt TRAN lên đường chất lượng--thời gian của B2 và P. Với ngân sách $E=500$, B2 đã đạt \ResultTwoBudgetBtwoFivezerozero, cao hơn TRAN, trong khi thời gian lập kế hoạch ngắn hơn nhiều; tăng ngân sách chỉ đưa B2 và P tới vùng bão hoà đã thấy ở \cref{sec:results-budget}.
+\Cref{fig:quality-runtime} places TRAN and B1 on the quality--runtime curves that B2 and P trace for budgets from 250 to 4000. Already with a budget of $E=500$, B2 reaches \ResultTwoBudgetBtwoFivezerozero, above TRAN, at a fraction of its planning time, and larger budgets move both B2 and P toward the saturation level examined below.
 
-\subsection{Ablation}
+\subsection{Ablation and Algorithm Analysis}
 \label{sec:results-ablation}
 
 \input{tables/phase2_ablation}
 
-Trong \cref{tab:phase2-ablation}, bỏ khối đường làm tỷ lệ đúng hạn thay đổi \ResultTwoAblationDiffVzeroPFixedPaths{} trên v0 và \ResultTwoAblationDiffVzeroBhfivezeroPFixedPaths{} trên v0-bh50, còn bỏ khối quỹ đạo thay đổi \ResultTwoAblationDiffVzeroPFixedTrajectory{} và \ResultTwoAblationDiffVzeroBhfivezeroPFixedTrajectory. Thiết kế trên tốc độ kỳ vọng thay cho năm realization lấy mẫu thay đổi \ResultTwoAblationDiffVzeroPExpectedDesign{} và \ResultTwoAblationDiffVzeroBhfivezeroPExpectedDesign, dù thời gian lập kế hoạch ngắn hơn nhiều. Các biến thể còn lại --- chỉ giữ một thao tác sửa lịch, sửa lịch không dùng thông tin backlog, và bỏ khối băng thông --- chỉ lệch khỏi P không quá vài phần nghìn. Lợi ích của tìm kiếm vì vậy đến từ việc đồng chọn đường và quỹ đạo trên các realization lấy mẫu; trọng số băng thông và hai thao tác sửa lịch hầu như không thay đổi kết quả khi bộ điều phối EDF đã chia băng thông theo backlog.
+The ablation in \cref{tab:phase2-ablation} identifies where the gain comes from, with $\Delta$ denoting the topology-level mean difference in timely-delivery ratio between a variant and P. Disabling the path block changes the timely-delivery ratio of P by \ResultTwoAblationDiffVzeroPFixedPaths{} on v0 and \ResultTwoAblationDiffVzeroBhfivezeroPFixedPaths{} on v0-bh50, and disabling the trajectory block changes it by \ResultTwoAblationDiffVzeroPFixedTrajectory{} and \ResultTwoAblationDiffVzeroBhfivezeroPFixedTrajectory. Designing on expected rates instead of five sampled realizations changes it by \ResultTwoAblationDiffVzeroPExpectedDesign{} and \ResultTwoAblationDiffVzeroBhfivezeroPExpectedDesign, even though it plans much faster. The remaining variants, which keep only one repair operator, repair without backlog information, or skip the bandwidth block, stay within a few thousandths of P. The gain of the search therefore comes from selecting paths and trajectory jointly on sampled realizations, while the bandwidth weights and the repair operators matter little once the EDF scheduler shares bandwidth according to the backlog.
 
-\subsection{Vai trò của UAV theo mức kết nối mặt đất}
 \label{sec:results-connectivity}
-
 \input{tables/phase2_connectivity}
 
-\Cref{tab:phase2-connectivity} chia scenario theo tỷ lệ nguồn có relay mặt đất trong tầm. Tỷ lệ đúng hạn của B0 bám sát tỷ lệ này, với hệ số tương quan \ResultTwoGroundCorrelationVzero{} trên v0 và \ResultTwoGroundCorrelationVzeroBhfivezero{} trên v0-bh50, vì cảnh báo từ nguồn không có relay trong tầm không thể được giao khi không có UAV. UAV đưa khả năng kết nối của mọi nhóm lên gần bằng một, và mức tăng của B2 so với B0 gần như không đổi giữa các nhóm: \ResultTwoTercileGainVzeroLow, \ResultTwoTercileGainVzeroMiddle{} và \ResultTwoTercileGainVzeroHigh{} trên v0, \ResultTwoTercileGainVzeroBhfivezeroLow, \ResultTwoTercileGainVzeroBhfivezeroMiddle{} và \ResultTwoTercileGainVzeroBhfivezeroHigh{} trên v0-bh50. Thí nghiệm không tách riêng nguyên nhân của mức tăng ở từng nhóm, nên báo cáo không suy ra cơ chế từ bảng này.
+To see when the UAV matters, \cref{tab:phase2-connectivity} groups the scenarios by the fraction of sources that have a ground relay in range. Without a UAV, both the connectivity, listed as Conn B0, and the timely-delivery ratio closely follow this fraction, the latter with correlation coefficients of \ResultTwoGroundCorrelationVzero{} on v0 and \ResultTwoGroundCorrelationVzeroBhfivezero{} on v0-bh50, since alerts from sources without a relay in range cannot be delivered at all. The UAV raises connectivity close to one in every group, and the gain of B2 over B0 remains nearly constant across groups, from \ResultTwoTercileGainVzeroLow{} to \ResultTwoTercileGainVzeroHigh{} on v0. The UAV therefore helps even where most sources already reach a ground relay.
 
-\subsection{Ngân sách đánh giá và số realization thiết kế}
 \label{sec:results-budget}
-
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{semilogxaxis}[
-    width=0.8\textwidth, height=5.5cm, log basis x=2,
-    xlabel={Ngân sách đánh giá $E$}, ylabel={Tỷ lệ đúng hạn},
+    width=0.75\textwidth, height=4.6cm, log basis x=2,
+    xlabel={Evaluation budget $E$}, ylabel={Timely-delivery ratio},
     xtick={250,500,1000,2000,4000}, xticklabels={250,500,1000,2000,4000},
-    grid=major, legend pos=south east, /pgf/number format/use comma,
+    grid=major, legend pos=south east,
     yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3},
 ]
 \addplot[mark=*, color=blue!70!black] table[col sep=comma, x=budget, y=timely] {data/phase2_budget_b2.csv};
@@ -99,17 +113,22 @@ Trong \cref{tab:phase2-ablation}, bỏ khối đường làm tỷ lệ đúng h�
 \addlegendentry{P}
 \end{semilogxaxis}
 \end{tikzpicture}
-\caption{Tỷ lệ đúng hạn của B2 và P trên 30 scenario v0 theo ngân sách đánh giá.}
+\caption{Timely-delivery ratio versus the evaluation budget on v0.}
 \label{fig:budget}
 \end{figure}
 
-\input{tables/phase2_design}
+\Cref{fig:budget} shows that the search saturates quickly. B2 reaches \ResultTwoBudgetBtwoTwofivezero{} with $E=250$ and \ResultTwoBudgetBtwoOnezerozerozero{} with $E=1000$, and it stays almost constant up to $E=4000$, where it reaches \ResultTwoBudgetBtwoFourzerozerozero, because the search stops after about \ResultTwoBudgetCallsBtwoFourzerozerozero{} evaluations on average, once a round accepts no further change. P follows the same trend, with \ResultTwoBudgetPTwofivezero, \ResultTwoBudgetPOnezerozerozero, and \ResultTwoBudgetPFourzerozerozero{} for the same budgets. The default budget $E=2000$ therefore lies in the saturated regime, and the lack of improvement of P over B2 cannot be attributed to an insufficient budget. The number of design realizations matters more than the budget. Running P on the first replicate of each v0 topology, designing on expected rates yields \ResultTwoDesignExpected, one realization \ResultTwoDesignOne, five realizations \ResultTwoDesignFive, and ten realizations \ResultTwoDesignOnezero, while the planning time grows from \ResultTwoDesignPlanningExpected{} to \ResultTwoDesignPlanningOnezero{} seconds.
 
-Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250$ và \ResultTwoBudgetBtwoOnezerozerozero{} với $E=1000$, rồi gần như không đổi khi tăng tới $E=4000$ (\ResultTwoBudgetBtwoFourzerozerozero), vì phương pháp dừng sau trung bình \ResultTwoBudgetCallsBtwoFourzerozerozero{} lần đánh giá khi một vòng không còn nhận thay đổi. P có cùng xu hướng (\ResultTwoBudgetPTwofivezero, \ResultTwoBudgetPOnezerozerozero{} và \ResultTwoBudgetPFourzerozerozero). Ngân sách mặc định $E=2000$ vì vậy nằm ở vùng bão hoà, và kết luận P không hơn B2 không do thiếu ngân sách. \Cref{tab:phase2-design} cho thấy số realization thiết kế quan trọng hơn ngân sách: thiết kế trên tốc độ kỳ vọng đạt \ResultTwoDesignExpected, một realization đạt \ResultTwoDesignOne, năm realization đạt \ResultTwoDesignFive{} và mười realization đạt \ResultTwoDesignOnezero, trong khi thời gian lập kế hoạch tăng từ \ResultTwoDesignPlanningExpected{} lên \ResultTwoDesignPlanningOnezero{} giây.
+\label{sec:results-milp}
+\input{tables/phase1_milp}
 
-\subsection{Độ nhạy}
+\Cref{tab:phase1-milp} compares the LP bound with the exact MILP on \ResultMilpCount{} reduced instances with ten alerts each, using the B1 trajectory and the first channel realization; HiGHS solved \ResultMilpOptimalCount{} of these MILPs to optimality. The plan built from the MILP solution is executed with the better of its own bandwidths and backlog-based equal sharing. On these instances, B1 attains the MILP optimum in \ResultMilpMethodAtOptimumCount{} cases and the plan built from the MILP solution in \ResultMilpPlanAtOptimumCount{} cases, so the gap between the LP bound and the achieved value comes mainly from relaxing the integrality of path selection. The bandwidth rule matters as well: taking the bandwidths directly from the MILP solution delivers only \ResultMilpStaticTotal{} timely alerts in total over the five instances, whereas keeping the solution paths and sharing bandwidth equally by backlog delivers \ResultMilpEqualSplitTotal, because a static bandwidth schedule falls out of step with how the EDF scheduler serves the queues. Finally, the envelope of ten tangents overestimates the rate by at most \ResultTangentOverestimateMax{} in relative terms on $[B_{\mathrm{tot}}/512, B_{\mathrm{tot}}]$. The gaps in \cref{tab:phase2-main} should therefore be read as upper bounds on the room for improvement, and the improvement that is actually achievable may be considerably smaller.
+
+\label{sec:results-runtime}
+In terms of computational cost, B0 plans almost instantly, and B1 needs \ResultPlanningVzeroBone{} seconds per v0 scenario on average because it simulates every candidate. B2 and P take \ResultTwoPlanningVzeroBtwo{} and \ResultTwoPlanningVzeroP{} seconds with \ResultTwoCallsVzeroBtwo{} and \ResultTwoCallsVzeroP{} evaluations on average, running \ResultWorkers{} processes in parallel, and evaluating one plan on one realization takes about \ResultEvaluationVzeroBone{} seconds. The \ResultLpCount{} LPs that bound B0 and B1 have a median of \ResultLpVariablesMedian{} and at most \ResultLpVariablesMax{} variables, and their solve time has a median of \ResultLpRuntimeMedian{} seconds and a maximum of \ResultLpRuntimeMax{} seconds.
+
+\subsection{Sensitivity and RescueNet Case Study}
 \label{sec:results-sensitivity}
-
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
@@ -117,10 +136,10 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
     group style={group size=3 by 2, horizontal sep=1.2cm, vertical sep=1.7cm},
     width=0.34\textwidth, height=4.3cm, ymin=0.2, ymax=0.65, grid=major,
     tick label style={font=\scriptsize}, label style={font=\footnotesize},
-    /pgf/number format/use comma, yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
+    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
     cycle list={{blue!70!black, mark=*}, {green!50!black, mark=triangle*}, {red!70!black, dashed, mark=square*}},
 ]
-\nextgroupplot[xlabel={$L_{\mathrm{ref}}$ (kbit)}, ylabel={Tỷ lệ đúng hạn}, xmode=log, log basis x=2, xtick={125,250,500,1000}, xticklabels={125,250,500,1000}, legend to name=senslegend, legend columns=3]
+\nextgroupplot[xlabel={$L_{\mathrm{ref}}$ (kbit)}, ylabel={Timely-delivery ratio}, xmode=log, log basis x=2, xtick={125,250,500,1000}, xticklabels={125,250,500,1000}, legend to name=senslegend, legend columns=3]
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_lref.csv}; \addlegendentry{B1}
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_lref.csv}; \addlegendentry{B2}
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_lref.csv}; \addlegendentry{P}
@@ -128,19 +147,19 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_backhaul.csv};
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_backhaul.csv};
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_backhaul.csv};
-\nextgroupplot[xlabel={Cửa sổ hạn trung bình (slot)}, xtick={20,40,80}]
+\nextgroupplot[xlabel={Mean deadline window (slots)}, xtick={20,40,80}]
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_deadline.csv};
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_deadline.csv};
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_deadline.csv};
-\nextgroupplot[xlabel={$B_{\mathrm{tot}}$ (MHz)}, ylabel={Tỷ lệ đúng hạn}, xtick={0.5,1,2}]
+\nextgroupplot[xlabel={$B_{\mathrm{tot}}$ (MHz)}, ylabel={Timely-delivery ratio}, xtick={0.5,1,2}]
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_btot.csv};
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_btot.csv};
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_btot.csv};
-\nextgroupplot[xlabel={Số cảnh báo $\abs{A}$}, xtick={20,40,60}]
+\nextgroupplot[xlabel={Number of alerts $\abs{A}$}, xtick={20,40,60}]
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_alerts.csv};
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_alerts.csv};
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_alerts.csv};
-\nextgroupplot[xlabel={Số candidate $K$}, xtick={2,3,5}]
+\nextgroupplot[xlabel={Number of candidates $K$}, xtick={2,3,5}]
 \addplot table[col sep=comma, x=x, y=B1] {data/phase2_sensitivity_paths.csv};
 \addplot table[col sep=comma, x=x, y=B2] {data/phase2_sensitivity_paths.csv};
 \addplot table[col sep=comma, x=x, y=P] {data/phase2_sensitivity_paths.csv};
@@ -148,50 +167,48 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
 \end{tikzpicture}
 
 \pgfplotslegendfromname{senslegend}
-\caption{Tỷ lệ đúng hạn khi thay đổi từng tham số so với v0 (điểm giữa của mỗi hình, trừ backhaul, nơi v0 là \qty{1000}{\kilo\bit\per\second} và v0-bh50 là \qty{50}{\kilo\bit\per\second}), trên replicate đầu của mười topology đánh giá.}
+\caption{Sensitivity of the timely-delivery ratio to the main parameters.}
 \label{fig:sensitivity}
 \end{figure}
 
-\Cref{fig:sensitivity} cho thấy thứ tự B1 thấp hơn B2 và P giữ nguyên trên mọi họ không suy biến. Hạn ngắn thu hẹp lợi thế (B1 \ResultTwoSensSensDeadlineShortBone{} so với P \ResultTwoSensSensDeadlineShortP), còn hạn dài mở rộng lợi thế (B1 \ResultTwoSensSensDeadlineLongBone{} so với P \ResultTwoSensSensDeadlineLongP). Cảnh báo lớn hơn làm mọi phương pháp giảm mạnh: với $L_{\mathrm{ref}}=\qty{1}{\mega\bit}$, B1 đạt \ResultTwoSensSensLrefonemBone{} và P đạt \ResultTwoSensSensLrefonemP. Tăng số cảnh báo lên 60 hoặc giảm $B_{\mathrm{tot}}$ còn một nửa làm tỷ lệ đúng hạn giảm nhẹ (P \ResultTwoSensSensAlertssixzeroP{} và \ResultTwoSensSensBtotzerofiveP, so với \ResultTwoSensVzeroP{} của v0), còn số candidate $K$ ảnh hưởng ít. Họ dùng hằng số vật lý khác ($\beta_0=\qty{-40}{\dB}$, $N_0=\qty{-164}{\dBm\per\hertz}$) suy biến: mọi nguồn có relay mặt đất trong tầm và cả ba phương pháp đạt \ResultTwoSensSensPhysicalP, nên họ này không được dùng để kết luận về vai trò của UAV.
+\Cref{fig:sensitivity} varies one parameter at a time around v0 on the first replicate of each evaluation topology; the middle point of each panel corresponds to v0, except in the backhaul panel, where v0 and v0-bh50 are the right and left points. B1 remains below B2 and P in every non-degenerate family. The advantage narrows with short deadlines, where B1 reaches \ResultTwoSensSensDeadlineShortBone{} and P \ResultTwoSensSensDeadlineShortP, and widens with long deadlines, where B1 reaches \ResultTwoSensSensDeadlineLongBone{} and P \ResultTwoSensSensDeadlineLongP. Larger alerts reduce the ratio of every method sharply; with $L_{\mathrm{ref}}=\qty{1}{\mega\bit}$, B1 reaches \ResultTwoSensSensLrefonemBone{} and P only \ResultTwoSensSensLrefonemP. Raising the number of alerts to 60 or halving $B_{\mathrm{tot}}$ lowers the ratio of P only slightly, to \ResultTwoSensSensAlertssixzeroP{} and \ResultTwoSensSensBtotzerofiveP{} compared with \ResultTwoSensVzeroP{} on v0, and the number of candidates $K$ has little influence. The family with stronger channels, which uses $\beta_0=\qty{-40}{\dB}$ and $N_0=\qty{-164}{\dBm\per\hertz}$, is degenerate: every source has a ground relay in range and all three methods reach \ResultTwoSensSensPhysicalP, so we do not use it to draw conclusions about the role of the UAV.
 
-\subsection{Case study RescueNet}
 \label{sec:results-case-study}
-
 \input{tables/ext_case_study}
 
-\Cref{tab:case-study} tóm tắt case study. Không có UAV, B0 chỉ giao đúng hạn \ResultExtCaseTimelyBzero{} số cảnh báo và chỉ \ResultExtCaseConnBzero{} số nguồn có đường theo thời gian tới trung tâm. Quỹ đạo cố định của B1 nâng tỷ lệ đúng hạn lên \ResultExtCaseTimelyBone; B2, P và TRAN đạt \ResultExtCaseTimelyBtwo, \ResultExtCaseTimelyP{} và \ResultExtCaseTimelyTRAN, với khoảng tin cậy chồng lấn nhau. Thứ tự này giống thí nghiệm chính: đồng tối ưu quỹ đạo và đường tăng tỷ lệ đúng hạn so với quỹ đạo cố định, sửa lịch không thêm lợi ích, còn TRAN gần B2 nhưng có gap lớn hơn (\ResultExtCaseGapTRAN{} so với \ResultExtCaseGapBtwo) và lập kế hoạch lâu hơn (\ResultExtCasePlanningTRAN{} so với \ResultExtCasePlanningBtwo{} giây). Dù ít nguồn có relay mặt đất trong tầm hơn v0, mức tăng của B1 và B2 so với B0 gần bằng mức tăng ở thí nghiệm chính.
+The RescueNet case study in \cref{tab:case-study} reproduces the ranking of the main experiment. Without a UAV, B0 delivers only \ResultExtCaseTimelyBzero{} of the alerts on time, and only \ResultExtCaseConnBzero{} of the sources have a time-respecting path to the center. The fixed trajectory of B1 raises the ratio to \ResultExtCaseTimelyBone, and B2, P, and TRAN reach \ResultExtCaseTimelyBtwo, \ResultExtCaseTimelyP, and \ResultExtCaseTimelyTRAN{} with overlapping confidence intervals. As before, jointly optimizing trajectory and paths improves on the fixed trajectory and repair adds nothing, while TRAN comes close to B2 but with a larger gap, \ResultExtCaseGapTRAN{} instead of \ResultExtCaseGapBtwo, and a longer planning time, \ResultExtCasePlanningTRAN{} instead of \ResultExtCasePlanningBtwo{} seconds. Although fewer sources have a ground relay in range than in v0, the gains of B1 and B2 over B0 remain close to those of the main experiment.
 
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-    width=0.72\textwidth, height=0.72\textwidth, axis equal image, xmin=0, xmax=2, ymin=0, ymax=2,
-    xlabel={$x$ (km)}, ylabel={$y$ (km)}, /pgf/number format/use comma,
+    width=0.58\textwidth, height=0.58\textwidth, axis equal image, xmin=0, xmax=2, ymin=0, ymax=2,
+    xlabel={$x$ (km)}, ylabel={$y$ (km)},
     legend style={font=\footnotesize, at={(0.5,-0.13)}, anchor=north, legend columns=3},
 ]
 \addplot[gray!45, unbounded coords=jump] table[col sep=comma, x=x, y=y] {data/ext_map_edges_alive.csv};
-\addlegendentry{Cạnh còn sống}
+\addlegendentry{Surviving edge}
 \addplot[red!60, dashed, unbounded coords=jump] table[col sep=comma, x=x, y=y] {data/ext_map_edges_failed.csv};
-\addlegendentry{Cạnh hỏng}
+\addlegendentry{Failed edge}
 \addplot[only marks, mark=*, mark size=1.3pt, black!55] table[col sep=comma, x=x, y=y] {data/ext_map_relays.csv};
 \addlegendentry{Relay}
 \addplot[only marks, mark=square*, mark size=3pt, black] table[col sep=comma, x=x, y=y] {data/ext_map_center.csv};
-\addlegendentry{Trung tâm}
+\addlegendentry{Center}
 \addplot[black!60, dotted, thick] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_b1.csv};
-\addlegendentry{Quỹ đạo B1}
+\addlegendentry{B1 trajectory}
 \addplot[blue!70!black, thick] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_p.csv};
-\addlegendentry{Quỹ đạo P}
+\addlegendentry{P trajectory}
 \addplot[green!50!black, thick, dashed] table[col sep=comma, x=x, y=y] {data/ext_map_trajectory_tran.csv};
-\addlegendentry{Quỹ đạo TRAN}
+\addlegendentry{TRAN trajectory}
 \addplot[only marks, mark=o, orange!85!black] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{3:3}] {data/ext_map_targets.csv};
-\addlegendentry{Hư hại nhẹ}
+\addlegendentry{Minor damage}
 \addplot[only marks, mark=triangle*, red!70!black] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{4:4}] {data/ext_map_targets.csv};
-\addlegendentry{Hư hại nặng}
+\addlegendentry{Major damage}
 \addplot[only marks, mark=x, thick, violet] table[col sep=comma, x=x, y=y, restrict expr to domain={\thisrow{class}}{5:5}] {data/ext_map_targets.csv};
-\addlegendentry{Sập hoàn toàn}
+\addlegendentry{Total destruction}
 \end{axis}
 \end{tikzpicture}
-\caption{Target, mạng relay và quỹ đạo của B1, P và TRAN trên scenario đại diện \ResultExtTraceScenario{} của case study.}
+\caption{Targets, relay network, and UAV trajectories in the representative case-study scenario.}
 \label{fig:case-map}
 \end{figure}
 
@@ -199,9 +216,9 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-    width=0.8\textwidth, height=5.5cm, xmin=0, xmax=150, ymin=0,
-    xlabel={Slot}, ylabel={Tỷ lệ cảnh báo đã giao đúng hạn},
-    grid=major, legend pos=north west, /pgf/number format/use comma,
+    width=0.75\textwidth, height=4.6cm, xmin=0, xmax=150, ymin=0,
+    xlabel={Slot}, ylabel={Fraction delivered on time},
+    grid=major, legend pos=north west,
     yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
 ]
 \addplot[black!60, dotted, thick] table[col sep=comma, x=slot, y=B1] {data/ext_progress.csv};
@@ -212,49 +229,8 @@ Theo \cref{fig:budget}, B2 đạt \ResultTwoBudgetBtwoTwofivezero{} với $E=250
 \addlegendentry{TRAN}
 \end{axis}
 \end{tikzpicture}
-\caption{Tiến trình giao cảnh báo trên scenario \ResultExtTraceScenario: tỷ lệ trong \ResultExtTraceAlertCount{} cảnh báo đã tới trung tâm đúng hạn tính đến cuối mỗi slot, trung bình trên 30 realization.}
+\caption{Delivery progress in the representative case-study scenario.}
 \label{fig:case-progress}
 \end{figure}
 
-\Cref{fig:case-map} vẽ scenario đại diện \ResultExtTraceScenario, là scenario có tỷ lệ đúng hạn của P gần trung vị nhất. P đi qua cùng các vùng như B1 nhưng dừng ở mỗi vùng theo lịch khác, còn TRAN bay theo một đường liên tục và vươn rộng hơn về hai phía của vùng target. Trên scenario này, B1, P và TRAN giao đúng hạn \ResultExtTraceBone, \ResultExtTraceP{} và \ResultExtTraceTRAN{} số cảnh báo. \Cref{fig:case-progress} cho thấy cả ba phương pháp giao theo từng đợt khi UAV tới gần các cụm nguồn; B1 gần như ngừng tăng sau khoảng slot 100, trong khi P và TRAN còn giao thêm nhiều cảnh báo có hạn muộn và kết thúc cao hơn.
-
-\subsection{Độ chặt của cận trên}
-\label{sec:results-milp}
-
-\input{tables/phase1_milp}
-
-\Cref{tab:phase1-milp} đối chiếu cận LP với MILP trên \ResultMilpCount{} instance thu nhỏ của Pha 1. HiGHS giải tối ưu \ResultMilpOptimalCount{} trong \ResultMilpCount{} bài MILP. Trên các instance này, B1 đạt đúng giá trị tối ưu MILP ở \ResultMilpMethodAtOptimumCount{} instance và kế hoạch dựng từ nghiệm MILP đạt tối ưu ở \ResultMilpPlanAtOptimumCount{} instance, nên khoảng cách giữa cận LP và giá trị đạt được chủ yếu đến từ việc nới lỏng tính nguyên của lựa chọn đường. Khi dựng kế hoạch, băng thông lấy thẳng từ nghiệm MILP chỉ giao đúng hạn tổng cộng \ResultMilpStaticTotal{} cảnh báo trên năm instance, so với \ResultMilpEqualSplitTotal{} khi giữ các đường của nghiệm và chia đều băng thông theo backlog, vì lịch băng thông tĩnh lệch nhịp với cách bộ điều phối EDF phục vụ hàng đợi. Bao mười tiếp tuyến ước lượng tốc độ cao hơn thực tế tối đa \ResultTangentOverestimateMax{} (theo tỷ lệ tương đối) trên $[B_{\mathrm{tot}}/512, B_{\mathrm{tot}}]$. Vì vậy các gap ở \cref{tab:phase2-main} nên được hiểu là cận trên của phần có thể cải thiện, có thể lớn hơn đáng kể so với phần thực sự đạt được.
-
-\subsection{Thời gian tính toán}
-\label{sec:results-runtime}
-
-Lập kế hoạch B0 gần như tức thời, còn B1 mất trung bình \ResultPlanningVzeroBone{} giây cho mỗi scenario v0 vì phải mô phỏng từng candidate. B2 và P mất trung bình \ResultTwoPlanningVzeroBtwo{} và \ResultTwoPlanningVzeroP{} giây với \ResultTwoCallsVzeroBtwo{} và \ResultTwoCallsVzeroP{} lần đánh giá khi chạy song song \ResultWorkers{} tiến trình; đánh giá một kế hoạch trên một realization mất khoảng \ResultEvaluationVzeroBone{} giây. \Cref{fig:lp-runtime} cho thấy thời gian giải của \ResultLpCount{} bài LP ở Pha 1: số biến có trung vị \ResultLpVariablesMedian{} và lớn nhất \ResultLpVariablesMax{}, thời gian giải có trung vị \ResultLpRuntimeMedian{} giây và lớn nhất \ResultLpRuntimeMax{} giây.
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-\begin{loglogaxis}[
-    width=0.8\textwidth, height=6cm,
-    xlabel={Số biến của bài toán LP}, ylabel={Thời gian giải (s)},
-    grid=major, /pgf/number format/use comma,
-]
-\addplot[only marks, mark=*, mark size=0.5pt, color=blue!60!black, opacity=0.4]
-    table[col sep=comma, x=variables, y=runtime] {data/lp_runtime.csv};
-\end{loglogaxis}
-\end{tikzpicture}
-\caption{Thời gian giải của \ResultLpCount{} bài toán LP cận trên ở Pha 1 (hai họ scenario, hai loại cận, 30 realization) theo số biến.}
-\label{fig:lp-runtime}
-\end{figure}
-
-\subsection{Trả lời các câu hỏi nghiên cứu}
-\label{sec:rq}
-
-\textbf{RQ1 --- đồng tối ưu so với tối ưu từng phần.} Đồng tối ưu quỹ đạo, đường và băng thông (B2) tăng tỷ lệ đúng hạn so với quỹ đạo cố định (B1) trên cả hai họ, với chênh lệch \ResultTwoDiffVzeroBtwoBone{} và \ResultTwoDiffVzeroBhfivezeroBtwoBone{} cùng chiều trên cả mười topology. Ablation chỉ ra phần lợi ích này đến từ khối đường và khối quỹ đạo; khối băng thông gần như không đóng góp khi băng thông đã chia theo backlog. So với phương pháp mạnh từ tài liệu (TRAN), B2 và P cao hơn trên cả hai họ, rõ nhất khi backhaul băng hẹp, nhưng chênh lệch không có ý nghĩa sau hiệu chỉnh Holm.
-
-\textbf{RQ2 --- sửa lịch theo nguy cơ trễ hạn.} Không đo được lợi ích: P $-$ B2 bằng \ResultTwoDiffVzeroPBtwo{} trên v0 và \ResultTwoDiffVzeroBhfivezeroPBtwo{} trên v0-bh50 với $p_{\mathrm{Holm}}=\ResultTwoHolmVzeroPBtwo$, các biến thể chỉ giữ một thao tác hoặc bỏ thông tin backlog cho kết quả như P, và kết luận không đổi khi tăng ngân sách.
-
-\textbf{RQ3 --- khi nào UAV khôi phục việc chuyển dữ liệu.} UAV đưa khả năng kết nối từ \ResultTwoConnVzeroBzero{} lên gần một và tăng tỷ lệ đúng hạn ở mọi mức kết nối mặt đất, với mức tăng tương tự nhau giữa các nhóm; lợi ích biến mất khi mọi nguồn đã có relay mặt đất trong tầm, như ở họ dùng hằng số vật lý khác. Trong case study RescueNet, UAV nâng khả năng kết nối từ \ResultExtCaseConnBzero{} lên gần một.
-
-\textbf{RQ4 --- suy giảm theo điều kiện.} Tỷ lệ đúng hạn giảm mạnh nhất khi cảnh báo lớn hơn hoặc hạn ngắn hơn, giảm nhẹ khi tăng số cảnh báo hoặc giảm phổ; thứ tự giữa các phương pháp giữ nguyên. Sai lệch mô hình kênh khi thiết kế, thể hiện qua việc thiết kế trên tốc độ kỳ vọng thay cho realization lấy mẫu, làm tỷ lệ đúng hạn của P thay đổi \ResultTwoAblationDiffVzeroPExpectedDesign.
-
-\textbf{RQ5 --- độ bền của kết luận.} Các chênh lệch có ý nghĩa đều cùng chiều trên cả mười topology, và thứ tự B1 thấp hơn B2, P giữ nguyên trên mọi họ độ nhạy không suy biến. Case study RescueNet thay quy tắc sinh điểm nguồn bằng vị trí công trình hư hại thật và giữ nguyên thứ tự B0 thấp hơn B1, B1 thấp hơn B2, P và TRAN; kiểm chứng này chỉ dựa trên một bố cục địa lý, còn quy tắc sinh cảnh báo chưa được thay đổi.
+\Cref{fig:case-map} depicts scenario \ResultExtTraceScenario, chosen because the timely-delivery ratio of P on it is closest to the median. P visits the same zones as B1 but distributes its hover time differently, whereas TRAN follows a continuous path that reaches farther toward both sides of the target region. On this scenario, B1, P, and TRAN deliver \ResultExtTraceBone, \ResultExtTraceP, and \ResultExtTraceTRAN{} of the alerts on time. \Cref{fig:case-progress} plots the fraction of the \ResultExtTraceAlertCount{} alerts delivered on time by the end of each slot, averaged over 30 realizations, and shows that all three methods deliver alerts in bursts as the UAV approaches the source clusters; B1 almost stops after slot 100, whereas P and TRAN continue to deliver alerts with late deadlines and finish higher.

@@ -1,26 +1,23 @@
 % =============================================================================
-% main.tex — file gốc, chỉ ghép các phần. Build: xem README.md (compile_latex.sh của skill)
+% main.tex — root file, only assembles the parts. Build: see README.md (the skill's compile_latex.sh)
 % =============================================================================
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \input{preamble}
-\input{data/phase1_results}  % macro số liệu Pha 1, sinh bởi experiments/report_tables.py
-\input{data/phase2_results}  % macro số liệu Pha 2, sinh bởi experiments/report_tables_phase2.py
-\input{data/ext_results}     % macro số liệu TRAN, case study và thời gian tính, sinh bởi experiments/report_tables_extensions.py
+\input{data/phase1_results}  % baseline (B0, B1, bound, MILP) result macros, written by experiments/report_tables.py
+\input{data/phase2_results}  % result macros of the proposed methods, written by experiments/report_tables_phase2.py
+\input{data/ext_results}     % TRAN, case study and compute macros, written by experiments/report_tables_extensions.py
 \addbibresource{references.bib}
 
 \hypersetup{
-  pdftitle={Đồng tối ưu quỹ đạo UAV, lựa chọn relay và phân bổ băng thông cho cảnh báo đúng hạn trong mạng cứu hộ},
+  pdftitle={Joint UAV Trajectory, Relay Selection, and Bandwidth Allocation for Deadline-Aware Alert Delivery in Disaster Networks},
   pdfauthor={Doãn Văn An},
   pdfsubject={Design and Analysis of Algorithms},
 }
 
-\title{\textbf{Đồng tối ưu quỹ đạo UAV, lựa chọn relay và phân bổ băng thông\\
-  nhằm nâng cao xác suất truyền cảnh báo đúng hạn trong mạng cứu hộ}\\[0.5em]
-  \large Joint UAV Trajectory, Relay Selection, and Bandwidth Allocation\\
-  for Deadline-Aware Alert Delivery in Disaster Networks}
+\title{\Large\textbf{Joint UAV Trajectory, Relay Selection, and Bandwidth Allocation for Deadline-Aware Alert Delivery in Disaster Networks}}
 \author{Doãn Văn An \\
-  \small Mã số học viên: 20252778M \\
-  \small Học phần Design and Analysis of Algorithms --- Đề số 5}
+  \small Student ID: 20252778M \\
+  \small Design and Analysis of Algorithms}
 \date{\today}
 
 \begin{document}
@@ -31,14 +28,13 @@
 \input{sections/abstract}
 \input{sections/introduction}
 \input{sections/related-work}
+\input{sections/system-model}
+\input{sections/analysis}
 \input{sections/method}
 \input{sections/experiments}
 \input{sections/discussion}
-\input{sections/conclusion}
+\input{sections/availability}
 
-\printbibliography[title={Tài liệu tham khảo}]
-
-\appendix
-\input{sections/appendix}
+\printbibliography[title={References}]
 
 \end{document}

@@ -1,21 +1,21 @@
-% Chuyển thể TRAN — bảng viết tay (spec D Mục 5.1).
+% TRAN adaptation — hand-written table (spec D Section 5.1).
 \begin{table}[htbp]
 \centering
 \small
-\caption{Chuyển thể thuật toán bán song công của Tran và cộng sự~\cite{tran2022relay} sang mô hình của đề tài.}
+\caption{Adaptation of TRAN to our model.}
 \label{tab:tran-adaptation}
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
-\textbf{Bài gốc} & \textbf{Trong đề tài} \\
+\textbf{Original paper} & \textbf{This work} \\
 \midrule
-Thiết bị $k$ có $S_k$ bit, thời điểm bắt đầu và hạn thu & Cảnh báo $a$ có $L_a$ bit, thời điểm $r_a$ và cửa sổ thu $[r_a,\,r_a+\lceil\theta W_a\rceil)$ \\
-Một gateway; chuyển xuống từ sau hạn thu tới hết nhiệm vụ & Gateway là nút vào của candidate có chi phí nhỏ nhất; chuyển xuống trong $[r_a+\lceil\theta W_a\rceil,\,d_a-b_a)$ \\
-Tối ưu công suất của thiết bị và UAV & Công suất cố định như mọi phương pháp \\
-Kênh Rician với suy hao $\omega_0 d^{-\alpha}$ & Luật công suất $\beta d^{-\alpha}$ khớp với độ lợi kỳ vọng PrLoS \\
-Bộ nhớ UAV hữu hạn & Không có, vì bộ đệm UAV không giới hạn trong mô hình \\
-Không giới hạn số downlink đồng thời & Mỗi slot giữ tối đa hai downlink có băng thông lớn nhất \\
-Bài toán tìm điểm khả thi để khởi tạo & Khởi tạo từ quỹ đạo B1, băng thông chia đều và $\lambda=0$, luôn khả thi \\
-Không cho giá trị $\mu$ và ngưỡng hội tụ & $\theta$ và $\mu$ chọn trên tập phát triển; dừng khi mục tiêu đổi dưới $10^{-3}$ hoặc sau 30 vòng \\
+Device $k$ with $S_k$ bits, a start time, and an upload deadline & Alert $a$ with $L_a$ bits, release slot $r_a$, and upload window $[r_a,\,r_a+\lceil\theta W_a\rceil)$ \\
+One gateway; offloading from the upload deadline until the end of the mission & Gateway is the entry node of the lowest-cost candidate; offloading within $[r_a+\lceil\theta W_a\rceil,\,d_a-b_a)$ \\
+Device and UAV powers optimized & Fixed powers, as for every method \\
+Rician channel with path loss $\omega_0 d^{-\alpha}$ & Power law $\beta d^{-\alpha}$ fitted to the expected PrLoS gain \\
+Finite UAV memory & None, since the UAV buffer is unlimited in our model \\
+No limit on concurrent downlinks & At most two downlinks with the largest bandwidths kept per slot \\
+Feasibility problem for initialization & Initialized from the B1 trajectory, equal bandwidths, and $\lambda=0$, which is always feasible \\
+No values given for $\mu$ and the convergence threshold & $\theta$ and $\mu$ selected on the development set; stop when the objective changes by less than $10^{-3}$ or after 30 iterations \\
 \bottomrule
 \end{tabularx}
 \end{table}

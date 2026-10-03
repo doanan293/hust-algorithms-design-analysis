@@ -97,7 +97,7 @@ Sixteen papers are included. Screening counts: 74 records excluded by title, 18 
 
 ## 4. Comparison Table
 
-`docs/report/data/related_work.csv` (semicolon-separated, Vietnamese cells for the report) has the columns `key, year, venue, objective, uavs, relay_selection, deadline, connectivity, channel_uncertainty, bandwidth_power, method, guarantee`. Cells follow Sections 2–3; *Không nêu* means the text read does not state it.
+`docs/report/data/related_work.csv` (semicolon-separated, English cells for the report) has the columns `key, year, venue, objective, uavs, relay_selection, deadline, connectivity, channel_uncertainty, bandwidth_power, method, guarantee`. Cells follow Sections 2–3; *Not stated* means the text read does not state it.
 
 None of the included papers combines per-demand deadlines with a choice of ground relays over a finite-capacity backhaul, which is the combination studied in this project; papers with deadlines assume a single destination, and papers with backhaul constraints have no per-demand timing.
 

@@ -1,0 +1,92 @@
+% System-model scene (Figure 1), drawn with TikZ and fontawesome5 icons.
+\begin{tikzpicture}[x=1cm, y=1cm, >={Stealth[length=2.2mm]},
+    lbl/.style={font=\footnotesize, align=center},
+    tag/.style={font=\scriptsize, align=center, fill=groundgreen, inner sep=1pt},
+    backhaul/.style={draw=black!55, line width=1.4pt},
+    failed/.style={draw=red!75!black, line width=1.4pt, dash pattern=on 4pt off 3pt},
+    uplink/.style={->, draw=red!80!black, line width=1.1pt},
+    downlink/.style={->, draw=blue!70!black, line width=1.1pt, dash pattern=on 7pt off 4pt},
+    ground/.style={->, draw=green!45!black, line width=1.1pt},
+    traj/.style={draw=black, line width=0.7pt, dash pattern=on 5pt off 2pt on 1pt off 2pt}]
+  % ---------------------------------------------------------------- ground
+  \fill[groundgreen] (6.6,3.4) ellipse (6.6 and 3.1);
+  \draw[black!45] (6.6,3.4) ellipse (6.6 and 3.1);
+  % damage zone
+  \fill[red!55!brown, opacity=0.22] (9.6,3.3) ellipse (2.7 and 1.75);
+  \draw[red!55!black, dashed, line width=0.6pt] (9.6,3.3) ellipse (2.7 and 1.75);
+  \node[lbl, text=red!50!black, fill=white, fill opacity=0.75, text opacity=1, rounded corners=2pt, inner sep=1.5pt] at (10.4,1.35) {Damage zone};
+  % ---------------------------------------------------------------- ground relay network
+  \coordinate (C)  at (1.6,3.3);
+  \coordinate (T1) at (3.4,5.0);
+  \coordinate (T2) at (3.6,1.9);
+  \coordinate (T3) at (5.6,3.6);
+  \coordinate (T4) at (7.0,1.5);
+  \coordinate (T5) at (7.6,5.0);
+  \draw[backhaul] (C) -- (T1) (C) -- (T2) (T1) -- (T3) (T2) -- (T3) (T2) -- (T4) (T3) -- (T5) (T3) -- (T4);
+  \draw[failed] (T5) -- (9.0,4.3);
+  \node[text=red!75!black, font=\large] at (8.25,4.68) {\faTimes};
+  \foreach \t in {T1,T2,T3,T4,T5} \node[text=black!70, font=\LARGE] at (\t) {\faBroadcastTower};
+  \node[text=black!70, font=\LARGE] at (9.0,4.3) {\faBroadcastTower};
+  \node[tag, text=red!60!black, fill=none] at (8.95,3.82) {lost backhaul};
+  \node[tag] at (3.4,5.55) {relay};
+  \node[tag] at (7.0,0.95) {relay $v$};
+  \node[tag] at (5.0,3.2) {drop node $u$};
+  % rescue center
+  \node[text=red!70!black, font=\Huge] at (C) {\faHospital};
+  \node[lbl, anchor=north] at (1.6,2.65) {Rescue center $c$};
+  % ---------------------------------------------------------------- buildings in the zone
+  \node[text=brown!70!black, font=\huge] at (8.2,2.4) {\faHouseDamage};
+  \node[text=brown!70!black, font=\huge] at (10.2,4.4) {\faHouseDamage};
+  \node[text=brown!70!black, font=\huge] at (11.3,2.6) {\faHouseDamage};
+  \node[text=black!50, font=\huge] at (4.9,5.3) {\faBuilding};
+  \node[text=black!50, font=\huge] at (5.2,0.9) {\faCity};
+  % ---------------------------------------------------------------- sources raising alerts
+  \foreach \x/\y/\n in {9.2/3.1/s1, 10.3/3.2/s2, 9.7/2.2/s3, 11.6/3.5/s4} {
+    \node[text=blue!55!black, font=\LARGE] (\n) at (\x,\y) {\faUsers};
+    \node[text=orange!90!black, font=\small] at (\x+0.38,\y+0.38) {\faExclamationTriangle};
+  }
+  \node[lbl] at (9.7,1.72) {sources};
+  % ---------------------------------------------------------------- UAV
+  \begin{scope}[shift={(8.7,7.9)}, scale=0.62]
+    \fill[black!80] (-1.1,0.05) rectangle (1.1,0.22);
+    \foreach \x in {-1.1,1.1} {
+      \fill[black!80] (\x,0.13) circle (0.16);
+      \fill[black!65] (\x,0.42) ellipse (0.62 and 0.11);
+      \fill[black!80] (\x-0.04,0.13) rectangle (\x+0.04,0.42);
+    }
+    \fill[black!85] (0,0.0) ellipse (0.62 and 0.36);
+    \fill[black!60] (0,-0.05) ellipse (0.28 and 0.16);
+    \foreach \r in {0.45,0.7,0.95} \draw[black!80, line width=1.1pt] ($(0,-0.5)+(200:\r)$) arc (200:340:\r);
+  \end{scope}
+  \node[lbl] at (10.75,8.05) {UAV relay};
+  \coordinate (U) at (8.7,7.35);
+  % ---------------------------------------------------------------- trajectory
+  \draw[traj, ->] (1.6,3.9) .. controls (2.0,6.6) and (5.2,7.6) .. (U);
+  \draw[traj, ->] (U) to[out=0, in=100] (12.3,5.2) to[out=-80, in=0] (8.0,0.25) to[out=180, in=-90] (1.45,2.72);
+  \node[lbl, rotate=28] at (3.5,6.75) {take-off};
+  \node[text=red!75!black, font=\Large] at (12.3,5.5) {\faMapMarker*};
+  \node[lbl, anchor=east] at (12.05,5.85) {hover stop};
+  % ---------------------------------------------------------------- links
+  \draw[uplink] (s1.north) -- ($(U)+(-0.15,0)$);
+  \draw[uplink] (s4.north) -- ($(U)+(0.25,0)$);
+  \draw[downlink] ($(U)+(-0.35,0)$) -- ($(T3)+(0.3,0.35)$);
+  \draw[ground] (s3.west) -- ($(T4)+(0.35,0.1)$);
+  % elevation angle at a source
+  \draw[black!80, densely dotted] (11.6,3.78) -- (10.55,3.78);
+  \draw[black!80] ($(11.6,3.78)+(180:0.75)$) arc (180:126:0.75);
+  \node[font=\small] at ($(11.6,3.78)+(153:1.05)$) {$\theta$};
+  % ---------------------------------------------------------------- legend
+  \begin{scope}[shift={(13.2,8.4)}]
+    \node[lbl, anchor=west] at (0,0) {Trajectory};
+    \draw[traj, ->] (0,-0.35) -- (1.7,-0.35);
+    \node[lbl, anchor=west] at (0,-0.85) {Uplink (access)};
+    \draw[uplink] (0,-1.2) -- (1.7,-1.2);
+    \node[lbl, anchor=west] at (0,-1.7) {Downlink};
+    \draw[downlink] (0,-2.05) -- (1.7,-2.05);
+    \node[lbl, anchor=west] at (0,-2.55) {Ground access};
+    \draw[ground] (0,-2.9) -- (1.7,-2.9);
+    \node[lbl, anchor=west] at (0,-3.4) {Backhaul / failed};
+    \draw[backhaul] (0,-3.75) -- (0.75,-3.75);
+    \draw[failed] (0.95,-3.75) -- (1.7,-3.75);
+  \end{scope}
+\end{tikzpicture}

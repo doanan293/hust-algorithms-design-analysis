@@ -13,7 +13,7 @@ import yaml
 from runner.provenance import result_provenance_problem
 
 DIGIT_WORDS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
-MILP_STATUS = {"optimal": "tối ưu", "time_limit": "hết giờ"}
+MILP_STATUS = {"optimal": "optimal", "time_limit": "time limit"}
 
 
 def num(value: float, digits: int = 3) -> str:
@@ -51,30 +51,30 @@ def params_rows(scenario: Mapping, stressed: Mapping, experiment: Mapping, data_
     time, uav, spectrum, channel = scenario["time"], scenario["uav"], scenario["spectrum"], scenario["channel"]
     span = experiment["realization_ids"]
     return [
-        ["Kích thước vùng mô phỏng", "$L_{\\mathrm{box}}$", f"\\qty{{{data_profile['box_size_m']:g}}}{{\\metre}}"],
-        ["Topology đánh giá / phát triển", "---", f"{topology['strata'] - topology['dev_count']} / {topology['dev_count']}"],
-        ["Replicate mỗi topology (đánh giá / phát triển)", "---", f"{topology['eval_replicates']} / {topology['dev_replicates']}"],
-        ["Số realization kênh", "$M$", str(span["stop"] - span["start"])],
-        ["Độ dài slot / số slot", "$\\Delta$, $N$", f"\\qty{{{time['slot_s']:g}}}{{\\second}} / {time['num_slots']}"],
-        ["Tỷ lệ nửa slot truy nhập", "$\\tau$", num(time["access_fraction"], 1)],
-        ["Độ cao / tốc độ tối đa UAV", "$H$, $V_{\\max}$", f"\\qty{{{uav['altitude_m']:g}}}{{\\metre}} / \\qty{{{uav['v_max_mps']:g}}}{{\\metre\\per\\second}}"],
-        ["Công suất UAV / số downlink đồng thời", "$P_U$", f"\\qty{{{uav['total_power_w']:g}}}{{\\watt}} / {uav['max_active_downlinks']}"],
-        ["Công suất nguồn", "$p_s$", f"\\qty{{{scenario['source_power_w']:g}}}{{\\watt}}"],
-        ["Tổng băng thông mỗi nửa slot", "$B_{\\mathrm{tot}}$", f"\\qty{{{spectrum['b_tot_hz'] / 1e6:g}}}{{\\mega\\hertz}}"],
-        ["Mật độ phổ nhiễu", "$N_0$", f"\\qty{{{spectrum['noise_psd_dbm_per_hz']:g}}}{{\\dBm\\per\\hertz}}"],
-        ["Tham số PrLoS", "$(a, b)$", f"({num(channel['uav']['plos_a'], 2)}, {num(channel['uav']['plos_b'], 2)})"],
-        ["Suy hao NLoS / số mũ LoS, NLoS", "$\\mu$, $\\alpha_L$, $\\alpha_N$", f"{num(channel['uav']['nlos_attenuation'], 1)} / {num(channel['uav']['alpha_los'], 1)}, {num(channel['uav']['alpha_nlos'], 1)}"],
-        ["Độ lợi tham chiếu", "$\\beta_0$", f"\\qty{{{channel['uav']['beta0_db']:g}}}{{\\dB}}"],
-        ["Số mũ suy hao mặt đất", "$\\alpha_G$", num(channel["ground"]["alpha"], 1)],
-        ["Ngưỡng tốc độ khả dụng", "$R_{\\min}$", kbit(channel["usable_rate_bps"])],
-        ["Candidate path (tối đa đường mặt đất)", "$K$", f"{scenario['paths']['k']} ({scenario['paths']['max_ground']})"],
-        ["Vùng hư hại: số / khoảng cách / bán kính", "---", f"{workload['zone_count']} / \\qty{{{workload['zone_min_separation_m']:g}}}{{\\metre}} / \\qty{{{workload['zone_radius_m']:g}}}{{\\metre}}"],
-        ["Số nguồn / độ lệch chuẩn vị trí", "$|S|$, $\\sigma$", f"{workload['source_count']} / \\qty{{{workload['source_sigma_m']:g}}}{{\\metre}}"],
-        ["Số cảnh báo / cửa sổ deadline", "$|A|$, $d_a-r_a$", f"{workload['alert_count']} / {workload['deadline_min_slots']}--{workload['deadline_max_slots']} slot"],
-        ["Kích thước tham chiếu (tỷ lệ cắt, instance)", "$L_{\\mathrm{ref}}$", f"\\qty{{{workload['size_ref_bits'] / 1000:g}}}{{\\kilo\\bit}} ([{num(workload['size_ratio_min'], 2)}, {num(workload['size_ratio_max'], 0)}], \\texttt{{{workload['sndlib_instance']}}})"],
-        ["Xác suất hỏng cạnh trong / ngoài vùng", "$p_{\\mathrm{in}}$, $p_{\\mathrm{out}}$", f"{num(failures['p_in'], 2)} / {num(failures['p_out'], 2)}"],
-        ["Dung lượng backhaul (v0 / v0-bh50)", "$C_e$", f"{kbit(scenario['backhaul_capacity_bps'])} / {kbit(stressed['backhaul_capacity_bps'])}"],
-        ["Số tiếp tuyến trong cận LP / lần lấy mẫu bootstrap", "---", f"{experiment['bounds']['tangents']} / {experiment['bootstrap']['resamples']}"],
+        ["Simulation area side", "$L_{\\mathrm{box}}$", f"\\qty{{{data_profile['box_size_m']:g}}}{{\\metre}}"],
+        ["Evaluation / development topologies", "---", f"{topology['strata'] - topology['dev_count']} / {topology['dev_count']}"],
+        ["Replicates per topology (evaluation / development)", "---", f"{topology['eval_replicates']} / {topology['dev_replicates']}"],
+        ["Channel realizations", "$M$", str(span["stop"] - span["start"])],
+        ["Slot length / number of slots", "$\\Delta$, $N$", f"\\qty{{{time['slot_s']:g}}}{{\\second}} / {time['num_slots']}"],
+        ["Access-phase fraction", "$\\tau$", num(time["access_fraction"], 1)],
+        ["UAV altitude / maximum speed", "$H$, $V_{\\max}$", f"\\qty{{{uav['altitude_m']:g}}}{{\\metre}} / \\qty{{{uav['v_max_mps']:g}}}{{\\metre\\per\\second}}"],
+        ["UAV power / concurrent downlinks", "$P_U$", f"\\qty{{{uav['total_power_w']:g}}}{{\\watt}} / {uav['max_active_downlinks']}"],
+        ["Source power", "$p_s$", f"\\qty{{{scenario['source_power_w']:g}}}{{\\watt}}"],
+        ["Bandwidth per phase", "$B_{\\mathrm{tot}}$", f"\\qty{{{spectrum['b_tot_hz'] / 1e6:g}}}{{\\mega\\hertz}}"],
+        ["Noise power spectral density", "$N_0$", f"\\qty{{{spectrum['noise_psd_dbm_per_hz']:g}}}{{\\dBm\\per\\hertz}}"],
+        ["PrLoS parameters", "$(a, b)$", f"({num(channel['uav']['plos_a'], 2)}, {num(channel['uav']['plos_b'], 2)})"],
+        ["NLoS attenuation / LoS, NLoS exponents", "$\\mu$, $\\alpha_L$, $\\alpha_N$", f"{num(channel['uav']['nlos_attenuation'], 1)} / {num(channel['uav']['alpha_los'], 1)}, {num(channel['uav']['alpha_nlos'], 1)}"],
+        ["Reference gain", "$\\beta_0$", f"\\qty{{{channel['uav']['beta0_db']:g}}}{{\\dB}}"],
+        ["Ground path-loss exponent", "$\\alpha_G$", num(channel["ground"]["alpha"], 1)],
+        ["Usable-rate threshold", "$R_{\\min}$", kbit(channel["usable_rate_bps"])],
+        ["Candidate paths (max.\\ ground paths)", "$K$", f"{scenario['paths']['k']} ({scenario['paths']['max_ground']})"],
+        ["Damage zones: count / separation / radius", "---", f"{workload['zone_count']} / \\qty{{{workload['zone_min_separation_m']:g}}}{{\\metre}} / \\qty{{{workload['zone_radius_m']:g}}}{{\\metre}}"],
+        ["Sources / position std.\\ dev.", "$|S|$, $\\sigma$", f"{workload['source_count']} / \\qty{{{workload['source_sigma_m']:g}}}{{\\metre}}"],
+        ["Alerts / deadline window", "$|A|$, $d_a-r_a$", f"{workload['alert_count']} / {workload['deadline_min_slots']}--{workload['deadline_max_slots']} slots"],
+        ["Reference size (clip range, instance)", "$L_{\\mathrm{ref}}$", f"\\qty{{{workload['size_ref_bits'] / 1000:g}}}{{\\kilo\\bit}} ([{num(workload['size_ratio_min'], 2)}, {num(workload['size_ratio_max'], 0)}], \\texttt{{{workload['sndlib_instance']}}})"],
+        ["Edge failure prob.\\ inside / outside zones", "$p_{\\mathrm{in}}$, $p_{\\mathrm{out}}$", f"{num(failures['p_in'], 2)} / {num(failures['p_out'], 2)}"],
+        ["Backhaul capacity (v0 / v0-bh50)", "$C_e$", f"{kbit(scenario['backhaul_capacity_bps'])} / {kbit(stressed['backhaul_capacity_bps'])}"],
+        ["LP tangents / bootstrap resamples", "---", f"{experiment['bounds']['tangents']} / {experiment['bootstrap']['resamples']}"],
     ]
 
 
