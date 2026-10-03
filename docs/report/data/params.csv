@@ -21,5 +21,5 @@ Sources / position std.\ dev.;$|S|$, $\sigma$;15 / \qty{150}{\metre}
 Alerts / deadline window;$|A|$, $d_a-r_a$;40 / 20--60 slots
 Reference size (clip range, instance);$L_{\mathrm{ref}}$;\qty{250}{\kilo\bit} ([\num{0.25}, \num{4}], \texttt{abilene})
 Edge failure prob.\ inside / outside zones;$p_{\mathrm{in}}$, $p_{\mathrm{out}}$;\num{0.60} / \num{0.05}
-Backhaul capacity (v0 / v0-bh50);$C_e$;\qty{1000}{\kilo\bit\per\second} / \qty{50}{\kilo\bit\per\second}
+Backhaul capacity (Wide / Narrow);$C_e$;\qty{1000}{\kilo\bit\per\second} / \qty{50}{\kilo\bit\per\second}
 LP tangents / bootstrap resamples;---;10 / 10000

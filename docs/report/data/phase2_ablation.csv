@@ -1,5 +1,5 @@
 variant;timely;diff;timelybh;diffbh;calls
-Full P;\num{0.553};---;\num{0.507};---;\num{1973}
+Full SBS-R;\num{0.553};---;\num{0.507};---;\num{1973}
 Operator 1 only;\num{0.553};\num{0.000} [\num{-0.006}, \num{0.008}];\num{0.510};\num{0.002} [\num{-0.002}, \num{0.007}];\num{1961}
 Operator 2 only;\num{0.553};\num{0.000} [\num{-0.002}, \num{0.003}];\num{0.508};\num{0.000} [\num{-0.003}, \num{0.002}];\num{1961}
 Repair without backlog;\num{0.553};\num{-0.001} [\num{-0.002}, \num{0.001}];\num{0.509};\num{0.001} [\num{0.000}, \num{0.002}];\num{1982}

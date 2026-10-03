@@ -101,11 +101,11 @@ def test_extension_report_files_follow_the_results(tmp_path: Path):
     arguments = ["--results", str(phase2), "--phase1", str(phase1), "--manifests", str(manifests), "--output", str(output)]
     assert report.main(arguments) == 0
     assert _lines(output / "ext_literature.csv")[:2] == ["set;backhaul;method;timely;ci;gap;planning",
-                                                        "v0;\\qty{1000}{\\kilo\\bit\\per\\second};B1;\\num{0.500};[\\num{0.450}, \\num{0.550}];\\num{0.250};\\num{120.0}"]
-    assert _lines(output / "ext_literature.csv")[4].split(";")[2:4] == ["TRAN", "\\num{0.530}"]
-    assert _lines(output / "ext_literature_statistics.csv")[1] == "v0;P $-$ TRAN;\\num{0.020};[\\num{-0.010}, \\num{0.050}];\\num{0.40};\\num{0.3600};\\num{0.7200}"
-    assert _lines(output / "ext_case_study.csv")[5] == "TRAN;\\num{0.440};[\\num{0.390}, \\num{0.490}];\\num{1.000};\\num{0.250};\\num{120.0}"
-    assert _lines(output / "ext_quality_points.csv") == ["method,planning,timely", "B1,120.000,0.500000", "TRAN,120.000,0.530000"]
+                                                        "Wide;\\qty{1000}{\\kilo\\bit\\per\\second};FixedTour;\\num{0.500};[\\num{0.450}, \\num{0.550}];\\num{0.250};\\num{120.0}"]
+    assert _lines(output / "ext_literature.csv")[4].split(";")[2:4] == ["Tran-IA", "\\num{0.530}"]
+    assert _lines(output / "ext_literature_statistics.csv")[1] == "Wide;SBS-R $-$ Tran-IA;\\num{0.020};[\\num{-0.010}, \\num{0.050}];\\num{0.40};\\num{0.3600};\\num{0.7200}"
+    assert _lines(output / "ext_case_study.csv")[5] == "Tran-IA;\\num{0.440};[\\num{0.390}, \\num{0.490}];\\num{1.000};\\num{0.250};\\num{120.0}"
+    assert _lines(output / "ext_quality_points.csv") == ["method,planning,timely", "FixedTour,120.000,0.500000", "Tran-IA,120.000,0.530000"]
     assert _lines(output / "ext_map_targets.csv") == ["x,y,class", "1.0000,0.5000,4"]
     assert _lines(output / "ext_map_edges_alive.csv") == ["x,y", "nan,nan"]
     assert _lines(output / "ext_map_edges_failed.csv") == ["x,y", "0.0000,0.0000", "2.0000,0.0000", "nan,nan"]
@@ -120,7 +120,7 @@ def test_extension_report_files_follow_the_results(tmp_path: Path):
         "\\newcommand{\\ResultExtPilotTheta}{\\num{0.333}}", "\\newcommand{\\ResultExtPilotMu}{\\num{10}}", "\\newcommand{\\ResultExtPilotGridSpread}{\\num{0.100}}",
         "\\newcommand{\\ResultExtCaseTimelyTRAN}{\\num{0.440}}", "\\newcommand{\\ResultExtMergeDistanceMax}{\\num{8.2}}",
         "\\newcommand{\\ResultExtGsdMax}{\\num{2.46}}", "\\newcommand{\\ResultExtFallbackPairs}{2}", "\\newcommand{\\ResultExtGroundFractionRescuenet}{\\num{0.376}}",
-        "\\newcommand{\\ResultExtTraceScenario}{\\texttt{Agis-r0}}", "\\newcommand{\\ResultExtComputeHours}{\\num{24.5}}", "\\newcommand{\\ResultExtCvxpyVersion}{1.9.2}",
+        "\\newcommand{\\ResultExtTraceScenario}{Agis, replicate 1}", "\\newcommand{\\ResultExtComputeHours}{\\num{24.5}}", "\\newcommand{\\ResultExtCvxpyVersion}{1.9.2}",
     ):
         assert expected in macros, expected
 

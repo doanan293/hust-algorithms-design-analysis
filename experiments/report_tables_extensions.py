@@ -7,14 +7,14 @@ from pathlib import Path
 import statistics
 import sys
 
-from report_tables import _read_rows, _write_semicolon, kbit, macro_name
+from report_tables import _read_rows, _write_semicolon, kbit, macro_name, method_label, scenario_label, set_label
 from report_tables_phase2 import SETS, compute_minutes, number, write_points
 from runner.provenance import result_provenance_problem
 
 LITERATURE_METHODS = ("B1", "B2", "P", "TRAN")
 CASE_METHODS = ("B0", "B1", "B2", "P", "TRAN")
 TRACE_METHODS = ("B1", "P", "TRAN")
-COMPARISON_LABELS = {"P - TRAN": "P $-$ TRAN", "B2 - TRAN": "B2 $-$ TRAN"}
+COMPARISON_LABELS = {"P - TRAN": "SBS-R $-$ Tran-IA", "B2 - TRAN": "SBS $-$ Tran-IA"}
 COMPUTE_EXPERIMENTS = (
     ("phase1", "Baselines B0 and B1, LP bounds, and MILP"),
     ("phase2/main", "Main comparison and ablation"),
@@ -91,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
         for method in LITERATURE_METHODS:
             row = summary["literature" if method == "TRAN" else "main"][(set_id, method)]
             literature_rows.append([
-                set_id, kbit(capacity), method, number(row["timely_ratio_mean"]),
+                set_label(set_id), kbit(capacity), method_label(method), number(row["timely_ratio_mean"]),
                 f"[{number(row['timely_ratio_ci_low'])}, {number(row['timely_ratio_ci_high'])}]", number(row["gap_mean"]),
                 number(row["planning_runtime_s_mean"], 1),
             ])
@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     statistics_rows = []
     for row in _read_rows(args.results / "statistics_literature.csv"):
         statistics_rows.append([
-            row["set_id"], COMPARISON_LABELS[row["comparison"]], number(row["mean_difference"]), f"[{number(row['ci_low'])}, {number(row['ci_high'])}]",
+            set_label(row["set_id"]), COMPARISON_LABELS[row["comparison"]], number(row["mean_difference"]), f"[{number(row['ci_low'])}, {number(row['ci_high'])}]",
             number(row["rank_biserial"], 2), number(row["p_value"], 4), number(row["p_holm"], 4),
         ])
         first = row["comparison"].split(" - ")[0]
@@ -112,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
 
     quality = [["B1", summary["main"][("v0", "B1")]], ["TRAN", summary["literature"][("v0", "TRAN")]]]
     write_points(args.output / "ext_quality_points.csv", ["method", "planning", "timely"],
-                 [[method, f"{float(row['planning_runtime_s_mean']):.3f}", f"{float(row['timely_ratio_mean']):.6f}"] for method, row in quality])
+                 [[method_label(method), f"{float(row['planning_runtime_s_mean']):.3f}", f"{float(row['timely_ratio_mean']):.6f}"] for method, row in quality])
     literature_bounds = _read_rows(args.results / "literature" / "bounds.csv")
     environment = json.loads((args.results / "literature" / "manifest.json").read_text(encoding="utf-8"))["environment"]
     macros += [
@@ -148,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     for method in CASE_METHODS:
         row = summary["case_study"][("rescuenet", method)]
         case_rows.append([
-            method, number(row["timely_ratio_mean"]), f"[{number(row['timely_ratio_ci_low'])}, {number(row['timely_ratio_ci_high'])}]",
+            method_label(method), number(row["timely_ratio_mean"]), f"[{number(row['timely_ratio_ci_low'])}, {number(row['timely_ratio_ci_high'])}]",
             number(row["conn_ratio_mean"]), number(row["gap_mean"]), number(row["planning_runtime_s_mean"], 1),
         ])
         for metric, column, digits in (("Timely", "timely_ratio_mean", 3), ("TimelyLow", "timely_ratio_ci_low", 3), ("TimelyHigh", "timely_ratio_ci_high", 3), ("Conn", "conn_ratio_mean", 3), ("Gap", "gap_mean", 3), ("Planning", "planning_runtime_s_mean", 1)):
@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     trace = args.results / "case_study" / "trace"
     trace_summary = json.loads((trace / "trace.json").read_text(encoding="utf-8"))
     scenario_id = trace_summary["scenario_id"]
-    macros.append(("ResultExtTraceScenario", f"\\texttt{{{scenario_id}}}"))
+    macros.append(("ResultExtTraceScenario", scenario_label(scenario_id)))
     for method in TRACE_METHODS:
         macros.append((macro("Trace", method), number(trace_summary["methods"][method]["timely_ratio_trace"])))
     write_points(args.output / "ext_map_targets.csv", ["x", "y", "class"], [[km(row["x_m"]), km(row["y_m"]), row["damage_class"]] for row in _read_rows(trace / "targets.csv")])

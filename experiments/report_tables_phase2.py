@@ -10,13 +10,13 @@ import sys
 from typing import Mapping, Sequence
 
 from analysis.statistics import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, bootstrap_mean_ci, topology_means
-from report_tables import _read_rows, _write_semicolon, kbit, macro_name, num
+from report_tables import _read_rows, _write_semicolon, kbit, macro_name, method_label, num, set_label
 from runner.provenance import result_provenance_problem
 
 EXPERIMENTS = ("main", "budget", "sensitivity", "design")
 SETS = (("v0", 1000000.0), ("v0-bh50", 50000.0))
 MAIN_METHODS = ("B0", "B1", "B2", "B3", "P")
-COMPARISON_LABELS = {"P - B2": "P $-$ B2", "B2 - B1": "B2 $-$ B1", "B2 - B3": "B2 $-$ B3", "P - B1": "P $-$ B1"}
+COMPARISON_LABELS = {"P - B2": "SBS-R $-$ SBS", "B2 - B1": "SBS $-$ FixedTour", "B2 - B3": "SBS $-$ SBS-Lex", "P - B1": "SBS-R $-$ FixedTour"}
 ABLATIONS = (
     ("P_op1", "Operator 1 only"),
     ("P_op2", "Operator 2 only"),
@@ -113,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         for method in MAIN_METHODS:
             row = summary["main"][(set_id, method)]
             main_rows.append([
-                set_id, kbit(capacity), method, number(row["timely_ratio_mean"]),
+                set_label(set_id), kbit(capacity), method_label(method), number(row["timely_ratio_mean"]),
                 f"[{number(row['timely_ratio_ci_low'])}, {number(row['timely_ratio_ci_high'])}]", number(row["conn_ratio_mean"]),
                 number(row["gap_mean"]), number(row["union_gap_mean"]), number(row["planning_runtime_s_mean"], 1), number(row["evaluate_calls_mean"], 0),
             ])
@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
     statistics_rows = []
     for row in _read_rows(args.results / "statistics.csv"):
         statistics_rows.append([
-            row["set_id"], COMPARISON_LABELS[row["comparison"]], number(row["mean_difference"]),
+            set_label(row["set_id"]), COMPARISON_LABELS[row["comparison"]], number(row["mean_difference"]),
             f"[{number(row['ci_low'])}, {number(row['ci_high'])}]", number(row["rank_biserial"], 2), number(row["p_value"], 4), number(row["p_holm"], 4),
         ])
         first, second = row["comparison"].split(" - ")
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     macros.append(("ResultTwoHolmFloor", number(min(float(row["p_holm"]) for row in _read_rows(args.results / "statistics.csv")), 4)))
 
     ablation_rows = []
-    for method, label in (("P", "Full P"), *ABLATIONS):
+    for method, label in (("P", "Full SBS-R"), *ABLATIONS):
         cells = [label]
         for set_id, _ in SETS:
             row = summary["main"][(set_id, method)]
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
             group = [scenario for scenario in sorted(fractions) if tercile(fractions[scenario]) == key]
             b0, b1, b2 = (statistics.fmean(means[method][scenario] for scenario in group) for method in ("B0", "B1", "B2"))
             conn = statistics.fmean(statistics.fmean(connectivity[scenario]) for scenario in group)
-            connectivity_rows.append([set_id, label, str(len(group)), number(conn), number(b0), number(b1), number(b2), number(b2 - b0)])
+            connectivity_rows.append([set_label(set_id), label, str(len(group)), number(conn), number(b0), number(b1), number(b2), number(b2 - b0)])
             macros.append((macro("TercileGain", set_id, key), number(b2 - b0)))
         b0 = [means["B0"][scenario] for scenario in sorted(fractions)]
         try:

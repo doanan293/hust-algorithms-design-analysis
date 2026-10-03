@@ -74,12 +74,12 @@ def test_phase2_report_files_follow_the_results(tmp_path: Path):
     assert report.main(["--results", str(results), "--manifests", str(manifests), "--output", str(output)]) == 0
     main = _semicolon(output / "phase2_main.csv")
     assert main[0] == ["set", "backhaul", "method", "timely", "ci", "conn", "gap", "uniongap", "planning", "calls"] and len(main) == 11
-    assert main[3][:6] == ["v0", "\\qty{1000}{\\kilo\\bit\\per\\second}", "B2", "\\num{0.500}", "[\\num{0.450}, \\num{0.550}]", "\\num{1.000}"]
-    assert main[6][0:3] == ["v0-bh50", "\\qty{50}{\\kilo\\bit\\per\\second}", "B0"]
+    assert main[3][:6] == ["Wide", "\\qty{1000}{\\kilo\\bit\\per\\second}", "SBS", "\\num{0.500}", "[\\num{0.450}, \\num{0.550}]", "\\num{1.000}"]
+    assert main[6][0:3] == ["Narrow", "\\qty{50}{\\kilo\\bit\\per\\second}", "NoUAV"]
     statistics_rows = _semicolon(output / "phase2_statistics.csv")
-    assert statistics_rows[1] == ["v0", "P $-$ B2", "\\num{0.125}", "[\\num{0.100}, \\num{0.150}]", "\\num{1.00}", "\\num{0.0020}", "\\num{0.0156}"]
+    assert statistics_rows[1] == ["Wide", "SBS-R $-$ SBS", "\\num{0.125}", "[\\num{0.100}, \\num{0.150}]", "\\num{1.00}", "\\num{0.0020}", "\\num{0.0156}"]
     ablation = _semicolon(output / "phase2_ablation.csv")
-    assert [row[0] for row in ablation[1:]] == ["Full P", "Operator 1 only", "Operator 2 only", "Repair without backlog", "No path block",
+    assert [row[0] for row in ablation[1:]] == ["Full SBS-R", "Operator 1 only", "Operator 2 only", "Repair without backlog", "No path block",
                                                  "No trajectory block", "No bandwidth block", "Expected-rate design"]
     assert ablation[2][2] == "\\num{0.000} [\\num{0.000}, \\num{0.000}]"
     assert ablation[5][1:5] == ["\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]", "\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]"]

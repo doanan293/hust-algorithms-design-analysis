@@ -14,6 +14,23 @@ from runner.provenance import result_provenance_problem
 
 DIGIT_WORDS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
 MILP_STATUS = {"optimal": "optimal", "time_limit": "time limit"}
+# Display names used in the report; result files and macros keep the internal identifiers.
+METHOD_LABELS = {"B0": "NoUAV", "B1": "FixedTour", "B2": "SBS", "B3": "SBS-Lex", "P": "SBS-R", "TRAN": "Tran-IA"}
+SET_LABELS = {"v0": "Wide", "v0-bh50": "Narrow"}
+
+
+def method_label(method: str) -> str:
+    return METHOD_LABELS.get(method, method)
+
+
+def set_label(set_id: str) -> str:
+    return SET_LABELS.get(set_id, set_id)
+
+
+def scenario_label(scenario_id: str) -> str:
+    """Topology name and 1-based replicate, e.g. ``Agis-r2`` -> ``Agis, replicate 3``."""
+    topology, _, replicate = scenario_id.rpartition("-r")
+    return f"{topology}, replicate {int(replicate) + 1}" if topology and replicate.isdigit() else scenario_id
 
 
 def num(value: float, digits: int = 3) -> str:
@@ -73,7 +90,7 @@ def params_rows(scenario: Mapping, stressed: Mapping, experiment: Mapping, data_
         ["Alerts / deadline window", "$|A|$, $d_a-r_a$", f"{workload['alert_count']} / {workload['deadline_min_slots']}--{workload['deadline_max_slots']} slots"],
         ["Reference size (clip range, instance)", "$L_{\\mathrm{ref}}$", f"\\qty{{{workload['size_ref_bits'] / 1000:g}}}{{\\kilo\\bit}} ([{num(workload['size_ratio_min'], 2)}, {num(workload['size_ratio_max'], 0)}], \\texttt{{{workload['sndlib_instance']}}})"],
         ["Edge failure prob.\\ inside / outside zones", "$p_{\\mathrm{in}}$, $p_{\\mathrm{out}}$", f"{num(failures['p_in'], 2)} / {num(failures['p_out'], 2)}"],
-        ["Backhaul capacity (v0 / v0-bh50)", "$C_e$", f"{kbit(scenario['backhaul_capacity_bps'])} / {kbit(stressed['backhaul_capacity_bps'])}"],
+        ["Backhaul capacity (Wide / Narrow)", "$C_e$", f"{kbit(scenario['backhaul_capacity_bps'])} / {kbit(stressed['backhaul_capacity_bps'])}"],
         ["LP tangents / bootstrap resamples", "---", f"{experiment['bounds']['tangents']} / {experiment['bootstrap']['resamples']}"],
     ]
 
@@ -134,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     for row in crosscheck:
         milp_rows.append(
             [
-                row["scenario_id"], row["alert_count"], num(row["method_value"], 0), num(row["milp_plan_value"], 0), num(row["milp_incumbent"], 0),
+                scenario_label(row["scenario_id"]), row["alert_count"], num(row["method_value"], 0), num(row["milp_plan_value"], 0), num(row["milp_incumbent"], 0),
                 num(row["milp_dual_bound"], 2), num(row["lp_ub"], 2), MILP_STATUS.get(row["milp_status"], row["milp_status"]),
                 num(row["milp_runtime_s"], 1), num(row["tangent_max_overestimate"], 4),
             ]
