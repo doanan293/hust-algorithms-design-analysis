@@ -1,7 +1,7 @@
 \section{Proposed Algorithm}
 \label{sec:method}
 
-This section presents the proposed sample-scored block search, which we denote B2, and its schedule-repair variant P. Both methods take a scenario and its candidate paths as input and output a plan $(q,x,w)$: a trajectory, a path selection, and bandwidth weights. \Cref{fig:pipeline} summarizes the pipeline. We first explain why the blocks are not solved as convex subproblems, then introduce the two ingredients shared by all blocks, namely the weighted bandwidth rule and the design scorer, and finally describe the blocks of B2, the repair loop of P, and a leximin variant used to isolate the effect of the objective.
+This section presents the proposed sample-scored block search, which we denote SBS, and its schedule-repair variant SBS-R. Both methods take a scenario and its candidate paths as input and output a plan $(q,x,w)$: a trajectory, a path selection, and bandwidth weights. \Cref{fig:pipeline} summarizes the pipeline. We first explain why the blocks are not solved as convex subproblems, then introduce the two ingredients shared by all blocks, namely the weighted bandwidth rule and the design scorer, and finally describe the blocks of SBS, the repair loop of SBS-R, and a leximin variant used to isolate the effect of the objective.
 
 \begin{figure}[htbp]
 \centering
@@ -10,11 +10,11 @@ This section presents the proposed sample-scored block search, which we denote B
     rep/.style={blk, fill=orange!12, dashed},
     io/.style={draw=black!70, fill=black!5, text width=4.6cm, minimum height=0.85cm, align=center, font=\footnotesize},
     sc/.style={draw=green!40!black, rounded corners=2pt, fill=green!8, text width=4.2cm, align=center, font=\footnotesize, inner sep=5pt}]
-  \node[io] (init) {Initial plan\\B1 trajectory, $w\equiv 1$};
+  \node[io] (init) {Initial plan\\FixedTour trajectory, $w\equiv 1$};
   \node[blk, below=0.8cm of init] (path) {Path block\\$x$: skip or each candidate};
   \node[blk, below=of path] (bw) {Bandwidth block\\$w_e\gets 2w_e$ or $w_e/2$};
   \node[blk, below=of bw] (traj) {Trajectory block\\tour from the feasible family};
-  \node[rep, below=of traj] (repair) {Risk-driven repair (P only)};
+  \node[rep, below=of traj] (repair) {Risk-driven repair (SBS-R only)};
   \node[io, below=0.6cm of repair] (out) {Plan $(q,x,w)$};
   \node[sc, right=1.0cm of bw] (scorer) {\textbf{Design scorer}\\EDF simulation on $M_d=5$ design realizations; lexicographic key \eqref{eq:objective}; one call $=$ one evaluation};
   \node[sc, right=1.0cm of out, fill=black!5, draw=black!70] (eval) {Out-of-sample evaluation on $M=30$ realizations; LP bound on $q$};
@@ -40,7 +40,7 @@ This section presents the proposed sample-scored block search, which we denote B
 \subsection{Design Rationale}
 \label{sec:algorithm}
 
-We keep the three-block structure of~\cite{huang2025ddatsap} but do not solve each block as a convex problem, a choice motivated by three preliminary tests on six evaluation scenarios with ten realizations each. When the bandwidths of the LP solution \eqref{eq:lp} were used as a static schedule, the timely-delivery ratio fell from \num{0.410} for the fixed-trajectory baseline B1 to \num{0.128}; used as bandwidth-sharing weights, they reached \num{0.404}, and paths taken from the LP solution reached \num{0.412}. Guidance from the LP therefore does not carry over to the EDF scheduler, and under the PrLoS channel the trajectory block admits no valid convex surrogate for an objective that counts alerts. Local search scored by the evaluator itself, by contrast, raised the ratio to \num{0.427} when scoring on expected rates and to \num{0.449} when scoring on five sampled realizations, while scoring on expected rates even lowered one scenario from \num{0.372} to \num{0.305}. We therefore implement each block as an evaluated local-search step. Compared with a surrogate-based decomposition, this design measures every accepted change on the exact objective and scheduler used for evaluation, and it requires only samples of the channel rather than a convex surrogate of it.
+We keep the three-block structure of~\cite{huang2025ddatsap} but do not solve each block as a convex problem, a choice motivated by three preliminary tests on six evaluation scenarios with ten realizations each. When the bandwidths of the LP solution \eqref{eq:lp} were used as a static schedule, the timely-delivery ratio fell from \num{0.410} for the fixed-trajectory baseline FixedTour to \num{0.128}; used as bandwidth-sharing weights, they reached \num{0.404}, and paths taken from the LP solution reached \num{0.412}. Guidance from the LP therefore does not carry over to the EDF scheduler, and under the PrLoS channel the trajectory block admits no valid convex surrogate for an objective that counts alerts. Local search scored by the evaluator itself, by contrast, raised the ratio to \num{0.427} when scoring on expected rates and to \num{0.449} when scoring on five sampled realizations, while scoring on expected rates even lowered one scenario from \num{0.372} to \num{0.305}. We therefore implement each block as an evaluated local-search step. Compared with a surrogate-based decomposition, this design measures every accepted change on the exact objective and scheduler used for evaluation, and it requires only samples of the channel rather than a convex surrogate of it.
 
 \subsection{Plan Representation and Design Scoring}
 \label{sec:weights}
@@ -101,7 +101,7 @@ The true objective is the expectation of the lexicographic key over the channel 
 
 \subsection{Block Search and Schedule Repair}
 \label{sec:b2}
-B2 starts from the plan of B1 with all weights equal to $1$ and performs at most ten rounds of three blocks. The \emph{path block} visits the alerts in increasing order of deadline and tries, in turn, leaving each alert unserved and assigning it to each of its candidates. The \emph{bandwidth block} visits the radio links in use in decreasing order of the total size of the alerts they carry and tries to multiply all weights of a link by $2$, or by $1/2$ if doubling is rejected. The \emph{trajectory block} scans the family of tours illustrated in \cref{fig:tours}, which are feasible by construction: the UAV leaves the center, flies in straight lines at speed $V_{\max}$ through an ordered subset of the damage zones, hovers at each stop, and returns. The remaining time is split among the stops equally, in proportion to the number of alerts of each zone, or in proportion to the sum of $1/(d_a-r_a)$ over the zone, and each stop is either the zone center or the centroid of the sources in the zone. With three zones, the family contains at most $90$ tours, including the trajectory of B1. The search stops when a round accepts no change. Restricting the trajectory to this family gives up the continuous freedom of SCA-based trajectory design, but in return every candidate tour satisfies \eqref{eq:mobility} and can be evaluated directly on the exact objective.
+SBS starts from the plan of FixedTour with all weights equal to $1$ and performs at most ten rounds of three blocks. The \emph{path block} visits the alerts in increasing order of deadline and tries, in turn, leaving each alert unserved and assigning it to each of its candidates. The \emph{bandwidth block} visits the radio links in use in decreasing order of the total size of the alerts they carry and tries to multiply all weights of a link by $2$, or by $1/2$ if doubling is rejected. The \emph{trajectory block} scans the family of tours illustrated in \cref{fig:tours}, which are feasible by construction: the UAV leaves the center, flies in straight lines at speed $V_{\max}$ through an ordered subset of the damage zones, hovers at each stop, and returns. The remaining time is split among the stops equally, in proportion to the number of alerts of each zone, or in proportion to the sum of $1/(d_a-r_a)$ over the zone, and each stop is either the zone center or the centroid of the sources in the zone. With three zones, the family contains at most $90$ tours, including the trajectory of FixedTour. The search stops when a round accepts no change. Restricting the trajectory to this family gives up the continuous freedom of SCA-based trajectory design, but in return every candidate tour satisfies \eqref{eq:mobility} and can be evaluated directly on the exact objective.
 
 \begin{figure}[htbp]
 \centering
@@ -113,7 +113,7 @@ B2 starts from the plan of B1 with all weights equal to $1$ and performs at most
     stopg/.style={cross out, draw=blue!65!black, thick, inner sep=1.8pt},
     lbl/.style={font=\footnotesize, align=center},
     small/.style={font=\scriptsize, align=center}]
-  \foreach \ox/\title in {0/{(a) Tour of B1}, 7.6/{(b) Other tours in the family}} {
+  \foreach \ox/\title in {0/{(a) Tour of FixedTour}, 7.6/{(b) Other tours in the family}} {
     \begin{scope}[shift={(\ox,0)}]
       \node[lbl] at (3.0,4.0) {\title};
       \node[zone] (Z1) at (1.4,2.6) {};
@@ -152,7 +152,7 @@ B2 starts from the plan of B1 with all weights equal to $1$ and performs at most
 \end{figure}
 
 \label{sec:repair}
-The blocks of B2 change one decision at a time without regard to which alerts are about to miss their deadlines. P targets these alerts directly by adding a repair loop after the trajectory block of every round, as illustrated in \cref{fig:repair}. A ledger evaluation of the current plan records, for each alert and design realization, its slack $d_a-1-t_a$, where $t_a$ is the completion slot and the slack is set to $-1$ for late alerts, together with the hop that holds the alert's data for the most slots and the links whose capacity is exhausted. The risk of an alert is the fraction of design realizations in which it is late or has a slack of at most $\theta=2$ slots, and the loop considers at most $R=10$ alerts with the highest risk. If the bottleneck hop of such an alert is a radio link, \emph{Operator~1} doubles its weight within the slots $[r_a,d_a)$ only, which moves bandwidth from the other links of the same phase to this alert. \emph{Operator~2} tries the other candidates of the alert, ranked first by the number of congested links in its window and then by estimated cost, and accepts the first one that increases the key. All operators share the budget with the three blocks, so P and B2 have the same maximum number of evaluations. The mechanism follows the destroy-and-repair principle of large neighborhood search~\cite{ropke2006alns}.
+The blocks of SBS change one decision at a time without regard to which alerts are about to miss their deadlines. SBS-R targets these alerts directly by adding a repair loop after the trajectory block of every round, as illustrated in \cref{fig:repair}. A ledger evaluation of the current plan records, for each alert and design realization, its slack $d_a-1-t_a$, where $t_a$ is the completion slot and the slack is set to $-1$ for late alerts, together with the hop that holds the alert's data for the most slots and the links whose capacity is exhausted. The risk of an alert is the fraction of design realizations in which it is late or has a slack of at most $\theta=2$ slots, and the loop considers at most $R=10$ alerts with the highest risk. If the bottleneck hop of such an alert is a radio link, \emph{Operator~1} doubles its weight within the slots $[r_a,d_a)$ only, which moves bandwidth from the other links of the same phase to this alert. \emph{Operator~2} tries the other candidates of the alert, ranked first by the number of congested links in its window and then by estimated cost, and accepts the first one that increases the key. All operators share the budget with the three blocks, so SBS-R and SBS have the same maximum number of evaluations. The mechanism follows the destroy-and-repair principle of large neighborhood search~\cite{ropke2006alns}.
 
 \begin{figure}[htbp]
 \centering
@@ -192,14 +192,14 @@ The blocks of B2 change one decision at a time without regard to which alerts ar
     \node[small, text width=6.6cm, anchor=north] at (3.2,-0.8) {\textcolor{red!70!black}{Operator 1}: double the weight of the bottleneck hop only within $[r_a,d_a)$;\\ \textcolor{green!45!black}{Operator 2}: switch to another candidate, ranked by congested links, then cost};
   \end{scope}
 \end{tikzpicture}
-\caption{Risk-driven schedule repair in P: (a)~risk detection; (b)~repair operators.}
+\caption{Risk-driven schedule repair in SBS-R: (a)~risk detection; (b)~repair operators.}
 \label{fig:repair}
 \end{figure}
 
 \subsection{Overall Algorithm and Complexity}
 \label{sec:overall}
 
-\Cref{alg:bcd-repair} summarizes the method; B2 is obtained with repair disabled and P with repair enabled.
+\Cref{alg:bcd-repair} summarizes the method; SBS is obtained with repair disabled and SBS-R with repair enabled.
 
 \begin{algorithm}[htbp]
 \caption{Sample-scored block search with schedule repair.}
@@ -207,7 +207,7 @@ The blocks of B2 change one decision at a time without regard to which alerts ar
 \begin{algorithmic}[1]
 \Require Scenario, candidate set, design realizations, budget $E$, maximum rounds $I_{\max}=10$
 \Ensure Trajectory $q$, path selection $x$, bandwidth weights $w$
-\State $(q,x)\gets$ plan of B1; $w\gets 1$; $\kappa\gets$ key of $(q,x,w)$
+\State $(q,x)\gets$ plan of FixedTour; $w\gets 1$; $\kappa\gets$ key of $(q,x,w)$
 \For{$i=1,\dots,I_{\max}$}
     \State Path block: for each alert in deadline order, try skipping it and each candidate
     \State Bandwidth block: for each link in use, try $w_e\gets 2w_e$, then $w_e\gets w_e/2$
@@ -226,12 +226,12 @@ The blocks of B2 change one decision at a time without regard to which alerts ar
 \end{algorithmic}
 \end{algorithm}
 
-One round uses at most $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ evaluations for the three blocks plus $1+RK$ for the repair loop of P, where $\mathcal L_{\mathrm{used}}$ is the set of radio links in use. Each evaluation costs $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, and risk detection scans the ledger in $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$, where $T$ is the number of transmission records. The budget caps the total number of evaluations, so the planning time of B2, B3, and P is $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, independent of the actual number of rounds. The method only guarantees that the key of the plan does not decrease; it does not guarantee optimality, and the LP bound \eqref{eq:lp}, solved on the trajectory chosen by each method, measures the remaining room for improvement.
+One round uses at most $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ evaluations for the three blocks plus $1+RK$ for the repair loop of SBS-R, where $\mathcal L_{\mathrm{used}}$ is the set of radio links in use. Each evaluation costs $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, and risk detection scans the ledger in $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$, where $T$ is the number of transmission records. The budget caps the total number of evaluations, so the planning time of SBS, SBS-Lex, and SBS-R is $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, independent of the actual number of rounds. The method only guarantees that the key of the plan does not decrease; it does not guarantee optimality, and the LP bound \eqref{eq:lp}, solved on the trajectory chosen by each method, measures the remaining room for improvement.
 
 \label{sec:variants}
-To separate the effect of the objective from that of the search, B3 runs the same search as B2 with a different key. Let $\bar f_a$ be the fraction of the bits of $a$ that reach the center before the deadline, averaged over the design realizations. The average delivery rate of $a$ divided by its required rate $L_a/((d_a-r_a)\Delta)$ equals exactly $\bar f_a$, so $\min_a \bar f_a$ is a normalized version of the max--min objective of~\cite{huang2025ddatsap}. Because a single undeliverable alert forces $\min_a\bar f_a=0$ for every plan, B3 compares plans in leximin order:
+To separate the effect of the objective from that of the search, SBS-Lex runs the same search as SBS with a different key. Let $\bar f_a$ be the fraction of the bits of $a$ that reach the center before the deadline, averaged over the design realizations. The average delivery rate of $a$ divided by its required rate $L_a/((d_a-r_a)\Delta)$ equals exactly $\bar f_a$, so $\min_a \bar f_a$ is a normalized version of the max--min objective of~\cite{huang2025ddatsap}. Because a single undeliverable alert forces $\min_a\bar f_a=0$ for every plan, SBS-Lex compares plans in leximin order:
 \begin{equation}
 \label{eq:leximin}
 \bigl(\bar f_{(1)},\bar f_{(2)},\dots,\bar f_{(\abs{A})},\ \textstyle\sum_{\omega}\sum_a z_{a,\omega},\ \mathrm{Conn}\bigr),\qquad \bar f_{(1)}\le\bar f_{(2)}\le\dots\le\bar f_{(\abs{A})},
 \end{equation}
-\noindent where an unserved alert has $\bar f_a=0$. The difference between B2 and B3 measures the cost of optimizing fairness instead of the number of timely alerts.
+\noindent where an unserved alert has $\bar f_a=0$. The difference between SBS and SBS-Lex measures the cost of optimizing fairness instead of the number of timely alerts.

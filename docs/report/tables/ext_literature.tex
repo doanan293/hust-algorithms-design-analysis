@@ -1,15 +1,15 @@
-% Comparison with TRAN — rows read from data/ext_literature.csv (written by experiments/report_tables_extensions.py).
+% Comparison with Tran-IA — rows read from data/ext_literature.csv (written by experiments/report_tables_extensions.py).
 \begin{table}[htbp]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{Results of TRAN.}
+\caption{Results of Tran-IA.}
 \label{tab:literature}
 \begin{tabular}{@{}llcccr@{}}
 \toprule
 \textbf{Backhaul} & \textbf{Method} & \textbf{Timely $\uparrow$} & \textbf{95\% CI} & \textbf{Gap $\downarrow$} & \textbf{Planning (s) $\downarrow$} \\
 \midrule
-\csvreader[separator=semicolon, late after line=\\, filter strcmp={\colmethod}{TRAN}]{data/ext_literature.csv}{2=\colbackhaul, 3=\colmethod, 4=\coltimely, 5=\colci, 6=\colgap, 7=\colplanning}{\colbackhaul & \colmethod & \coltimely & \colci & \colgap & \colplanning}
+\csvreader[separator=semicolon, late after line=\\, filter strcmp={\colmethod}{Tran-IA}]{data/ext_literature.csv}{2=\colbackhaul, 3=\colmethod, 4=\coltimely, 5=\colci, 6=\colgap, 7=\colplanning}{\colbackhaul & \colmethod & \coltimely & \colci & \colgap & \colplanning}
 \bottomrule
 \end{tabular}
 \end{table}

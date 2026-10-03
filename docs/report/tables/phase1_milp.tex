@@ -1,15 +1,15 @@
 % MILP cross-check — rows read from data/phase1_milp.csv (written by experiments/report_tables.py).
 \begin{table}[htbp]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \caption{Tightness of the LP bound on reduced instances.}
 \label{tab:phase1-milp}
 \begin{tabular}{@{}lccccccc@{}}
 \toprule
-\textbf{Scenario} & \textbf{$|A|$} & \textbf{B1} & \textbf{MILP plan} & \textbf{MILP} & \textbf{MILP bound} & \textbf{LP bound} & \textbf{Time (s)} \\
+\textbf{Scenario} & \textbf{$|A|$} & \textbf{FixedTour} & \textbf{MILP plan} & \textbf{MILP} & \textbf{MILP bound} & \textbf{LP bound} & \textbf{Time (s)} \\
 \midrule
-\csvreader[separator=semicolon, late after line=\\]{data/phase1_milp.csv}{1=\colscenario, 2=\colalerts, 3=\colmethod, 4=\colplan, 5=\colincumbent, 6=\coldual, 7=\collp, 9=\colruntime}{\texttt{\colscenario} & \colalerts & \colmethod & \colplan & \colincumbent & \coldual & \collp & \colruntime}
+\csvreader[separator=semicolon, late after line=\\]{data/phase1_milp.csv}{1=\colscenario, 2=\colalerts, 3=\colmethod, 4=\colplan, 5=\colincumbent, 6=\coldual, 7=\collp, 9=\colruntime}{\colscenario & \colalerts & \colmethod & \colplan & \colincumbent & \coldual & \collp & \colruntime}
 \bottomrule
 \end{tabular}
 \end{table}

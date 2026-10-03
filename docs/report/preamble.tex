@@ -9,9 +9,14 @@
 
 % --- Encoding and fonts -------------------------------------------------------
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage[T5,T1]{fontenc}     % T1 for the text; T5 only for Vietnamese author names (\vn)
+\newcommand{\vn}[1]{{\fontencoding{T5}\selectfont #1}}
 \usepackage{lmodern}
 \usepackage[english]{babel}
+
+% --- Section numbering as in MDPI papers: "2. Related Work", "3.1. ..." -------
+\usepackage{titlesec}
+\titlelabel{\thetitle.\quad}
 
 % --- Page layout --------------------------------------------------------------
 \usepackage[a4paper, margin=2.5cm, headheight=13.6pt]{geometry} % headheight as fancyhdr requires at 12pt
@@ -24,6 +29,7 @@
 \fancyhead[L]{\small\nouppercase{\FirstMark{2e-left}}} % first section on the page (\leftmark gives the last)
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\sectionmark}[1]{\markboth{\thesection.\ #1}{}} % header: "2. Related Work"
 
 % Float placement: allow fuller text pages with floats, fewer float-only pages
 \renewcommand{\topfraction}{0.85}
@@ -110,7 +116,7 @@
 % \addbibresource lives in main.tex so that the skill's compile_latex.sh detects biber
 
 % --- Links and cross-references (load late) -----------------------------------
-\usepackage[unicode, colorlinks=true, linkcolor=blue!60!black,
+\usepackage[unicode, hyperfootnotes=false, colorlinks=true, linkcolor=blue!60!black,
             citecolor=blue!60!black, urlcolor=blue!60!black]{hyperref}
 \usepackage[nameinlink]{cleveref}
 \crefname{equation}{Eq.}{Eqs.}

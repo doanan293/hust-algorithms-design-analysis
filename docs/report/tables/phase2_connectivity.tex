@@ -1,13 +1,13 @@
 % By ground connectivity — rows read from data/phase2_connectivity.csv (written by experiments/report_tables_phase2.py).
 \begin{table}[htbp]
 \centering
-\small
+\footnotesize
 \setlength{\tabcolsep}{4pt}
 \caption{Results by ground connectivity.}
 \label{tab:phase2-connectivity}
 \begin{tabular}{@{}llcccccc@{}}
 \toprule
-\textbf{Family} & \textbf{Ground-reachable} & \textbf{Scenarios} & \textbf{Conn B0} & \textbf{B0} & \textbf{B1} & \textbf{B2} & \textbf{B2 $-$ B0} \\
+\textbf{Family} & \textbf{Ground-reachable} & \textbf{Scenarios} & \textbf{Conn NoUAV} & \textbf{NoUAV} & \textbf{FixedTour} & \textbf{SBS} & \textbf{SBS $-$ NoUAV} \\
 \midrule
 \csvreader[separator=semicolon, late after line=\\]{data/phase2_connectivity.csv}{1=\colset, 2=\colgroup, 3=\colscenarios, 4=\colconn, 5=\colbzero, 6=\colbone, 7=\colbtwo, 8=\colgain}{\colset & \colgroup & \colscenarios & \colconn & \colbzero & \colbone & \colbtwo & \colgain}
 \bottomrule

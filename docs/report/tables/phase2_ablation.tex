@@ -1,15 +1,15 @@
-% Ablation of P — rows read from data/phase2_ablation.csv (written by experiments/report_tables_phase2.py).
+% Ablation of SBS-R — rows read from data/phase2_ablation.csv (written by experiments/report_tables_phase2.py).
 \begin{table}[htbp]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{2pt}
-\caption{Ablation of P.}
+\caption{Ablation of SBS-R.}
 \label{tab:phase2-ablation}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-& \multicolumn{2}{c}{\textbf{v0}} & \multicolumn{2}{c}{\textbf{v0-bh50}} \\
+& \multicolumn{2}{c}{\textbf{Wide}} & \multicolumn{2}{c}{\textbf{Narrow}} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\textbf{Variant} & \textbf{Timely $\uparrow$} & \textbf{$\Delta$ vs.\ P [CI]} & \textbf{Timely $\uparrow$} & \textbf{$\Delta$ vs.\ P [CI]} \\
+\textbf{Variant} & \textbf{Timely $\uparrow$} & \textbf{$\Delta$ vs.\ SBS-R [CI]} & \textbf{Timely $\uparrow$} & \textbf{$\Delta$ vs.\ SBS-R [CI]} \\
 \midrule
 \csvreader[separator=semicolon, late after line=\\]{data/phase2_ablation.csv}{1=\colvariant, 2=\coltimely, 3=\coldiff, 4=\coltimelybh, 5=\coldiffbh}{\colvariant & \coltimely & \coldiff & \coltimelybh & \coldiffbh}
 \bottomrule

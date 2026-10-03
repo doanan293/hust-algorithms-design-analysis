@@ -1,8 +1,8 @@
-% TRAN adaptation — hand-written table (spec D Section 5.1).
+% Tran-IA adaptation — hand-written table (spec D Section 5.1).
 \begin{table}[htbp]
 \centering
 \small
-\caption{Adaptation of TRAN to our model.}
+\caption{Adaptation of Tran-IA to our model.}
 \label{tab:tran-adaptation}
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
@@ -14,7 +14,7 @@ Device and UAV powers optimized & Fixed powers, as for every method \\
 Rician channel with path loss $\omega_0 d^{-\alpha}$ & Power law $\beta d^{-\alpha}$ fitted to the expected PrLoS gain \\
 Finite UAV memory & None, since the UAV buffer is unlimited in our model \\
 No limit on concurrent downlinks & At most two downlinks with the largest bandwidths kept per slot \\
-Feasibility problem for initialization & Initialized from the B1 trajectory, equal bandwidths, and $\lambda=0$, which is always feasible \\
+Feasibility problem for initialization & Initialized from the FixedTour trajectory, equal bandwidths, and $\lambda=0$, which is always feasible \\
 No values given for $\mu$ and the convergence threshold & $\theta$ and $\mu$ selected on the development set; stop when the objective changes by less than $10^{-3}$ or after 30 iterations \\
 \bottomrule
 \end{tabularx}
