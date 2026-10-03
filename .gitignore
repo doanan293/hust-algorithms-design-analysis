@@ -8,3 +8,7 @@ data/manifests/*.tmp
 data/manifests/*.partial
 results/phase1/shards/
 results/phase2/**/shards/
+
+# Local agent skills (kept on disk, not tracked)
+.agents/
+.claude/skills/
