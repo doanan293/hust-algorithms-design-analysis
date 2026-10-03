@@ -3,16 +3,16 @@
 
 A plan consists of a trajectory $q$ that satisfies \eqref{eq:mobility}, a path selection $x_{a,p}\in\set{0,1}$ with $\sum_p x_{a,p}\le 1$, which allows an alert to be left unserved, and bandwidths $b_{e,n}\ge 0$ on the radio links. Plans are computed before the mission without access to the evaluation realizations and are then evaluated on independent channel realizations. During execution, every slot $n$ must satisfy the following constraints:
 \begin{enumerate}
-\item \emph{Spectrum:} the total bandwidth of the access links and that of the downlinks each do not exceed $B_{\mathrm{tot}}$, and at most two downlinks are active.
-\item \emph{Capacity:} a radio link $e$ carries at most $t_e\Delta\,R(b_{e,n},s_{e,n})$ bits, with $t_e=\tau$ for access links and $t_e=1-\tau$ for downlinks; a backhaul edge carries at most $\Delta C_e$ bits, shared by all alerts that traverse it.
-\item \emph{Causality:} the bits of alert $a$ are available at its source from the beginning of slot $r_a$; a transmission in slot $n$ uses only data held in the buffer at the beginning of slot $n$, so bits received in slot $n$ can be forwarded from slot $n+1$ on; bits travel only along the selected path, and buffers are non-negative.
-\item \emph{Deadline:} at the beginning of slot $d_a$, all remaining bits of $a$ are dropped.
+\item Spectrum: the total bandwidth of the access links and that of the downlinks each do not exceed $B_{\mathrm{tot}}$, and at most two downlinks are active.
+\item Capacity: a radio link $e$ carries at most $t_e\Delta\,R(b_{e,n},s_{e,n})$ bits, with $t_e=\tau$ for access links and $t_e=1-\tau$ for downlinks; a backhaul edge carries at most $\Delta C_e$ bits, shared by all alerts that traverse it.
+\item Causality: the bits of alert $a$ are available at its source from the beginning of slot $r_a$; a transmission in slot $n$ uses only data held in the buffer at the beginning of slot $n$, so bits received in slot $n$ can be forwarded from slot $n+1$ on; bits travel only along the selected path, and buffers are non-negative.
+\item Deadline: at the beginning of slot $d_a$, all remaining bits of $a$ are dropped.
 \end{enumerate}
 All methods share the same scheduler, which serves each queue in earliest-deadline-first (EDF) order.
 
 \begin{definition}[Timely alert]
 \label[definition]{def:timely}
-Alert $a$ is \emph{timely} in realization $\omega$, denoted $z_{a,\omega}=1$, if at least $L_a$ of its bits reach the center $c$ no later than the end of slot $d_a-1$; otherwise $z_{a,\omega}=0$.
+Alert $a$ is timely in realization $\omega$, denoted $z_{a,\omega}=1$, if at least $L_a$ of its bits reach the center $c$ no later than the end of slot $d_a-1$; otherwise $z_{a,\omega}=0$.
 \end{definition}
 
 Let $D_{a,\omega}$ be the number of bits of $a$ that reach $c$ before the deadline. Plans are compared in lexicographic order of
@@ -39,7 +39,7 @@ The third component of \eqref{eq:objective} measures the shortfall, that is, the
 \end{remark}
 
 \label{sec:analysis}
-Before designing an algorithm, we establish why (P1) calls for a heuristic and how its solutions can be judged: the problem is NP-hard even when the trajectory is fixed, and an upper bound is available against which any plan can be measured.
+Before designing an algorithm, we establish why Problem (P1) calls for a heuristic and how its solutions can be judged: the problem is NP-hard even when the trajectory is fixed, and an upper bound is available against which any plan can be measured.
 
 \subsection{NP-Hardness}
 \label{sec:hardness}
@@ -66,7 +66,7 @@ Fix a trajectory $q$, the candidate set, and a realization $\omega$, so that $s_
 \begin{subequations}
 \label{eq:lp}
 \begin{align}
-\max\quad & \textstyle\sum_{a\in A} z_a \label{eq:lp-objective}\\
+\text{(P2)}\qquad \max\quad & \textstyle\sum_{a\in A} z_a \label{eq:lp-objective}\\
 \text{s.t.}\quad
 & \textstyle\sum_{p} x_{a,p}\le 1, \label{eq:lp-choice}\\
 & B_{a,p,0,r_a}=L_a x_{a,p},\qquad B_{a,p,h,r_a+h}=f_{a,p,h-1,r_a+h-1}\ (h\ge 1), \label{eq:lp-init}\\
@@ -78,7 +78,7 @@ Fix a trajectory $q$, the candidate set, and a realization $\omega$, so that $s_
 & x,z\in[0,1],\qquad f,B,b\ge 0, \label{eq:lp-domain}
 \end{align}
 \end{subequations}
-where $f_{a,p,-1,n}\equiv 0$, $H_p$ is the number of hops of candidate $p$, \eqref{eq:lp-buffer} applies when $n+1\le d_a-1$, \eqref{eq:lp-radio} applies to radio links with $s_{e,n}>0$, the flow on a radio link with $s_{e,n}=0$ is fixed to zero, and \eqref{eq:lp-backhaul} applies to backhaul edges. Let $\mathrm{UB}_\omega(q)$ denote its optimal value.
+where $f_{a,p,-1,n}\equiv 0$, $H_p$ is the number of hops of candidate $p$, \eqref{eq:lp-buffer} applies when $n+1\le d_a-1$, \eqref{eq:lp-radio} applies to radio links with $s_{e,n}>0$, the flow on a radio link with $s_{e,n}=0$ is fixed to zero, and \eqref{eq:lp-backhaul} applies to backhaul edges. Let $\mathrm{UB}_\omega(q)$ denote the optimal value of Problem (P2).
 
 \begin{proposition}[Upper bound]
 \label[proposition]{prop:ub}
@@ -90,9 +90,9 @@ For fixed $s>0$, $R(b,s)=b\,\phi(1/b)$ with $\phi(t)=\log_2(1+st)$ concave, so $
 Consider any plan with trajectory $q$ and its execution on $\omega$. Set $x_{a,p}=1$ for the selected path, $z_a=z_{a,\omega}$, $f_{a,p,h,n}$ to the number of bits sent over hop $h$ in slot $n$, $B_{a,p,h,n}$ to the buffer at the beginning of the slot, and $b_{e,n}$ to the allocated bandwidth. The causality and buffer constraints yield \eqref{eq:lp-init}--\eqref{eq:lp-buffer}; \cref{def:timely} yields \eqref{eq:lp-deadline}; the spectrum and capacity constraints yield \eqref{eq:lp-spectrum} and \eqref{eq:lp-backhaul}; and the tangent inequality yields \eqref{eq:lp-radio}. This point is feasible and its objective value equals the number of timely alerts, which therefore cannot exceed $\mathrm{UB}_\omega(q)$.
 \end{proof}
 
-Problem \eqref{eq:lp} further relaxes the integrality of $x$ and $z$, the EDF order, the limit of two downlinks, and the causality of channel knowledge, since the bound knows the realization in advance; each relaxation only enlarges the feasible region. The bound holds only for the given trajectory and candidate set and is not a global bound over all trajectories. For each scenario, the bound is averaged over realizations and divided by $\abs{A}$, and the gap of a method is $(\overline{\mathrm{UB}}-\overline{P})/\overline{\mathrm{UB}}$. Each method that uses the UAV is compared with the bound on its own trajectory, and the baseline without a UAV is compared with the bound of the same problem restricted to ground candidates.
+Problem (P2) further relaxes the integrality of $x$ and $z$, the EDF order, the limit of two downlinks, and the causality of channel knowledge, since the bound knows the realization in advance; each relaxation only enlarges the feasible region. The bound holds only for the given trajectory and candidate set and is not a global bound over all trajectories. For each scenario, the bound is averaged over realizations and divided by $\abs{A}$, and the gap of a method is $(\overline{\mathrm{UB}}-\overline{P})/\overline{\mathrm{UB}}$. Each method that uses the UAV is compared with the bound on its own trajectory, and the baseline without a UAV is compared with the bound of the same problem restricted to ground candidates.
 
-To measure the tightness of the bound, we re-solve \eqref{eq:lp} as an MILP with binary $x$ and $z$ on reduced instances. We then build a plan from the MILP solution, using its selected paths and bandwidths and keeping the two largest downlinks whenever the limit is exceeded, and execute this plan on the same $\omega$, which gives the chain
+To measure the tightness of the bound, we solve on reduced instances the MILP obtained from Problem (P2) by restoring $x_{a,p},z_a\in\set{0,1}$, which we denote Problem (P3), with optimal value $\mathrm{UB}^{\mathrm{MILP}}_\omega(q)$. We then build a plan from the solution of (P3), using its selected paths and bandwidths and keeping the two largest downlinks whenever the limit is exceeded, and execute this plan on the same $\omega$, which gives the chain
 \begin{equation}
 \label{eq:sandwich}
 P_\omega(\text{MILP plan})\ \le\ \mathrm{OPT}_\omega(q)\ \le\ \mathrm{UB}^{\mathrm{MILP}}_\omega(q)\ \le\ \mathrm{UB}_\omega(q).
@@ -100,4 +100,4 @@ P_\omega(\text{MILP plan})\ \le\ \mathrm{OPT}_\omega(q)\ \le\ \mathrm{UB}^{\math
 The MILP plan knows the channel in advance, so it serves only to measure the tightness of the bound and is not compared with the other methods.
 
 \label{sec:complexity}
-Finally, we consider the computational cost of evaluating plans and computing the bound. Generating candidate paths requires one breadth-first search from $c$, which takes $O(\abs{V}+\abs{E})$ time, and ranking them takes $O(\abs{A}\abs{V}\log\abs{V})$. Evaluating a plan on $M$ realizations costs $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, where $\mathcal L$ is the set of links, and computing $\mathrm{Conn}$ costs $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. The evaluator records every transmission in a ledger, on which an independent checker verifies flow conservation, non-negative buffers, and the absence of future information at the same cost. Problem \eqref{eq:lp} has $\sum_a\sum_p H_p(d_a-r_a)$ flow variables and as many buffer variables, at most $\abs{\mathcal L_{\mathrm{r}}}N$ bandwidth variables, and at most $10\abs{\mathcal L_{\mathrm{r}}}N$ tangent constraints, where $\mathcal L_{\mathrm{r}}$ is the set of radio links of the candidate set. We solve the bound with HiGHS through \texttt{scipy} and, instead of stating a polynomial bound for the solver, report its measured solve times with the numerical results.
+Finally, we consider the computational cost of evaluating plans and computing the bound. Generating candidate paths requires one breadth-first search from $c$, which takes $O(\abs{V}+\abs{E})$ time, and ranking them takes $O(\abs{A}\abs{V}\log\abs{V})$. Evaluating a plan on $M$ realizations costs $O\bigl(MN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, where $\mathcal L$ is the set of links, and computing $\mathrm{Conn}$ costs $O\bigl(MN(\abs{V}+\abs{E}+\abs{S}\abs{V})\bigr)$. The evaluator records every transmission in a ledger, on which an independent checker verifies flow conservation, non-negative buffers, and the absence of future information at the same cost. Problem (P2) has $\sum_a\sum_p H_p(d_a-r_a)$ flow variables and as many buffer variables, at most $\abs{\mathcal L_{\mathrm{r}}}N$ bandwidth variables, and at most $10\abs{\mathcal L_{\mathrm{r}}}N$ tangent constraints, where $\mathcal L_{\mathrm{r}}$ is the set of radio links of the candidate set. We solve the bound with HiGHS through \texttt{scipy} and, instead of stating a polynomial bound for the solver, report its measured solve times with the numerical results.
