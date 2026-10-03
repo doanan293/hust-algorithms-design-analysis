@@ -2,7 +2,7 @@
   "level": "tables",
   "subset": null,
   "passed": true,
-  "git_commit": "8684e885753078a61804d03767f3e4f7351e9d9f",
+  "git_commit": "b44f1e8b09a337d732a382cb1aa115cce891a825",
   "git_dirty": false,
   "environment": {
     "python": "3.12.3",

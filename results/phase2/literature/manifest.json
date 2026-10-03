@@ -20,7 +20,7 @@
   "experiment_id": "phase2-literature",
   "failures": [],
   "finished_utc": "2026-09-12T14:46:26.271955+00:00",
-  "git_commit": "8f885c77b1bfe52cf0be50798f8ffb183b22de9d",
+  "git_commit": "95082c0bbd9ea29aad593f0c63373f253df737ce",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",

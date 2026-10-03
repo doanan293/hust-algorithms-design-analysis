@@ -18,7 +18,7 @@
   "experiment_id": "phase2-design",
   "failures": [],
   "finished_utc": "2026-09-12T04:51:57.827763+00:00",
-  "git_commit": "250bfd16e08ddaa2af161e187333c8dadffadeed",
+  "git_commit": "1d24349595e93102fe4ebe796c120ce5244ad0d3",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17"

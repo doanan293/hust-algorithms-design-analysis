@@ -20,7 +20,7 @@
   "experiment_id": "phase2-case-study",
   "failures": [],
   "finished_utc": "2026-09-12T17:46:32.268374+00:00",
-  "git_commit": "52e8f03c3bd7beb8f8b0ef33ed7a04f995a803dc",
+  "git_commit": "41f768052dbdc82556c98962a69b91cd9a4b59f0",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "rescuenet": "bb828acbae13a70290ab6b204a6b811efde9f7d3d5380d0a7bc3869937840ead"

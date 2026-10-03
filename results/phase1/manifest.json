@@ -22,7 +22,7 @@
   "experiment_id": "phase1",
   "failures": [],
   "finished_utc": "2026-09-13T03:12:20.487970+00:00",
-  "git_commit": "8428d0eb938bbd1207eeeff407ad58b7ecf99e41",
+  "git_commit": "31c20b473894f124be9d0fb15f221a9e9aed476d",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",

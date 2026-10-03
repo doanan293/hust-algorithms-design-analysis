@@ -16,7 +16,7 @@
   "experiment_id": "phase2-pilot",
   "failures": [],
   "finished_utc": "2026-09-11T14:19:03.879760+00:00",
-  "git_commit": "8ae7e77e097a12c89b75b8bfc66943b317302333",
+  "git_commit": "b1d969bba50dfa2cadf2f79d3331f01de516852a",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17"

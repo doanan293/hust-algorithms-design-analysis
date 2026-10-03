@@ -18,7 +18,7 @@
   "experiment_id": "phase2-sensitivity",
   "failures": [],
   "finished_utc": "2026-09-12T04:46:09.489013+00:00",
-  "git_commit": "250bfd16e08ddaa2af161e187333c8dadffadeed",
+  "git_commit": "1d24349595e93102fe4ebe796c120ce5244ad0d3",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "sens-alerts20": "3535f060b0a14b422862ce146f4f3c1ef257553b2f020a9d672415816b4b4070",
