@@ -20,8 +20,10 @@
   "experiment_id": "phase1",
   "failures": [],
   "finished_utc": "2026-10-08T13:32:36.590371+00:00",
-  "git_commit": "a05c6638be54652bdecaaffb51b14d31b1b8fcb3",
+  "git_commit": "6b2ec354a486491ec4bd6c3011a4978f93a2752a",
   "git_dirty": false,
+  "produced_at_commit": "a05c6638be54652bdecaaffb51b14d31b1b8fcb3",
+  "provenance_note": "git_commit moved from a05c663 to 6b2ec35: the only result-code change in between is a docstring in src/optimization/blocks.py; its AST without docstrings is identical, so the results describe the code at 6b2ec35.",
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",
     "v0-bh50": "00cef77c7f0136ae15f63bf306c4d661f707cd4cddbc00a163342838ac7b36b6"
