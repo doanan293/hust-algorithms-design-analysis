@@ -3,13 +3,16 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
+from baselines.b1 import B1
 from models.evaluate import REALIZED, EvaluationCounter, evaluate
 from models.paths import candidate_paths
+from models.rng import named_rng
 from models.scenario import scenario_from_dict
 from optimization import bcd
 from optimization.bcd import SearchMethod, SearchParams
 from optimization.objectives import lexicographic_key
 from optimization.scoring import DesignScorer
+from optimization.tours import tour_family
 from scenario_builders import make_alert
 from search_builders import three_zone_raw
 
@@ -20,6 +23,9 @@ VARIANTS = {
     "P": SearchParams(operation1=True, operation2=True, **SMALL),
     "P_no_backlog": SearchParams(operation1=True, operation2=True, backlog=False, **SMALL),
     "P_expected_design": SearchParams(operation1=True, operation2=True, **{**SMALL, "design_ids": ()}),
+    "P_catalog_trajectory": SearchParams(operation1=True, operation2=True, trajectory_mode="catalog", **SMALL),
+    "P_seed1": SearchParams(operation1=True, operation2=True, seed=1, **SMALL),
+    "P_catalog_init": SearchParams(operation1=True, operation2=True, catalog_init=True, **SMALL),
 }
 
 
@@ -87,10 +93,51 @@ def test_plan_reports_calls_and_trajectory_needs_planning():
         method.trajectory(scenario)
 
 
+def test_catalog_mode_only_visits_catalogue_tours():
+    scenario = _scenario()
+    candidates = candidate_paths(scenario)
+    catalog = SearchMethod("P", replace(VARIANTS["P"], trajectory_mode="catalog", path_block=False, operation1=False, operation2=False, bandwidth_block=False))
+    outcome = catalog.search(scenario, candidates)
+    family = {trajectory.tobytes() for _, trajectory in tour_family(scenario)} | {B1().plan(scenario, candidates, EvaluationCounter()).trajectory.tobytes()}
+    assert outcome.plan.trajectory.tobytes() in family
+
+
+def test_catalog_init_scans_the_family_once_before_the_local_rounds(monkeypatch):
+    scenario = _scenario()
+    candidates = candidate_paths(scenario)
+    calls = []
+    original = bcd.catalog_trajectory_block
+
+    def counting(scorer, state, family):
+        calls.append(len(family))
+        return original(scorer, state, family)
+
+    monkeypatch.setattr(bcd, "catalog_trajectory_block", counting)
+    SearchMethod("P", replace(VARIANTS["P"], catalog_init=True)).search(scenario, candidates)
+    assert calls == [len(tour_family(scenario))]
+    calls.clear()
+    SearchMethod("P", VARIANTS["P"]).search(scenario, candidates)
+    SearchMethod("P", replace(VARIANTS["P"], catalog_init=True, trajectory_block=False)).search(scenario, candidates)
+    assert calls == []
+
+
+def test_search_streams_are_seeded_per_scenario_and_seed():
+    scenario = _scenario()
+    first = named_rng(scenario.scenario_seed, "search:0")
+    assert first.random() == named_rng(scenario.scenario_seed, "search:0").random()
+    assert first.random() != named_rng(scenario.scenario_seed, "search:1").random()
+
+
 def test_search_params_from_mapping_validates_values():
     assert SearchParams.from_mapping({}) == SearchParams()
     assert SearchParams.from_mapping({"design_ids": "expected", "operation1": True}).design_ids == ()
     assert SearchParams.from_mapping({"design_ids": [3, 4]}).design_ids == (3, 4)
+    params = SearchParams.from_mapping(
+        {"trajectory_mode": "catalog", "catalog_probability": 0.0, "entry_neighbors": 5, "trajectory_segments": 10, "max_widening": 0, "seed": 2}
+    )
+    assert (params.trajectory_mode, params.catalog_probability, params.entry_neighbors) == ("catalog", 0.0, 5)
+    assert (params.trajectory_segments, params.max_widening, params.seed) == (10, 0, 2)
+    assert (SearchParams().trajectory_mode, SearchParams().catalog_probability, SearchParams().seed) == ("local", 0.1, 0)
     for raw, message in (
         ({"repair": True}, "unknown search parameters"),
         ({"objective": "maxmin"}, "objective"),
@@ -98,6 +145,14 @@ def test_search_params_from_mapping_validates_values():
         ({"operation1": "yes"}, "operation1"),
         ({"design_ids": []}, "design_ids"),
         ({"design_ids": [1, 1]}, "design_ids"),
+        ({"trajectory_mode": "random"}, "trajectory_mode"),
+        ({"catalog_probability": 1.5}, "catalog_probability"),
+        ({"catalog_probability": True}, "catalog_probability"),
+        ({"entry_neighbors": 0}, "entry_neighbors"),
+        ({"trajectory_segments": 0}, "trajectory_segments"),
+        ({"max_widening": -1}, "max_widening"),
+        ({"seed": -1}, "seed"),
+        ({"catalog_init": "yes"}, "catalog_init"),
     ):
         with pytest.raises(ValueError, match=message):
             SearchParams.from_mapping(raw)

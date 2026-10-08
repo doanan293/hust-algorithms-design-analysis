@@ -21,6 +21,7 @@ methods:
   - {id: P_equal_bandwidth, base: search, params: {bandwidth_block: false, operation2: true}}
   - {id: P_no_backlog, base: search, params: {operation1: true, operation2: true, backlog: false}}
   - {id: P_expected_design, base: search, params: {operation1: true, operation2: true, design_ids: expected}}
+  - {id: P_catalog_trajectory, base: search, params: {operation1: true, operation2: true, trajectory_mode: catalog}}
 bounds: {tangents: 10}
 bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
 workers: 12

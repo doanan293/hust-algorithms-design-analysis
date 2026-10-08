@@ -18,6 +18,7 @@ MAIN_SEARCH = {
     "P_equal_bandwidth": SearchParams(bandwidth_block=False, operation2=True),
     "P_no_backlog": SearchParams(backlog=False, **REPAIR),
     "P_expected_design": SearchParams(design_ids=(), **REPAIR),
+    "P_catalog_trajectory": SearchParams(trajectory_mode="catalog", **REPAIR),
 }
 SENSITIVITY_SETS = [
     "v0", "v0-bh50", "sens-bh100", "sens-lref125k", "sens-lref500k", "sens-lref1m", "sens-physical", "sens-deadline-short",
@@ -27,6 +28,32 @@ SENSITIVITY_SETS = [
 
 def _search(config):
     return {spec.id: spec.search_params() for spec in config.methods if spec.base == "search"}
+
+
+PILOT_LOCAL = {
+    "P": SearchParams(**REPAIR),
+    "P_m2": SearchParams(entry_neighbors=2, **REPAIR),
+    "P_m5": SearchParams(entry_neighbors=5, **REPAIR),
+    "P_w3": SearchParams(trajectory_segments=3, **REPAIR),
+    "P_w10": SearchParams(trajectory_segments=10, **REPAIR),
+    "P_cat0": SearchParams(catalog_probability=0.0, **REPAIR),
+    "P_cat03": SearchParams(catalog_probability=0.3, **REPAIR),
+    "P_cat1": SearchParams(catalog_probability=1.0, **REPAIR),
+    "P_seed1": SearchParams(seed=1, **REPAIR),
+    "P_seed2": SearchParams(seed=2, **REPAIR),
+    "P_init": SearchParams(catalog_init=True, **REPAIR),
+    "P_init_w10": SearchParams(catalog_init=True, trajectory_segments=10, **REPAIR),
+    "P_catalog_trajectory": SearchParams(trajectory_mode="catalog", **REPAIR),
+}
+
+
+def test_local_pilot_config_sweeps_one_parameter_at_a_time_on_the_development_split():
+    config = load_experiment_config(Path("configs/experiments/phase2_pilot_local.yaml"))
+    assert (config.split, config.output_dir) == ("dev", Path("results/phase2/pilot_local"))
+    assert [item.set_id for item in config.scenario_sets] == ["v0"]
+    assert [spec.id for spec in config.methods] == ["B1", "B2", *PILOT_LOCAL]
+    assert _search(config) == {"B2": SearchParams(), **PILOT_LOCAL}
+    assert not any(spec.bounds for spec in config.methods)
 
 
 def test_main_config_runs_every_method_and_ablation_on_both_sets():
@@ -63,7 +90,7 @@ def test_sensitivity_and_design_configs_use_one_replicate_per_topology():
 
 @pytest.mark.parametrize(
     ("name", "tasks"),
-    [("phase2_main", 60 * (12 + 30 + 30)), ("phase2_budget", 30 * 10), ("phase2_sensitivity", 15 * 10 * (3 + 30)), ("phase2_design", 10 * 3)],
+    [("phase2_main", 60 * (13 + 30 + 30)), ("phase2_budget", 30 * 10), ("phase2_sensitivity", 15 * 10 * (3 + 30)), ("phase2_design", 10 * 3)],
 )
 def test_phase2_configs_expand_to_their_task_counts(name, tasks):
     config = load_experiment_config(Path(f"configs/experiments/{name}.yaml"))

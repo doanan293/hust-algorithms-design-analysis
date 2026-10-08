@@ -7,17 +7,21 @@ import numpy as np
 
 from baselines.b1 import B1
 from models.evaluate import EvaluationCounter
-from models.paths import CandidatePath
+from models.paths import CandidatePath, backhaul_routes
 from models.plan import Plan
+from models.rng import named_rng
 from models.scenario import Scenario
 
-from .blocks import SearchState, bandwidth_block, path_block, trajectory_block, unit_weights
+from .blocks import SearchState, bandwidth_block, catalog_trajectory_block, path_block, trajectory_block, unit_weights
 from .objectives import OBJECTIVES, Key
 from .repair import repair_round
 from .scoring import DEFAULT_BUDGET, DEFAULT_DESIGN_IDS, BudgetExhausted, DesignScorer
 from .tours import tour_family
 
 EXPECTED_DESIGN = "expected"
+LOCAL = "local"
+CATALOG = "catalog"
+TRAJECTORY_MODES = (LOCAL, CATALOG)
 
 
 @dataclass(frozen=True)
@@ -34,17 +38,33 @@ class SearchParams:
     design_ids: tuple[int, ...] = DEFAULT_DESIGN_IDS
     budget: int = DEFAULT_BUDGET
     max_iterations: int = 10
+    trajectory_mode: str = LOCAL
+    catalog_init: bool = False
+    catalog_probability: float = 0.1
+    entry_neighbors: int = 3
+    trajectory_segments: int = 5
+    max_widening: int = 10
+    seed: int = 0
 
     def __post_init__(self) -> None:
         if self.objective not in OBJECTIVES:
             raise ValueError(f"objective: expected one of {sorted(OBJECTIVES)}, got {self.objective!r}")
-        for name in ("path_block", "bandwidth_block", "trajectory_block", "operation1", "operation2", "backlog"):
+        for name in ("path_block", "bandwidth_block", "trajectory_block", "operation1", "operation2", "backlog", "catalog_init"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name}: expected true or false")
-        for name in ("budget", "max_iterations"):
+        if self.trajectory_mode not in TRAJECTORY_MODES:
+            raise ValueError(f"trajectory_mode: expected one of {TRAJECTORY_MODES}, got {self.trajectory_mode!r}")
+        probability = self.catalog_probability
+        if isinstance(probability, bool) or not isinstance(probability, (int, float)) or not 0.0 <= probability <= 1.0:
+            raise ValueError("catalog_probability: expected a number in [0, 1]")
+        for name in ("budget", "max_iterations", "entry_neighbors", "trajectory_segments"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name}: expected an integer of at least 1")
+        for name in ("max_widening", "seed"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name}: expected a non-negative integer")
         ids = self.design_ids
         if not isinstance(ids, tuple) or len(set(ids)) != len(ids) or any(
             isinstance(item, bool) or not isinstance(item, int) or item < 0 for item in ids
@@ -80,7 +100,7 @@ class SearchOutcome:
 
 @dataclass(frozen=True)
 class SearchMethod:
-    """Starts from B1 with unit weights; iterates blocks and repair until an iteration accepts nothing."""
+    """Starts from B1 with unit weights; iterates the path, bandwidth, trajectory blocks and repair until an iteration accepts nothing."""
 
     name: str
     params: SearchParams = field(default_factory=SearchParams)
@@ -102,6 +122,8 @@ class SearchMethod:
     def search(self, scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> SearchOutcome:
         params = self.params
         scorer = DesignScorer(scenario, params.design_ids, params.budget, OBJECTIVES[params.objective])
+        rng = named_rng(scenario.scenario_seed, f"search:{params.seed}")
+        routes = backhaul_routes(scenario)
         initial = B1().plan(scenario, candidates, EvaluationCounter())
         state = SearchState(initial.trajectory, dict(initial.paths), unit_weights(scenario, candidates))
         family = tour_family(scenario) if params.trajectory_block else []
@@ -109,18 +131,20 @@ class SearchMethod:
         exhausted = False
         try:
             state.key = scorer.score(state.plan())
+            if params.trajectory_block and params.catalog_init and params.trajectory_mode == LOCAL:
+                catalog_trajectory_block(scorer, state, family)
             for _ in range(params.max_iterations):
                 accepted = False
                 if params.path_block:
-                    accepted |= path_block(scenario, candidates, scorer, state)
+                    accepted |= path_block(scenario, candidates, routes, scorer, state, params, rng)
                 if params.bandwidth_block:
                     accepted |= bandwidth_block(scenario, scorer, state)
-                if params.trajectory_block:
-                    accepted |= trajectory_block(scorer, state, family)
+                if params.trajectory_block and params.trajectory_mode == CATALOG:
+                    accepted |= catalog_trajectory_block(scorer, state, family)
+                elif params.trajectory_block:
+                    accepted |= trajectory_block(scenario, scorer, state, params, rng, family)
                 if params.operation1 or params.operation2:
-                    accepted |= repair_round(
-                        scenario, candidates, scorer, state, params.operation1, params.operation2, params.backlog
-                    )
+                    accepted |= repair_round(scenario, candidates, routes, scorer, state, params, rng)
                 iteration_keys.append(state.key)
                 if not accepted:
                     break
