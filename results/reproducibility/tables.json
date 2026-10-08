@@ -2,7 +2,7 @@
   "level": "tables",
   "subset": null,
   "passed": true,
-  "git_commit": "54cd969a80b86000e6ecdbe9bf323d050bd89cb4",
+  "git_commit": "78ca0f06304e7d42a184d49afc5675ce913620a5",
   "git_dirty": false,
   "environment": {
     "python": "3.12.3",
@@ -14,8 +14,8 @@
     "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "cpu_count": 12
   },
-  "started_utc": "2026-10-08T21:59:45.535839+00:00",
-  "finished_utc": "2026-10-08T21:59:50.074457+00:00",
+  "started_utc": "2026-10-08T22:18:16.539270+00:00",
+  "finished_utc": "2026-10-08T22:18:21.910913+00:00",
   "checks": [
     {
       "name": "phase2_statistics",
