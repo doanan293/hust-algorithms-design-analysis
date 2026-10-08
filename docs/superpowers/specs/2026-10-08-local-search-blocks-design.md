@@ -1,7 +1,7 @@
 # Local Search Blocks Design (Sub-Project E)
 
 **Date:** 2026-10-08
-**Status:** Draft for user review
+**Status:** Approved for implementation planning
 **Builds on:** `2026-09-11-phase2-core-design.md` (search framework, Sections 5–9), `2026-09-12-extensions-final-delivery-design.md` (experiments, report, slides)
 **Trigger:** reviewer feedback that the path and trajectory blocks of B2/B3/P "search" by switching among pre-generated options instead of modifying the incumbent
 
@@ -83,14 +83,16 @@ path_block(scenario, routes, scorer, state, params, rng):
     _, result = scorer.score_with_ledger(state.plan())      # 1 evaluation; gives the ledger summary
     summary = ledger_summary(result)                         # Section 5.3
     accepted = False
-    for alert in rng.permutation(alerts):                    # a fresh random order every pass
+    for alert in urgency_order(alerts, rng):                 # a fresh random order every pass, urgent alerts first
         for q in path_neighbours(alert, state.paths[alert.id], summary, rng, ...):
             if state.try_change(scorer, paths={**state.paths, alert.id: q}, weights=with_unit_weights(q)):
                 accepted = True            # first improvement, continue with the new incumbent
     return accepted
 ```
 
-Acceptance stays "key increases strictly" (`SearchState.try_change`). Each `try_change` is one evaluation under the budget. The random alert order and the random entry draw make successive passes explore different neighbours of the same incumbent, instead of repeating the same deterministic sweep.
+Acceptance stays "key increases strictly" (`SearchState.try_change`). Each `try_change` is one evaluation under the budget.
+
+`urgency_order` draws the alerts one by one without replacement with probability ∝ `1 / (d_a − r_a)`, so urgent alerts tend to come first but the order differs between passes. The bias is deliberate: the evaluation budget is limited, so the sweep is greedy towards the alerts most likely to miss their deadline, while the randomness lets successive passes explore different neighbours of the same incumbent instead of repeating one deterministic sweep.
 
 ### 5.3 Ledger summary (congestion and residual capacity)
 
@@ -165,7 +167,7 @@ No congested UAV link → no segment moves; only the catalogue draw of Section 6
 
 ### 7.1 Randomness and reproducibility
 
-Every random choice of the search (alert order, entry draw, segment draw, catalogue draw) uses one `numpy` generator created at the start of `SearchMethod.search` with `named_rng(scenario.scenario_seed, f"search:{self.name}:{params.seed}")` (`models/rng.py`, the mechanism the channel draws already use). The generator is passed to the blocks; nothing reads global random state. The same scenario, method and `seed` therefore give the same plan, which `reproduce.py --level experiments` relies on. Different method ids (B2, P, ablations) get different streams, which is intended: they are different methods.
+Every random choice of the search (urgency-weighted alert order, entry draw, segment draw, catalogue draw) uses one `numpy` generator created at the start of `SearchMethod.search` with `named_rng(scenario.scenario_seed, f"search:{self.name}:{params.seed}")` (`models/rng.py`, the mechanism the channel draws already use). The generator is passed to the blocks; nothing reads global random state. The same scenario, method and `seed` therefore give the same plan, which `reproduce.py --level experiments` relies on. Different method ids (B2, P, ablations) get different streams, which is intended: they are different methods.
 
 ### 7.2 Parameters
 
@@ -223,7 +225,7 @@ Slides (`docs/presentation/uav-alert-delivery.pptx`, edited in place with the pp
 ## 10. Tests
 
 - `tests/models/test_plan.py`: `from_choice` equals a plan built from the same paths; validation rejects a broken chain, a repeated node, a dead edge, a ground entry out of range, a wrong first link.
-- `tests/optimization/test_path_moves.py`: every neighbour passes `validate_plan`; a source that is not ground-connected gets only UAV neighbours; kind flip respects ground range; entry switch returns ≤ M distinct entries and a lower `T(e)` gets a higher draw probability (checked on a hand-built case with two entries); `residual` falls with carried bits and is floored at ε; detour avoids the congested link and the prefix nodes, and is absent without congestion; `None` incumbent yields the K candidates.
+- `tests/optimization/test_path_moves.py`: `urgency_order` is a permutation of the alerts and, over many draws, puts the alert with the shortest window first more often than the one with the longest; every neighbour passes `validate_plan`; a source that is not ground-connected gets only UAV neighbours; kind flip respects ground range; entry switch returns ≤ M distinct entries and a lower `T(e)` gets a higher draw probability (checked on a hand-built case with two entries); `residual` falls with carried bits and is floored at ε; detour avoids the congested link and the prefix nodes, and is absent without congestion; `None` incumbent yields the K candidates.
 - `tests/optimization/test_trajectory_moves.py`: `shift_segment` output satisfies `_trajectory_violations` for random segments and directions; returns `None` on a V_max cruise boundary without widening; widening finds a feasible segment; `fraction = 1.0` touches the limit within tolerance; `sample_uav_segments` returns at most W distinct segments and never one with zero priority.
 - `tests/optimization/test_blocks.py`, `test_search_methods.py`, `test_repair.py`: updated for `paths`, the ledger call, `trajectory_mode`, `catalog_probability`, the RNG; a test that `trajectory_mode="catalog"` reproduces the old block's choice on a small scenario; a determinism test (same scenario, method, seed → identical plan; different seed → the RNG stream differs).
 - `tests/runner`: config parsing of the new parameters.
