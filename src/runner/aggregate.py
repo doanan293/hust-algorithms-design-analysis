@@ -39,7 +39,7 @@ def _bound_lookup(bound_rows: Sequence[Mapping[str, object]]) -> dict[tuple, flo
 def validity_violations(
     method_rows: Sequence[Mapping[str, object]], bound_rows: Sequence[Mapping[str, object]], owners: BoundOwners
 ) -> list[str]:
-    """Every bound optimal; every method row with its own bound stays below it."""
+    """Every bound optimal; every method row with its own bound stays below it unless its plan routes outside the candidate set."""
     bounds = _bound_lookup(bound_rows)
     violations = []
     for row in bound_rows:
@@ -54,6 +54,8 @@ def validity_violations(
         label = f"{row['set_id']}/{row['scenario_id']}/{row['method']}/r{row['realization_id']}"
         if key not in bounds:
             violations.append(f"{label}: missing {variant} bound")
+        elif int(row.get("paths_outside_candidates", 0)) > 0:
+            continue
         elif int(row["timely_count"]) > bounds[key] + VALIDITY_TOLERANCE:
             violations.append(f"{label}: {row['timely_count']} timely alerts exceed the bound {bounds[key]:.6f}")
     return violations
@@ -112,7 +114,7 @@ def summarize(
     for (set_id, method), scenarios in sorted(grouped.items()):
         owner = owners[method]
         clusters: dict[str, list[float]] = defaultdict(list)
-        timely, conn, shortfall, planning, evaluation, calls = [], [], [], [], [], []
+        timely, conn, shortfall, planning, evaluation, calls, outside = [], [], [], [], [], [], []
         bound_means, bound_runtime, gaps, union_means, union_gaps = [], [], [], [], []
         for scenario_id in sorted(scenarios):
             rows = scenarios[scenario_id]
@@ -124,6 +126,7 @@ def summarize(
             planning.append(_mean([float(row["planning_runtime_s"]) for row in rows]))
             evaluation.append(_mean([float(row["evaluation_runtime_s"]) for row in rows]))
             calls.append(_mean([float(row["evaluate_calls"]) for row in rows]))
+            outside.append(_mean([float(row.get("paths_outside_candidates", 0)) for row in rows]))
             if owner is not None:
                 scenario_bounds = bounds[(set_id, scenario_id, *owner)]
                 bound_mean = _mean([float(row["ratio"]) for row in scenario_bounds])
@@ -157,6 +160,7 @@ def summarize(
                 "union_bound_ratio_mean": _mean_or_nan(union_means),
                 "union_gap_mean": _mean_or_nan(union_defined),
                 "evaluate_calls_mean": _mean(calls),
+                "paths_outside_candidates_mean": _mean(outside),
             }
         )
     return summary

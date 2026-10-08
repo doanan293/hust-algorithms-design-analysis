@@ -2,9 +2,7 @@
   "command": [
     "experiments/run_phase1.py",
     "--config",
-    "configs/experiments/phase1.yaml",
-    "--output-dir",
-    "/tmp/claude-1000/-home-andv-personal-algorithms-design-analysis/414c94a6-e068-4846-8e09-09cdaaf4287f/scratchpad/tmp/plan-d3-phase1/rerun"
+    "configs/experiments/phase1.yaml"
   ],
   "config_hash": "b956a70a9efd8749748261dd6f4c4cb4e85e4021dae6561463fd3484f0174e47",
   "config_path": "configs/experiments/phase1.yaml",
@@ -14,23 +12,23 @@
     "cvxpy": "1.9.2",
     "highs": "1.12.0",
     "numpy": "2.5.3",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "python": "3.12.3",
     "scipy": "1.18.1"
   },
   "executed_task_count": 3725,
   "experiment_id": "phase1",
   "failures": [],
-  "finished_utc": "2026-09-13T03:12:20.487970+00:00",
-  "git_commit": "31c20b473894f124be9d0fb15f221a9e9aed476d",
+  "finished_utc": "2026-10-08T13:32:36.590371+00:00",
+  "git_commit": "a05c6638be54652bdecaaffb51b14d31b1b8fcb3",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17",
     "v0-bh50": "00cef77c7f0136ae15f63bf306c4d661f707cd4cddbc00a163342838ac7b36b6"
   },
   "skipped_task_count": 0,
-  "source_hash": "9d8df3aa22bd4b214103433a5aaa5fb5e9ffdd9af261b8a64a4c8a4267ef1ccb",
-  "started_utc": "2026-09-13T02:53:55.788551+00:00",
+  "source_hash": "71bc6fc77d9440972f73c6487f36b2c80b10880276e8e3ec07625a5859d53751",
+  "started_utc": "2026-10-08T13:16:10.747709+00:00",
   "status": "complete",
   "task_count": 3725,
   "workers": 12

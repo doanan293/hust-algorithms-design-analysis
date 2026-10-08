@@ -33,8 +33,8 @@ def run_job(job: tuple[str, str, float, float, int, int]) -> dict[str, object]:
     outcome = TranHD(params=TranParams(theta=theta, mu=mu, block_slots=block_slots)).solve(scenario, candidates)
     planning_s = time.perf_counter() - started
     ids = tuple(range(realizations))
-    initial = evaluate(scenario, outcome.initial_plan, REALIZED, ids, candidates=candidates)
-    final = evaluate(scenario, outcome.plan, REALIZED, ids, candidates=candidates)
+    initial = evaluate(scenario, outcome.initial_plan, REALIZED, ids)
+    final = evaluate(scenario, outcome.plan, REALIZED, ids)
     if not (initial.feasible and final.feasible):
         raise ValueError(f"{scenario.scenario_id}: infeasible TRAN plan")
     return {

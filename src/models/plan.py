@@ -4,9 +4,9 @@ from typing import Mapping
 
 import numpy as np
 
-from .channel import ACCESS, LinkId
-from .paths import CandidatePath, radio_links
-from .scenario import Scenario
+from .channel import ACCESS, DOWNLINK, LinkId
+from .paths import CandidatePath, path_violations
+from .scenario import UAV_ID, Scenario
 
 POSITION_TOLERANCE_M = 1e-6
 RELATIVE_TOLERANCE = 1e-9
@@ -41,9 +41,23 @@ class WeightedBacklogged:
 
 @dataclass(frozen=True)
 class Plan:
+    """Trajectory at slot boundaries, the path of every alert (None = unserved), and the bandwidth policy."""
+
     trajectory: np.ndarray
-    path_choice: Mapping[str, int | None]
+    paths: Mapping[str, CandidatePath | None]
     bandwidth: EqualSplitBacklogged | StaticSchedule | WeightedBacklogged
+
+    @classmethod
+    def from_choice(
+        cls,
+        trajectory: np.ndarray,
+        candidates: Mapping[str, tuple[CandidatePath, ...]],
+        choice: Mapping[str, int | None],
+        bandwidth: "EqualSplitBacklogged | StaticSchedule | WeightedBacklogged",
+    ) -> "Plan":
+        """Plan from candidate indices, for methods that choose within the candidate set."""
+        paths = {alert_id: None if index is None else candidates[alert_id][index] for alert_id, index in choice.items()}
+        return cls(trajectory, paths, bandwidth)
 
 
 def stationary_trajectory(scenario: Scenario) -> np.ndarray:
@@ -51,38 +65,27 @@ def stationary_trajectory(scenario: Scenario) -> np.ndarray:
     return np.tile(start, (scenario.time.num_slots + 1, 1))
 
 
-def chosen_paths(
-    scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], plan: Plan
-) -> dict[str, CandidatePath | None]:
-    return {
-        alert.id: None if plan.path_choice[alert.id] is None else candidates[alert.id][plan.path_choice[alert.id]]
-        for alert in scenario.alerts
-    }
+def chosen_paths(plan: Plan) -> dict[str, CandidatePath | None]:
+    return dict(plan.paths)
 
 
-def validate_plan(
-    scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], plan: Plan
-) -> list[str]:
+def validate_plan(scenario: Scenario, plan: Plan) -> list[str]:
     violations = _trajectory_violations(scenario, plan.trajectory)
     alert_ids = {alert.id for alert in scenario.alerts}
-    for alert_id in sorted(alert_ids - set(plan.path_choice)):
-        violations.append(f"path_choice: missing alert {alert_id}")
-    for alert_id in sorted(plan.path_choice):
-        index = plan.path_choice[alert_id]
+    for alert_id in sorted(alert_ids - set(plan.paths)):
+        violations.append(f"paths: missing alert {alert_id}")
+    for alert_id in sorted(plan.paths):
         if alert_id not in alert_ids:
-            violations.append(f"path_choice: unknown alert {alert_id}")
+            violations.append(f"paths: unknown alert {alert_id}")
             continue
-        valid_index = (
-            isinstance(index, (int, np.integer))
-            and not isinstance(index, bool)
-            and 0 <= int(index) < len(candidates[alert_id])
-        )
-        if index is not None and not valid_index:
-            violations.append(f"path_choice: alert {alert_id} has invalid candidate index {index}")
+        path = plan.paths[alert_id]
+        if path is not None:
+            source_id = scenario.alert_by_id[alert_id].source
+            violations.extend(f"paths: alert {alert_id} {problem}" for problem in path_violations(scenario, source_id, path))
     if isinstance(plan.bandwidth, StaticSchedule):
-        violations.extend(_schedule_violations(scenario, candidates, plan.bandwidth))
+        violations.extend(_schedule_violations(scenario, plan.bandwidth))
     elif isinstance(plan.bandwidth, WeightedBacklogged):
-        violations.extend(_weight_violations(scenario, candidates, plan.bandwidth))
+        violations.extend(_weight_violations(scenario, plan.bandwidth))
     elif not isinstance(plan.bandwidth, EqualSplitBacklogged):
         violations.append("bandwidth: unknown policy")
     return violations
@@ -104,13 +107,17 @@ def _trajectory_violations(scenario: Scenario, trajectory: np.ndarray) -> list[s
     return violations
 
 
-def _weight_violations(
-    scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], policy: WeightedBacklogged
-) -> list[str]:
-    known = set(radio_links(candidates))
+def _is_radio_link(scenario: Scenario, link: LinkId) -> bool:
+    kind, transmitter, receiver = link
+    if kind == ACCESS:
+        return transmitter in scenario.source_by_id and (receiver == UAV_ID or receiver in scenario.node_by_id)
+    return kind == DOWNLINK and transmitter == UAV_ID and receiver in scenario.node_by_id
+
+
+def _weight_violations(scenario: Scenario, policy: WeightedBacklogged) -> list[str]:
     violations = []
     for link in sorted(policy.weights):
-        if link not in known:
+        if not _is_radio_link(scenario, link):
             violations.append(f"bandwidth: unknown radio link {link}")
             continue
         values = np.asarray(policy.weights[link], dtype=float)
@@ -119,17 +126,14 @@ def _weight_violations(
     return violations
 
 
-def _schedule_violations(
-    scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]], schedule: StaticSchedule
-) -> list[str]:
+def _schedule_violations(scenario: Scenario, schedule: StaticSchedule) -> list[str]:
     num_slots = scenario.time.num_slots
-    known = set(radio_links(candidates))
     access_total = np.zeros(num_slots)
     downlink_total = np.zeros(num_slots)
     active_downlinks = np.zeros(num_slots, dtype=int)
     violations = []
     for link in sorted(schedule.bandwidth_hz):
-        if link not in known:
+        if not _is_radio_link(scenario, link):
             violations.append(f"bandwidth: unknown radio link {link}")
             continue
         values = np.asarray(schedule.bandwidth_hz[link], dtype=float)

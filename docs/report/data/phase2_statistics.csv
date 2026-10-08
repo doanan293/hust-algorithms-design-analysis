@@ -1,9 +1,9 @@
 set;comparison;diff;ci;rankbiserial;p;pholm
-Wide;SBS-R $-$ SBS;\num{0.002};[\num{-0.003}, \num{0.007}];\num{0.11};\num{0.5039};\num{1.0000}
-Wide;SBS $-$ FixedTour;\num{0.057};[\num{0.043}, \num{0.075}];\num{1.00};\num{0.0020};\num{0.0156}
-Wide;SBS $-$ SBS-Lex;\num{0.184};[\num{0.144}, \num{0.224}];\num{1.00};\num{0.0020};\num{0.0156}
-Wide;SBS-R $-$ FixedTour;\num{0.059};[\num{0.043}, \num{0.079}];\num{1.00};\num{0.0020};\num{0.0156}
-Narrow;SBS-R $-$ SBS;\num{-0.002};[\num{-0.007}, \num{0.002}];\num{-0.38};\num{0.5312};\num{1.0000}
-Narrow;SBS $-$ FixedTour;\num{0.079};[\num{0.058}, \num{0.101}];\num{1.00};\num{0.0020};\num{0.0156}
-Narrow;SBS $-$ SBS-Lex;\num{0.179};[\num{0.137}, \num{0.214}];\num{1.00};\num{0.0020};\num{0.0156}
-Narrow;SBS-R $-$ FixedTour;\num{0.077};[\num{0.059}, \num{0.097}];\num{1.00};\num{0.0020};\num{0.0156}
+Wide;SBS-R $-$ SBS;\num{0.002};[\num{-0.008}, \num{0.015}];\num{0.02};\num{0.8477};\num{0.8477}
+Wide;SBS $-$ FixedTour;\num{0.064};[\num{0.044}, \num{0.086}];\num{1.00};\num{0.0020};\num{0.0156}
+Wide;SBS $-$ SBS-Lex;\num{0.190};[\num{0.157}, \num{0.226}];\num{1.00};\num{0.0020};\num{0.0156}
+Wide;SBS-R $-$ FixedTour;\num{0.066};[\num{0.046}, \num{0.088}];\num{1.00};\num{0.0020};\num{0.0156}
+Narrow;SBS-R $-$ SBS;\num{0.003};[\num{-0.004}, \num{0.010}];\num{0.31};\num{0.3984};\num{0.7969}
+Narrow;SBS $-$ FixedTour;\num{0.087};[\num{0.065}, \num{0.112}];\num{1.00};\num{0.0020};\num{0.0156}
+Narrow;SBS $-$ SBS-Lex;\num{0.181};[\num{0.145}, \num{0.220}];\num{1.00};\num{0.0020};\num{0.0156}
+Narrow;SBS-R $-$ FixedTour;\num{0.091};[\num{0.070}, \num{0.112}];\num{1.00};\num{0.0020};\num{0.0156}

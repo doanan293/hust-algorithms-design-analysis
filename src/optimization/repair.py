@@ -2,22 +2,23 @@
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Mapping, Sequence
 
 import numpy as np
 
 from models.channel import BACKHAUL, LinkId
 from models.evaluate import EvaluationResult
 from models.ledger import Ledger
-from models.paths import CandidatePath
+from models.paths import BackhaulRoutes, CandidatePath
 from models.scenario import Alert, Scenario
 
 from .blocks import SearchState
+from .ledger_summary import LedgerSummary, congested_slots  # noqa: F401 (congested_slots is re-exported)
+from .path_moves import path_neighbours
 from .scoring import DesignScorer
 
 RISK_SLACK_SLOTS = 2
 AT_RISK_LIMIT = 10
-CONGESTION_TOLERANCE = 1e-6
 BUFFER_TOLERANCE_BITS = 1e-6
 
 
@@ -50,22 +51,9 @@ def bottleneck_hop(scenario: Scenario, alert: Alert, path: CandidatePath, transf
     return int(np.argmax((window > BUFFER_TOLERANCE_BITS).sum(axis=1)))
 
 
-def congested_slots(ledger: Ledger) -> dict[LinkId, set[int]]:
-    """Slots in which a link carried its whole recorded capacity (within 1e-6 relative)."""
-    carried: dict[tuple[int, LinkId], float] = defaultdict(float)
-    for slot, link, _, bits in ledger.transfers:
-        carried[(slot, link)] += bits
-    congested: dict[LinkId, set[int]] = defaultdict(set)
-    for slot, link, capacity in ledger.capacity_bits:
-        if carried.get((slot, link), 0.0) >= capacity * (1.0 - CONGESTION_TOLERANCE):
-            congested[link].add(slot)
-    return congested
-
-
 def assess_risk(
     scenario: Scenario,
-    candidates: Mapping[str, tuple[CandidatePath, ...]],
-    path_choice: Mapping[str, int | None],
+    paths: Mapping[str, CandidatePath | None],
     result: EvaluationResult,
     backlog: bool = True,
     slack_limit: int = RISK_SLACK_SLOTS,
@@ -75,7 +63,7 @@ def assess_risk(
     realizations = result.realizations
     ranked = []
     for alert in scenario.alerts:
-        if path_choice[alert.id] is None:
+        if paths[alert.id] is None:
             continue
         risky = sum(
             slack_slots(alert, item.delivery_slot[alert.id], item.timely[alert.id]) <= slack_limit for item in realizations
@@ -85,7 +73,7 @@ def assess_risk(
     ranked = sorted(ranked)[:limit]
     if not backlog:
         return [
-            AlertRisk(alert_id, -negative, candidates[alert_id][path_choice[alert_id]].links[0], frozenset())
+            AlertRisk(alert_id, -negative, paths[alert_id].links[0], frozenset())
             for negative, _, alert_id in ranked
         ]
     selected = {alert_id for _, _, alert_id in ranked}
@@ -103,7 +91,7 @@ def assess_risk(
     risks = []
     for negative, _, alert_id in ranked:
         alert = scenario.alert_by_id[alert_id]
-        path = candidates[alert_id][path_choice[alert_id]]
+        path = paths[alert_id]
         hops = Counter(bottleneck_hop(scenario, alert, path, by_alert[alert_id]) for by_alert in transfers)
         hop = min(hops, key=lambda item: (-hops[item], item))
         window = set(range(alert.release_slot, alert.deadline_slot))
@@ -121,39 +109,41 @@ def shift_bandwidth(
     return {**weights, link: values}
 
 
-def path_change_order(
-    candidates: Mapping[str, tuple[CandidatePath, ...]], risk: AlertRisk, current: int | None, backlog: bool = True
-) -> list[int]:
-    """Operation 2: other candidates by (congested links, cost_s, index); without backlog by (cost_s, index)."""
-    paths = candidates[risk.alert_id]
+def repair_order(neighbours: Sequence[CandidatePath | None], risk: AlertRisk, backlog: bool = True) -> list[CandidatePath]:
+    """Operation 2 order: served neighbours by (links in the congested set, cost_s); without backlog by cost_s only."""
+    paths = [path for path in neighbours if path is not None]
 
-    def order(index: int) -> tuple:
-        congested = sum(link in risk.congested_links for link in paths[index].links) if backlog else 0
-        return (congested, paths[index].cost_s, index)
+    def order(path: CandidatePath) -> tuple:
+        congested = sum(link in risk.congested_links for link in path.links) if backlog else 0
+        return (congested, path.cost_s, path.links)
 
-    return sorted((index for index in range(len(paths)) if index != current), key=order)
+    return sorted(paths, key=order)
 
 
 def repair_round(
     scenario: Scenario,
     candidates: Mapping[str, tuple[CandidatePath, ...]],
+    routes: BackhaulRoutes,
     scorer: DesignScorer,
     state: SearchState,
-    operation1: bool,
-    operation2: bool,
-    backlog: bool = True,
+    params: "SearchParams",
+    rng: np.random.Generator,
 ) -> bool:
-    """One detection call, then operation 1 and operation 2 per at-risk alert; at most 1 + R*K evaluations."""
+    """One detection call, then operation 1 and operation 2 per at-risk alert."""
     _, result = scorer.score_with_ledger(state.plan())
+    summary = LedgerSummary.from_result(result)
     accepted = False
-    for risk in assess_risk(scenario, candidates, state.path_choice, result, backlog):
+    for risk in assess_risk(scenario, state.paths, result, params.backlog):
         alert = scenario.alert_by_id[risk.alert_id]
-        if operation1 and risk.bottleneck[0] != BACKHAUL:
+        if params.operation1 and risk.bottleneck[0] != BACKHAUL:
             weights = shift_bandwidth(state.weights, risk.bottleneck, alert, scenario.time.num_slots)
             accepted |= state.try_change(scorer, weights=weights)
-        if operation2:
-            for index in path_change_order(candidates, risk, state.path_choice[alert.id], backlog):
-                if state.try_change(scorer, path_choice={**state.path_choice, alert.id: index}):
+        if params.operation2:
+            neighbours = path_neighbours(
+                scenario, alert, state.paths[alert.id], candidates, routes, state.trajectory, summary, rng, params.entry_neighbors
+            )
+            for path in repair_order(neighbours, risk, params.backlog):
+                if state.try_change(scorer, paths={**state.paths, alert.id: path}):
                     accepted = True
                     break
     return accepted

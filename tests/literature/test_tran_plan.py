@@ -32,8 +32,8 @@ def test_initial_iterate_converts_to_a_valid_static_plan(block_slots):
     candidates = candidate_paths(scenario)
     instance = build_instance(scenario, candidates, TranParams(block_slots=block_slots))
     plan = plan_from_iterate(instance, candidates, initial_iterate(instance))
-    assert validate_plan(scenario, candidates, plan) == []
-    assert plan.path_choice == {"alert-0000": 0, "alert-0001": 0, "alert-0002": 0}
+    assert validate_plan(scenario, plan) == []
+    assert plan.paths == {alert_id: candidates[alert_id][0] for alert_id in ("alert-0000", "alert-0001", "alert-0002")}
     access = sum(values for link, values in plan.bandwidth.bandwidth_hz.items() if link[0] == ACCESS)
     assert np.all(access <= 1e6 * (1.0 + 1e-9))
 
@@ -43,7 +43,7 @@ def test_tran_method_plans_validly_and_has_no_fixed_trajectory():
     candidates = candidate_paths(scenario)
     method = TranHD(params=TranParams(max_iterations=3))
     outcome = method.solve(scenario, candidates)
-    assert validate_plan(scenario, candidates, outcome.plan) == [] and validate_plan(scenario, candidates, outcome.initial_plan) == []
+    assert validate_plan(scenario, outcome.plan) == [] and validate_plan(scenario, outcome.initial_plan) == []
     assert outcome.penalty <= 0.0 and len(outcome.objectives) == outcome.iterations + 1
     assert np.array_equal(method.plan(scenario, candidates, EvaluationCounter()).trajectory, outcome.plan.trajectory)
     with pytest.raises(NotImplementedError):

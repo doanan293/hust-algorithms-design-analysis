@@ -84,6 +84,11 @@ def task_hash(task: Task, scenario_sha256: str, source_hash: str) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
+def paths_outside_candidates(plan: Plan, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> int:
+    """Alerts whose path is not one of their candidates; the bound (P2) only covers plans for which this is zero."""
+    return sum(path is not None and path not in candidates[alert_id] for alert_id, path in plan.paths.items())
+
+
 def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Method rows, plus trajectory bound rows for the planned trajectory when the spec asks for bounds."""
     scenario = load_scenario(Path(task.scenario_path))
@@ -93,10 +98,11 @@ def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dic
     started = time.perf_counter()
     plan = method.plan(scenario, candidates, counter)
     planning_s = time.perf_counter() - started
-    result = evaluate(scenario, plan, REALIZED, task.realization_ids, counter=counter, candidates=candidates)
+    result = evaluate(scenario, plan, REALIZED, task.realization_ids, counter=counter)
     if not result.feasible:
         raise ValueError(f"{task.key}: infeasible plan: {list(result.violations[:3])}")
     sources = len(scenario.sources)
+    outside = paths_outside_candidates(plan, candidates)
     without_uav = round(result.connectivity_ratio_without_uav * sources)
     rows = []
     for realization in result.realizations:
@@ -119,6 +125,7 @@ def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dic
                 "planning_runtime_s": planning_s,
                 "evaluation_runtime_s": result.runtime_s / len(task.realization_ids),
                 "evaluate_calls": counter.calls,
+                "paths_outside_candidates": outside,
             }
         )
     bound_rows = []
@@ -192,14 +199,14 @@ def run_crosscheck_task(task: CrosscheckTask) -> list[dict[str, object]]:
     milp = solve_milp(model, task.time_limit_s)
 
     def timely_count(plan: Plan) -> float:
-        evaluated = evaluate(scenario, plan, REALIZED, (task.realization_id,), candidates=candidates)
+        evaluated = evaluate(scenario, plan, REALIZED, (task.realization_id,))
         return float(sum(evaluated.realizations[0].timely.values())) if evaluated.feasible else math.nan
 
     static_value = equal_split_value = math.nan
     if milp.solution is not None:
         static_plan = plan_from_solution(scenario, candidates, model, milp.solution, trajectory)
         static_value = timely_count(static_plan)
-        equal_split_value = timely_count(Plan(trajectory, static_plan.path_choice, EqualSplitBacklogged()))
+        equal_split_value = timely_count(Plan(trajectory, static_plan.paths, EqualSplitBacklogged()))
     method = get_method(task.trajectory_method)
     method_value = timely_count(method.plan(scenario, candidates, EvaluationCounter()))
     return [

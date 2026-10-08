@@ -29,4 +29,4 @@ class B0:
             alert.id: next((index for index, path in enumerate(candidates[alert.id]) if path.kind == GROUND), None)
             for alert in scenario.alerts
         }
-        return Plan(self.trajectory(scenario), choice, EqualSplitBacklogged())
+        return Plan.from_choice(self.trajectory(scenario), candidates, choice, EqualSplitBacklogged())

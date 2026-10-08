@@ -35,7 +35,7 @@ class B1:
             alert.id: estimated_best_candidate(scenario, candidates, trajectory, channels, alert.id)
             for alert in scenario.alerts
         }
-        return Plan(trajectory, choice, EqualSplitBacklogged())
+        return Plan.from_choice(trajectory, candidates, choice, EqualSplitBacklogged())
 
 
 def estimated_best_candidate(
@@ -49,8 +49,8 @@ def estimated_best_candidate(
     alone = replace(scenario, alerts=(scenario.alert_by_id[alert_id],))
     best: tuple[int, int] | None = None
     for index in range(len(candidates[alert_id])):
-        plan = Plan(trajectory, {alert_id: index}, EqualSplitBacklogged())
-        slot = simulate(alone, candidates, plan, channels).delivery_slot[alert_id]
+        plan = Plan.from_choice(trajectory, candidates, {alert_id: index}, EqualSplitBacklogged())
+        slot = simulate(alone, plan, channels).delivery_slot[alert_id]
         if slot is not None and (best is None or slot < best[0]):
             best = (slot, index)
     return None if best is None else best[1]

@@ -3,16 +3,16 @@ import pytest
 
 from models.evaluate import EXPECTED, evaluate
 from models.ledger import Ledger
-from models.paths import CandidatePath, candidate_paths
+from models.paths import CandidatePath, backhaul_routes, candidate_paths
 from models.plan import EqualSplitBacklogged, Plan, stationary_trajectory
 from models.scenario import scenario_from_dict
+from optimization.bcd import SearchParams
 from optimization.blocks import SearchState, unit_weights
 from optimization.repair import (
     AlertRisk,
     assess_risk,
     bottleneck_hop,
     congested_slots,
-    path_change_order,
     repair_round,
     shift_bandwidth,
     slack_slots,
@@ -66,59 +66,60 @@ def test_operation1_doubles_weights_only_inside_the_alert_window():
     assert all(shifted[link] is weights[link] for link in weights if link != ACCESS_LINK)
 
 
-def test_operation2_orders_candidates_by_congestion_then_cost():
-    downlink = ("downlink", "uav", "n1")
-    paths = (
+def test_operation2_orders_neighbours_by_congestion_then_cost():
+    from optimization.repair import repair_order
+
+    downlink = ("down", "UAV", "n1")
+    paths = [
         CandidatePath("ground", "n1", (ACCESS_LINK, BACKHAUL_LINK), 0.1),
-        CandidatePath("ground", "n1", (ACCESS_LINK, BACKHAUL_LINK), 1.0),
         CandidatePath("ground", "n2", (("access", "s00", "n2"), ("backhaul", "n2", "n0")), 5.0),
-        CandidatePath("uav", "n1", (("access", "s00", "uav"), downlink, BACKHAUL_LINK), 0.5),
-    )
-    candidates = {"alert-0000": paths}
+        CandidatePath("uav", "n1", (("access", "s00", "UAV"), downlink, BACKHAUL_LINK), 0.5),
+        None,
+    ]
     risk = AlertRisk("alert-0000", 1.0, ACCESS_LINK, frozenset({ACCESS_LINK, BACKHAUL_LINK}))
-    assert path_change_order(candidates, risk, 0) == [2, 3, 1]
-    assert path_change_order(candidates, risk, None) == [2, 3, 0, 1]
-    assert path_change_order(candidates, risk, 0, backlog=False) == [3, 1, 2]
+    assert repair_order(paths, risk, backlog=True) == [paths[1], paths[2], paths[0]]
+    assert repair_order(paths, risk, backlog=False) == [paths[0], paths[2], paths[1]]
 
 
 def _hopeless_result(keep_ledger=True):
     scenario = scenario_from_dict(hopeless_raw())
     candidates = candidate_paths(scenario)
-    choice = {"alert-0000": 0, "alert-0001": 0}
+    choice = {"alert-0000": candidates["alert-0000"][0], "alert-0001": candidates["alert-0001"][0]}
     plan = Plan(stationary_trajectory(scenario), choice, EqualSplitBacklogged())
-    return scenario, candidates, choice, evaluate(scenario, plan, EXPECTED, candidates=candidates, keep_ledger=keep_ledger)
+    return scenario, candidates, choice, evaluate(scenario, plan, EXPECTED, keep_ledger=keep_ledger)
 
 
 def test_risk_ranks_served_alerts_and_finds_backhaul_bottlenecks():
     scenario, candidates, choice, result = _hopeless_result()
-    risks = assess_risk(scenario, candidates, choice, result)
+    risks = assess_risk(scenario, choice, result)
     assert [(item.alert_id, item.risk, item.bottleneck) for item in risks] == [
         ("alert-0000", 1.0, BACKHAUL_LINK),
         ("alert-0001", 1.0, ACCESS_LINK),
     ]
     assert BACKHAUL_LINK in risks[0].congested_links
-    assert [item.alert_id for item in assess_risk(scenario, candidates, choice, result, limit=1)] == ["alert-0000"]
-    unserved = {"alert-0000": None, "alert-0001": 0}
-    assert [item.alert_id for item in assess_risk(scenario, candidates, unserved, result)] == ["alert-0001"]
+    assert [item.alert_id for item in assess_risk(scenario, choice, result, limit=1)] == ["alert-0000"]
+    unserved = {**choice, "alert-0000": None}
+    assert [item.alert_id for item in assess_risk(scenario, unserved, result)] == ["alert-0001"]
 
 
 def test_no_backlog_risk_ignores_ledgers_and_targets_the_first_radio_hop():
     scenario, candidates, choice, result = _hopeless_result(keep_ledger=False)
-    risks = assess_risk(scenario, candidates, choice, result, backlog=False)
+    risks = assess_risk(scenario, choice, result, backlog=False)
     assert [(item.alert_id, item.bottleneck, item.congested_links) for item in risks] == [
         ("alert-0000", ACCESS_LINK, frozenset()),
         ("alert-0001", ACCESS_LINK, frozenset()),
     ]
     with pytest.raises(ValueError, match="ledgers"):
-        assess_risk(scenario, candidates, choice, result)
+        assess_risk(scenario, choice, result)
 
 
 def test_operation1_is_skipped_for_backhaul_bottlenecks():
     scenario = scenario_from_dict(hopeless_raw())
     candidates = candidate_paths(scenario)
-    scorer = DesignScorer(scenario, candidates, design_ids=(), budget=50)
-    state = SearchState(stationary_trajectory(scenario), {"alert-0000": 0, "alert-0001": 0}, unit_weights(scenario, candidates))
+    scorer = DesignScorer(scenario, design_ids=(), budget=50)
+    state = SearchState(stationary_trajectory(scenario), {alert_id: paths[0] for alert_id, paths in candidates.items()}, unit_weights(scenario, candidates))
     state.key = scorer.score(state.plan())
-    assert not repair_round(scenario, candidates, scorer, state, operation1=True, operation2=False)
+    params = SearchParams(operation1=True, operation2=False, design_ids=(), budget=50)
+    assert not repair_round(scenario, candidates, backhaul_routes(scenario), scorer, state, params, np.random.default_rng(0))
     # initial score, one detection call, and operation 1 for alert-0001 only: alert-0000 waits on the backhaul
     assert scorer.calls == 3

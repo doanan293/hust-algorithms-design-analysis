@@ -53,3 +53,24 @@ def test_radio_links_and_ground_connected_fraction(raw_scenario):
     assert ("access", "s00", "n1") in links
     assert all(link[0] != "backhaul" for link in links)
     assert ground_connected_source_fraction(scenario) == 0.5
+
+
+def test_radio_links_of_paths_skips_backhaul_and_unserved(raw_scenario):
+    from models.paths import radio_links_of_paths
+
+    scenario = scenario_from_dict(raw_scenario)
+    paths = candidate_paths(scenario)["alert-0000"]
+    links = radio_links_of_paths({"alert-0000": paths[2], "alert-0001": None})
+    assert links == (("access", "s00", "UAV"), ("down", "UAV", "n1"))
+
+
+def test_backhaul_routes_honour_exclusions(raw_scenario):
+    from models.paths import backhaul_routes
+
+    raw_scenario["network"]["edges"].append({"source": "n3", "target": "n2", "failed": False, "capacity_bps": 1000000.0})
+    scenario = scenario_from_dict(raw_scenario)
+    assert dict(backhaul_routes(scenario).next_hop) == {"n1": "n0", "n2": "n0", "n3": "n1"}
+    detour = backhaul_routes(scenario, excluded_edges=frozenset({frozenset(("n1", "n0"))}))
+    assert detour.route_links("n1") == (("backhaul", "n1", "n3"), ("backhaul", "n3", "n2"), ("backhaul", "n2", "n0"))
+    blocked = backhaul_routes(scenario, excluded_edges=frozenset({frozenset(("n1", "n0"))}), excluded_nodes=frozenset({"n2"}))
+    assert "n1" not in blocked.hop_count

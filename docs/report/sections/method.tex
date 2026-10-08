@@ -1,7 +1,7 @@
 \section{Proposed Algorithm}
 \label{sec:method}
 
-This section presents the proposed sample-scored block search, which we denote SBS, and its schedule-repair variant SBS-R. Both methods take a scenario and its candidate paths as input and output a plan $(q,x,w)$: a trajectory, a path selection, and bandwidth weights. \Cref{fig:pipeline} summarizes the pipeline. We first explain why the blocks are not solved as convex subproblems, then introduce the two ingredients shared by all blocks, namely the weighted bandwidth rule and the design scorer, and finally describe the blocks of SBS, the repair loop of SBS-R, and a leximin variant used to isolate the effect of the objective.
+This section presents the proposed sample-scored block search, which we denote SBS, and its schedule-repair variant SBS-R. Both methods take a scenario as input and output a plan $(q,\pi,w)$: a trajectory, a path $\pi_a$ for every alert (or none), and bandwidth weights. The candidate set of \cref{sec:model} only provides the initial plan; during the search, paths are generated from the current plan and may leave the candidate set. \Cref{fig:pipeline} summarizes the pipeline. We first explain why the blocks are not solved as convex subproblems, then introduce the two ingredients shared by all blocks, namely the weighted bandwidth rule and the design scorer, and finally describe the blocks of SBS, the repair loop of SBS-R, and a leximin variant used to isolate the effect of the objective.
 
 \begin{figure}[htbp]
 \centering
@@ -11,13 +11,13 @@ This section presents the proposed sample-scored block search, which we denote S
     io/.style={draw=black!70, fill=black!5, text width=4.6cm, minimum height=0.85cm, align=center, font=\footnotesize},
     sc/.style={draw=green!40!black, rounded corners=2pt, fill=green!8, text width=4.2cm, align=center, font=\footnotesize, inner sep=5pt}]
   \node[io] (init) {Initial plan\\FixedTour trajectory, $w\equiv 1$};
-  \node[blk, below=0.8cm of init] (path) {Path block\\$x$: skip or each candidate};
+  \node[blk, below=0.8cm of init] (path) {Path block\\neighbors of the current path $\pi_a$};
   \node[blk, below=of path] (bw) {Bandwidth block\\$w_e\gets 2w_e$ or $w_e/2$};
-  \node[blk, below=of bw] (traj) {Trajectory block\\tour from the feasible family};
+  \node[blk, below=of bw] (traj) {Trajectory block\\shift a segment of $q$};
   \node[rep, below=of traj] (repair) {Risk-driven repair (SBS-R only)};
   \node[io, below=0.6cm of repair] (out) {Plan $(q,x,w)$};
   \node[sc, right=1.0cm of bw] (scorer) {\textbf{Design scorer}\\EDF simulation on $M_d=5$ design realizations; lexicographic key \eqref{eq:objective}; one call $=$ one evaluation};
-  \node[sc, right=1.0cm of out, fill=black!5, draw=black!70] (eval) {Out-of-sample evaluation on $M=30$ realizations; LP bound on $q$};
+  \node[sc, right=1.0cm of out, fill=black!5, draw=black!70] (eval) {Out-of-sample evaluation on $M=30$ realizations; LP bound on $q$ over the candidate set};
   \node[sc, left=1.2cm of out, text width=3.8cm, fill=yellow!10, draw=black!50] (rule) {Accept a change only if the key increases strictly; stop when a round accepts nothing or the budget $E$ is spent};
   \draw[->] (init) -- (path);
   \draw[->] (path) -- (bw);
@@ -40,7 +40,7 @@ This section presents the proposed sample-scored block search, which we denote S
 \subsection{Design Rationale}
 \label{sec:algorithm}
 
-We keep the three-block structure of~\cite{huang2025ddatsap} but do not solve each block as a convex problem, a choice motivated by three preliminary tests on six evaluation scenarios with ten realizations each. When the bandwidths of the solution of Problem (P2) were used as a static schedule, the timely-delivery ratio fell from \num{0.410} for the fixed-trajectory baseline FixedTour to \num{0.128}; used as bandwidth-sharing weights, they reached \num{0.404}, and paths taken from the solution of (P2) reached \num{0.412}. Guidance from the LP therefore does not carry over to the EDF scheduler, and under the PrLoS channel the trajectory block admits no valid convex surrogate for an objective that counts alerts. Local search scored by the evaluator itself, by contrast, raised the ratio to \num{0.427} when scoring on expected rates and to \num{0.449} when scoring on five sampled realizations, while scoring on expected rates even lowered one scenario from \num{0.372} to \num{0.305}. We therefore implement each block as an evaluated local-search step. Compared with a surrogate-based decomposition, this design measures every accepted change on the exact objective and scheduler used for evaluation, and it requires only samples of the channel rather than a convex surrogate of it.
+We keep the three-block structure of~\cite{huang2025ddatsap} but do not solve each block as a convex problem, a choice motivated by three preliminary tests on six evaluation scenarios with ten realizations each. When the bandwidths of the solution of Problem (P2) were used as a static schedule, the timely-delivery ratio fell from \num{0.410} for the fixed-trajectory baseline FixedTour to \num{0.128}; used as bandwidth-sharing weights, they reached \num{0.404}, and paths taken from the solution of (P2) reached \num{0.412}. Guidance from the LP therefore does not carry over to the EDF scheduler, and under the PrLoS channel the trajectory block admits no valid convex surrogate for an objective that counts alerts. Search scored by the evaluator itself, by contrast, raised the ratio to \num{0.427} when scoring on expected rates and to \num{0.449} when scoring on five sampled realizations, while scoring on expected rates even lowered one scenario from \num{0.372} to \num{0.305}. We therefore implement each block as an evaluated local search: the block generates neighbors of the current plan by changing a small part of it, scores each neighbor, and keeps it only if the score improves. Compared with a surrogate-based decomposition, this design measures every accepted change on the exact objective and scheduler used for evaluation, and it requires only samples of the channel rather than a convex surrogate of it.
 
 \subsection{Plan Representation and Design Scoring}
 \label{sec:weights}
@@ -99,60 +99,91 @@ The search never uses the evaluation realizations. It scores a plan on $M_d=5$ d
 
 The true objective is the expectation of the lexicographic key over the channel distribution. Summing the key over $M_d$ design realizations is a sample average approximation (SAA) of this expectation with sample size $M_d=5$, whereas scoring on expected rates corresponds to the deterministic equivalent problem. Because design and evaluation realizations come from different random streams, all reported timely-delivery ratios are out-of-sample estimates. Our experiments on the number of design realizations examine the sample size of this SAA.
 
-\subsection{Block Search and Schedule Repair}
+\subsection{Block Search}
 \label{sec:b2}
-SBS starts from the plan of FixedTour with all weights equal to $1$ and performs at most ten rounds of three blocks. The path block visits the alerts in increasing order of deadline and tries, in turn, leaving each alert unserved and assigning it to each of its candidates. The bandwidth block visits the radio links in use in decreasing order of the total size of the alerts they carry and tries to multiply all weights of a link by $2$, or by $1/2$ if doubling is rejected. The trajectory block scans the family of tours illustrated in \cref{fig:tours}, which are feasible by construction: the UAV leaves the center, flies in straight lines at speed $V_{\max}$ through an ordered subset of the damage zones, hovers at each stop, and returns. The remaining time is split among the stops equally, in proportion to the number of alerts of each zone, or in proportion to the sum of $1/(d_a-r_a)$ over the zone, and each stop is either the zone center or the centroid of the sources in the zone. With three zones, the family contains at most $90$ tours, including the trajectory of FixedTour. The search stops when a round accepts no change. Restricting the trajectory to this family gives up the continuous freedom of SCA-based trajectory design, but in return every candidate tour satisfies \eqref{eq:mobility} and can be evaluated directly on the exact objective.
+SBS starts from the plan of FixedTour with all weights equal to $1$ and performs at most ten rounds of three blocks. Each block changes one part of the current plan while the other two are held fixed, and every change is scored and accepted only if the key increases strictly. The path and trajectory blocks begin with one ledger evaluation of the current plan on the design realizations, which records, for every link and slot, the transmitted bits and whether the link carried its full capacity. These records make the neighbors depend on the current trajectory and bandwidth: a path is rerouted around the links that the current plan congests, and the trajectory is moved toward the radio links that are short of capacity. All random choices use one generator seeded by the scenario, so a run is reproducible.
+
+\paragraph{Path block.} The block visits the alerts in a random order drawn without replacement with probability proportional to $1/(d_a-r_a)$, so urgent alerts tend to come first while successive rounds explore different orders; with a limited budget, this order spends evaluations first where a deadline is most at risk. For alert $a$ with current path $\pi_a$, the block tries the following neighbors in turn, illustrated in \cref{fig:moves}(a).
+\begin{itemize}
+\item \emph{Kind switch:} the same drop node with the other kind of first hop, i.e., a ground path becomes a UAV path and vice versa. A ground path is generated only if the source is within ground range of the node, and only for sources that reach some relay over the ground at all, so a source isolated from the ground network keeps UAV paths only.
+\item \emph{Entry switch:} the same kind of path through another entry node $v$, followed by its minimum-hop backhaul route. Each reachable node receives an estimated completion time
+\begin{equation}
+\label{eq:entry-time}
+T_a(v)=T^{\mathrm{acc}}_a(v)+\sum_{e\in\mathrm{route}(v)}\Bigl(\frac{L_a}{\hat C_e}+\Delta\Bigr),
+\end{equation}
+\noindent where $\hat C_e$ is the capacity of backhaul edge $e$ minus the rate it carries in the current plan during $[r_a,d_a)$, averaged over the design realizations and floored at $C_e/1000$, and $T^{\mathrm{acc}}_a(v)$ is the ground transmission time of $L_a$ for a ground path or the mean distance from the UAV's current positions in $[r_a,d_a)$ to $v$ divided by $V_{\max}$ for a UAV path. The block draws $M_e=3$ entry nodes without replacement with probability proportional to $1/T_a(v)$ and tries them in increasing $T_a(v)$, which favors nearby relays with spare backhaul without excluding the others.
+\item \emph{Backhaul detour:} the backhaul edge $(u,v)$ of $\pi_a$ that the current plan congests in the most slots of $[r_a,d_a)$ is removed, and the path is continued from $u$ by a minimum-hop route to $c$ that avoids $(u,v)$ and the nodes of $\pi_a$ before $u$. The part of $\pi_a$ up to $u$ is kept. No detour is generated when $\pi_a$ crosses no congested edge or when no such route exists.
+\item \emph{Skip:} the alert is left unserved, which frees capacity for the others.
+\end{itemize}
+An alert that is currently unserved tries its candidate paths instead. Every generated path is a loop-free route from $s_a$ to $c$ over surviving edges, so the neighborhood stays within the feasible set while reaching paths that are not in the candidate set.
+
+\paragraph{Bandwidth block.} The block visits the radio links in use in decreasing order of the total size of the alerts they carry and tries to multiply all weights of a link by $2$, or by $1/2$ if doubling is rejected. A radio link that enters the plan through a new path starts with weight $1$.
+
+\paragraph{Trajectory block.} The block moves a segment $q[i],\dots,q[j]$ of the current trajectory, $1\le i\le j\le N-1$, by a common displacement $\lambda u$ with a unit direction $u$, as illustrated in \cref{fig:moves}(b). The steps inside the segment are unchanged, so constraint \eqref{eq:mobility} only restricts the two boundary steps, and the largest feasible displacement is
+\begin{equation}
+\label{eq:shift}
+\lambda^\star=\max\bigl\{\lambda\ge 0:\ \norm{q[i]+\lambda u-q[i-1]}\le V_{\max}\Delta,\ \norm{q[j]+\lambda u-q[j+1]}\le V_{\max}\Delta\bigr\},
+\end{equation}
+\noindent obtained in closed form from two quadratic inequalities. When $\lambda^\star=0$ because a boundary lies on a segment flown at full speed, the segment is widened by one slot on each side, at most ten times. The segments come from the ledger evaluation: for every radio link between the UAV and a ground point $k$, the priority of slot $n$ is the number of design realizations in which the link is saturated at $n$, multiplied by $\sum_a L_a/(d_a-r_a)$ over the alerts on the link whose window contains $n$. Consecutive slots with positive priority form a segment, $u$ points from the centroid of the segment toward $k$, and the block draws $W=5$ segments with probability proportional to their total priority. Each drawn segment is tried with $\lambda=\lambda^\star$ and then with $\lambda^\star/2$. In the example of \cref{fig:moves}(b), the UAV hovers between two sources whose uplinks share the access band; if the alert of $s_1$ is larger or more urgent, its uplink accumulates more priority and the segment is pulled toward $s_1$. To keep moves that change the zone order available, the block also tries, with probability $0.1$ per round, one tour drawn uniformly from a family of up to $90$ feasible tours, which visit an ordered subset of the damage zones in straight lines at speed $V_{\max}$, hover at the zone centers or the centroids of their sources, and split the remaining time among the stops equally, in proportion to the number of alerts of each zone, or in proportion to $\sum_a 1/(d_a-r_a)$ over the zone. Every trajectory produced by the block satisfies \eqref{eq:mobility} by construction.
 
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[x=1cm, y=1cm, >={Stealth[length=1.8mm]},
-    zone/.style={circle, fill=red!8, draw=red!40, minimum size=1.5cm},
-    ctr/.style={rectangle, fill=black!75, minimum size=6pt, inner sep=0pt},
-    src/.style={regular polygon, regular polygon sides=3, fill=orange!60, draw=red!60!black, inner sep=0.8pt},
-    stopc/.style={circle, fill=blue!65!black, inner sep=1.6pt},
-    stopg/.style={cross out, draw=blue!65!black, thick, inner sep=1.8pt},
     lbl/.style={font=\footnotesize, align=center},
-    small/.style={font=\scriptsize, align=center}]
-  \foreach \ox/\title in {0/{(a) Tour of FixedTour}, 7.6/{(b) Other tours in the family}} {
-    \begin{scope}[shift={(\ox,0)}]
-      \node[lbl] at (3.0,4.0) {\title};
-      \node[zone] (Z1) at (1.4,2.6) {};
-      \node[zone] (Z2) at (4.6,3.0) {};
-      \node[zone] (Z3) at (4.0,0.6) {};
-      \node[small, text=red!60!black] at (0.45,3.35) {$Z_1$};
-      \node[small, text=red!60!black] at (5.65,3.65) {$Z_2$};
-      \node[small, text=red!60!black] at (5.05,0.0) {$Z_3$};
-      \foreach \p in {(1.1,2.9),(1.7,2.3),(1.6,2.9),(4.3,3.3),(4.9,2.7),(4.4,2.75),(3.7,0.4),(4.3,0.85),(4.25,0.35),(3.85,0.9)} \node[src] at \p {};
-      \node[ctr] (c) at (0.6,0.4) {};
-      \node[small, anchor=north] at (0.6,0.25) {center $c$};
-    \end{scope}
-  }
-  % (a) nearest-neighbor tour through all zone centers, equal hover
-  \draw[->, blue!65!black, thick] (0.6,0.4) -- (1.4,2.6);
-  \draw[->, blue!65!black, thick] (1.4,2.6) -- (4.6,3.0);
-  \draw[->, blue!65!black, thick] (4.6,3.0) -- (4.0,0.6);
-  \draw[->, blue!65!black, thick] (4.0,0.6) -- (0.6,0.4);
-  \foreach \p in {(1.4,2.6),(4.6,3.0),(4.0,0.6)} \node[stopc] at \p {};
-  \node[small, text width=5.6cm] at (3.0,-0.75) {nearest-neighbor order, zone centers,\\equal hover time at every stop};
-  % (b) two alternative tours
-  \begin{scope}[shift={(7.6,0)}]
-    \draw[->, blue!65!black, thick] (0.6,0.4) -- (4.05,0.62);
-    \draw[->, blue!65!black, thick] (4.05,0.62) -- (4.55,2.95);
-    \draw[->, blue!65!black, thick] (4.55,2.95) -- (0.6,0.4);
-    \node[stopg] at (4.05,0.62) {};
-    \node[stopg] at (4.55,2.95) {};
-    \draw[->, green!45!black, thick, dashed] (0.6,0.4) -- (1.45,2.7);
-    \draw[->, green!45!black, thick, dashed] (1.45,2.7) -- (0.6,0.4);
-    \node[stopc, fill=green!45!black] at (1.45,2.7) {};
-    \node[small, text width=6.4cm] at (3.0,-0.75) {\textcolor{blue!65!black}{ordered subset $(Z_3,Z_2)$, source centroids ($\times$), hover $\propto$ number of alerts}; \textcolor{green!45!black}{subset $(Z_1)$, zone center, hover $\propto\sum 1/(d_a-r_a)$}};
+    small/.style={font=\scriptsize, align=center},
+    nd/.style={circle, draw=black!70, fill=black!12, inner sep=1.5pt},
+    src/.style={regular polygon, regular polygon sides=3, fill=orange!60, draw=red!60!black, inner sep=0.8pt},
+    ctr/.style={rectangle, fill=black!75, minimum size=6pt, inner sep=0pt},
+    pt/.style={circle, fill=blue!65!black, inner sep=1.3pt},
+    newpt/.style={circle, fill=green!45!black, inner sep=1.3pt}]
+  % (a) path neighbors
+  \node[lbl] at (3.0,4.1) {(a) Neighbors of the path of alert $a$};
+  \node[src] (s) at (0.2,1.6) {}; \node[small, anchor=east] at (0.05,1.6) {$s_a$};
+  \node[draw=blue!65!black, fill=blue!10, rounded corners=2pt, font=\scriptsize, inner sep=2pt] (uav) at (1.4,3.3) {UAV};
+  \node[nd] (v1) at (1.5,1.6) {}; \node[small, anchor=north] at (1.5,1.45) {$v$};
+  \node[nd] (u) at (3.2,1.6) {}; \node[small, anchor=north] at (3.2,1.45) {$u$};
+  \node[nd] (w) at (3.9,0.4) {};
+  \node[nd] (v2) at (2.6,3.0) {}; \node[small, anchor=south] at (2.6,3.1) {$v'$};
+  \node[ctr] (c) at (5.4,1.6) {}; \node[small, anchor=west] at (5.5,1.6) {$c$};
+  \draw[->, black!70, thick] (s) -- (v1);
+  \draw[->, black!70, thick] (v1) -- (u);
+  \draw[->, red!70!black, line width=1.6pt] (u) -- node[below, small, text=red!70!black] {congested} (c);
+  \draw[->, green!45!black, dashed, thick] (u) -- (w);
+  \draw[->, green!45!black, dashed, thick] (w) -- (c);
+  \draw[->, blue!65!black, dashed] (s) -- (uav);
+  \draw[->, blue!65!black, dashed] (uav) -- (v1);
+  \draw[->, violet!70!black, dotted, thick] (s) to[bend left=10] (v2);
+  \draw[->, violet!70!black, dotted, thick] (v2) -- (c);
+  \node[small, text width=6.2cm, anchor=north] at (3.0,-0.2) {current path $s_a\to v\to u\to c$ (solid); \textcolor{blue!65!black}{kind switch} via the UAV to $v$; \textcolor{violet!70!black}{entry switch} to $v'$ drawn by $1/T_a(v')$; \textcolor{green!45!black}{detour} around the congested edge from $u$; skip};
+  % (b) segment shift
+  \begin{scope}[shift={(7.4,0)}]
+    \node[lbl] at (3.2,4.1) {(b) Shift of a trajectory segment};
+    \node[src] (s1) at (5.6,3.2) {}; \node[small, anchor=west] at (5.75,3.2) {$s_1$};
+    \node[src] (s2) at (5.6,0.2) {}; \node[small, anchor=west] at (5.75,0.2) {$s_2$};
+    \foreach \x/\n in {0.4/0,1.4/1,2.4/2} \node[pt] (p\n) at (\x,1.4) {};
+    \node[pt] (p3) at (3.3,1.4) {}; \node[pt] (p4) at (4.0,1.4) {}; \node[pt] (p5) at (4.7,1.4) {};
+    \draw[blue!65!black] (p0) -- (p1) -- (p2) -- (p3) -- (p4) -- (p5);
+    \node[small, anchor=north] at (2.4,1.25) {$q[i-1]$};
+    \node[small, anchor=north] at (4.7,1.25) {$q[j+1]$};
+    \draw[black!40, dashed] (2.4,1.4) circle (1.0);
+    \draw[black!40, dashed] (4.7,1.4) circle (1.0);
+    \node[newpt] (n3) at (3.3,2.0) {}; \node[newpt] (n4) at (4.0,2.0) {};
+    \draw[green!45!black, thick] (p2) -- (n3) -- (n4) -- (p5);
+    \draw[->, green!45!black] (3.65,1.45) -- node[left, small, text=green!45!black] {$\lambda u$} (3.65,1.95);
+    \draw[->, orange!70!black, dashed] (n4) -- (s1);
+    \draw[->, orange!70!black, dashed, black!30] (p4) -- (s2);
+    \node[small, text width=6.4cm, anchor=north] at (3.2,-0.2) {the segment $q[i..j]$ (here two points) moves by $\lambda u$ toward the source whose saturated uplink has the highest priority; the dashed circles of radius $V_{\max}\Delta$ around $q[i-1]$ and $q[j+1]$ bound $\lambda$ by \eqref{eq:shift}};
   \end{scope}
 \end{tikzpicture}
-\caption{Family of feasible tours scanned by the trajectory block.}
-\label{fig:tours}
+\caption{Neighborhoods of the path block and the trajectory block.}
+\label{fig:moves}
 \end{figure}
 
+The search stops when a round accepts no change or the budget is spent. Compared with SCA-based trajectory design, the trajectory block gives up the gradient of a convex surrogate, but every move it makes is feasible and evaluated on the exact objective; compared with scanning a fixed family of tours, the moves follow the incumbent and the current congestion of the plan, which lets the UAV settle at positions that no predefined tour contains.
+
+\subsection{Schedule Repair}
 \label{sec:repair}
-The blocks of SBS change one decision at a time without regard to which alerts are about to miss their deadlines. SBS-R targets these alerts directly by adding a repair loop after the trajectory block of every round, as illustrated in \cref{fig:repair}. A ledger evaluation of the current plan records, for each alert and design realization, its slack $d_a-1-t_a$, where $t_a$ is the completion slot and the slack is set to $-1$ for late alerts, together with the hop that holds the alert's data for the most slots and the links whose capacity is exhausted. The risk of an alert is the fraction of design realizations in which it is late or has a slack of at most $\theta=2$ slots, and the loop considers at most $R=10$ alerts with the highest risk. If the bottleneck hop of such an alert is a radio link, Operator~1 doubles its weight within the slots $[r_a,d_a)$ only, which moves bandwidth from the other links of the same phase to this alert. Operator~2 tries the other candidates of the alert, ranked first by the number of congested links in its window and then by estimated cost, and accepts the first one that increases the key. All operators share the budget with the three blocks, so SBS-R and SBS have the same maximum number of evaluations. The mechanism follows the destroy-and-repair principle of large neighborhood search~\cite{ropke2006alns}.
+The blocks of SBS change one decision at a time without regard to which alerts are about to miss their deadlines. SBS-R targets these alerts directly by adding a repair loop after the trajectory block of every round, as illustrated in \cref{fig:repair}. A ledger evaluation of the current plan records, for each alert and design realization, its slack $d_a-1-t_a$, where $t_a$ is the completion slot and the slack is set to $-1$ for late alerts, together with the hop that holds the alert's data for the most slots and the links whose capacity is exhausted. The risk of an alert is the fraction of design realizations in which it is late or has a slack of at most $\theta=2$ slots, and the loop considers at most $R=10$ alerts with the highest risk. If the bottleneck hop of such an alert is a radio link, Operator~1 doubles its weight within the slots $[r_a,d_a)$ only, which moves bandwidth from the other links of the same phase to this alert. Operator~2 generates the neighbors of the alert's path as in the path block, ranks them first by the number of congested links in the alert's window and then by estimated cost, and accepts the first one that increases the key. All operators share the budget with the three blocks, so SBS-R and SBS have the same maximum number of evaluations. The mechanism follows the destroy-and-repair principle of large neighborhood search~\cite{ropke2006alns}.
 
 \begin{figure}[htbp]
 \centering
@@ -189,7 +220,7 @@ The blocks of SBS change one decision at a time without regard to which alerts a
     \draw[->, black!60] (u) -- (c);
     \draw[->, green!45!black, dashed, thick] (s) -- (v);
     \draw[->, green!45!black, dashed, thick] (v) -- (c);
-    \node[small, text width=6.6cm, anchor=north] at (3.2,-0.8) {\textcolor{red!70!black}{Operator 1}: double the weight of the bottleneck hop only within $[r_a,d_a)$;\\ \textcolor{green!45!black}{Operator 2}: switch to another candidate, ranked by congested links, then cost};
+    \node[small, text width=6.6cm, anchor=north] at (3.2,-0.8) {\textcolor{red!70!black}{Operator 1}: double the weight of the bottleneck hop only within $[r_a,d_a)$;\\ \textcolor{green!45!black}{Operator 2}: switch to a neighbor path, ranked by congested links, then cost};
   \end{scope}
 \end{tikzpicture}
 \caption{Risk-driven schedule repair in SBS-R: (a)~risk detection; (b)~repair operators.}
@@ -205,28 +236,28 @@ The blocks of SBS change one decision at a time without regard to which alerts a
 \caption{Sample-scored block search with schedule repair.}
 \label{alg:bcd-repair}
 \begin{algorithmic}[1]
-\Require Scenario, candidate set, design realizations, budget $E$, maximum rounds $I_{\max}=10$
-\Ensure Trajectory $q$, path selection $x$, bandwidth weights $w$
-\State $(q,x)\gets$ plan of FixedTour; $w\gets 1$; $\kappa\gets$ key of $(q,x,w)$
+\Require Scenario, candidate set, design realizations, budget $E$, maximum rounds $I_{\max}=10$, seed
+\Ensure Trajectory $q$, paths $\pi$, bandwidth weights $w$
+\State $(q,\pi)\gets$ plan of FixedTour; $w\gets 1$; $\kappa\gets$ key of $(q,\pi,w)$
 \For{$i=1,\dots,I_{\max}$}
-    \State Path block: for each alert in deadline order, try skipping it and each candidate
+    \State Path block: ledger evaluation; for each alert in urgency-weighted random order, try its kind switch, $M_e$ entry switches drawn by $1/T_a(v)$, the detour around its most congested backhaul edge, and skipping it
     \State Bandwidth block: for each link in use, try $w_e\gets 2w_e$, then $w_e\gets w_e/2$
-    \State Trajectory block: try each tour in the family of feasible tours
+    \State Trajectory block: ledger evaluation; draw $W$ segments by priority and try each shift with $\lambda^\star$, then $\lambda^\star/2$; with probability $0.1$ try one tour of the feasible tour family
     \If{repair is enabled}
         \State Ledger evaluation; select at most $R$ alerts with the highest deadline risk
         \ForAll{at-risk alerts $a$}
             \State Operator 1: double the weight of the bottleneck hop within $[r_a,d_a)$
-            \State Operator 2: try other candidates by number of congested links, then by cost
+            \State Operator 2: try neighbor paths by number of congested links, then by cost
         \EndFor
     \EndIf
     \State Accept each trial iff the key increases strictly; stop as soon as the budget $E$ is spent
     \If{no change was accepted in this round} \textbf{break} \EndIf
 \EndFor
-\State \Return $(q,x,w)$
+\State \Return $(q,\pi,w)$
 \end{algorithmic}
 \end{algorithm}
 
-One round uses at most $(K+1)\abs{A}+2\abs{\mathcal L_{\mathrm{used}}}+90$ evaluations for the three blocks plus $1+RK$ for the repair loop of SBS-R, where $\mathcal L_{\mathrm{used}}$ is the set of radio links in use. Each evaluation costs $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, and risk detection scans the ledger in $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$, where $T$ is the number of transmission records. The budget caps the total number of evaluations, so the planning time of SBS, SBS-Lex, and SBS-R is $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, independent of the actual number of rounds. The method only guarantees that the key of the plan does not decrease; it does not guarantee optimality, and the LP bound (P2), solved on the trajectory chosen by each method, measures the remaining room for improvement.
+One round uses at most $1+(M_e+3)\abs{A}$ evaluations for the path block, $2\abs{\mathcal L_{\mathrm{used}}}$ for the bandwidth block, and $2+2W$ for the trajectory block, plus $1+R(M_e+3)$ for the repair loop of SBS-R, where $\mathcal L_{\mathrm{used}}$ is the set of radio links in use. Generating the neighbors of one alert takes $O\bigl(\abs{V}(\abs{V}+\abs{E})\bigr)$ time for the routes, and drawing the segments takes $O(N\abs{\mathcal L_{\mathrm{used}}}\abs{A})$, both negligible next to an evaluation. Each evaluation costs $O\bigl(M_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, and risk detection scans the ledger in $O\bigl(M_d(N\abs{\mathcal L}+T)\bigr)$, where $T$ is the number of transmission records. The budget caps the total number of evaluations, so the planning time of SBS, SBS-Lex, and SBS-R is $O\bigl(EM_dN(\abs{\mathcal L}+\abs{A}\log\abs{A})\bigr)$, independent of the actual number of rounds. The method only guarantees that the key of the plan does not decrease; it does not guarantee optimality. The LP bound (P2), solved on the trajectory chosen by each method, measures the remaining room for improvement within the candidate set; since SBS may route alerts outside this set, its value on a realization can exceed the bound.
 
 \label{sec:variants}
 To separate the effect of the objective from that of the search, SBS-Lex runs the same search as SBS with a different key. Let $\bar f_a$ be the fraction of the bits of $a$ that reach the center before the deadline, averaged over the design realizations. The average delivery rate of $a$ divided by its required rate $L_a/((d_a-r_a)\Delta)$ equals exactly $\bar f_a$, so $\min_a \bar f_a$ is a normalized version of the max--min objective of~\cite{huang2025ddatsap}. Because a single undeliverable alert forces $\min_a\bar f_a=0$ for every plan, SBS-Lex compares plans in leximin order:

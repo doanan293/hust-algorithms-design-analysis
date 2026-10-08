@@ -1,6 +1,6 @@
 method;timely;ci;conn;gap;planning
 NoUAV;\num{0.312};[\num{0.235}, \num{0.393}];\num{0.376};\num{0.142};\num{0.0}
 FixedTour;\num{0.395};[\num{0.313}, \num{0.475}];\num{1.000};\num{0.324};\num{0.2}
-SBS;\num{0.457};[\num{0.363}, \num{0.546}];\num{1.000};\num{0.271};\num{207.4}
-SBS-R;\num{0.457};[\num{0.364}, \num{0.542}];\num{0.999};\num{0.273};\num{218.7}
-Tran-IA;\num{0.450};[\num{0.381}, \num{0.523}];\num{1.000};\num{0.373};\num{377.1}
+SBS;\num{0.468};[\num{0.391}, \num{0.537}];\num{1.000};\num{0.258};\num{225.0}
+SBS-R;\num{0.471};[\num{0.397}, \num{0.539}];\num{1.000};\num{0.247};\num{229.2}
+Tran-IA;\num{0.450};[\num{0.381}, \num{0.523}];\num{1.000};\num{0.373};\num{375.8}

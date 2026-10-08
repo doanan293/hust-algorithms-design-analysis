@@ -34,11 +34,11 @@ def test_b0_uses_first_ground_candidate_and_leaves_unreachable_sources_unserved(
     candidates = candidate_paths(scenario)
     counter = EvaluationCounter()
     plan = B0().plan(scenario, candidates, counter)
-    assert plan.path_choice == {"alert-0000": 0, "alert-0001": None}
+    assert plan.paths == {"alert-0000": candidates["alert-0000"][0], "alert-0001": None}
     assert candidates["alert-0000"][0].kind == GROUND
     assert isinstance(plan.bandwidth, EqualSplitBacklogged)
     assert np.array_equal(plan.trajectory, stationary_trajectory(scenario))
-    assert validate_plan(scenario, candidates, plan) == []
+    assert validate_plan(scenario, plan) == []
     assert counter.calls == 0
 
 
@@ -56,7 +56,7 @@ def test_b1_leaves_hopeless_alerts_unserved_and_plans_validly():
     candidates = candidate_paths(scenario)
     counter = EvaluationCounter()
     plan = B1().plan(scenario, candidates, counter)
-    assert plan.path_choice == {"alert-0000": 0, "alert-0001": None}
+    assert plan.paths == {"alert-0000": candidates["alert-0000"][0], "alert-0001": None}
     assert np.array_equal(plan.trajectory, zone_tour_trajectory(scenario))
-    assert validate_plan(scenario, candidates, plan) == []
+    assert validate_plan(scenario, plan) == []
     assert counter.calls == 0

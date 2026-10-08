@@ -54,8 +54,8 @@ def test_milp_plan_is_valid_and_bounded_by_the_milp_bound():
     lp = solve_lp(model)
     milp = solve_milp(model, time_limit_s=60)
     plan = plan_from_solution(scenario, candidates, model, milp.solution, trajectory)
-    assert validate_plan(scenario, candidates, plan) == []
-    evaluated = evaluate(scenario, plan, REALIZED, (0,), candidates=candidates)
+    assert validate_plan(scenario, plan) == []
+    evaluated = evaluate(scenario, plan, REALIZED, (0,))
     value = sum(evaluated.realizations[0].timely.values())
     assert value <= milp.dual_bound + 1e-6 <= lp.value + 2e-6
     overestimate = tangent_max_overestimate(model_snr_values(model, channels), scenario.spectrum.b_tot_hz, 10)

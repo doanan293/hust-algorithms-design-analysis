@@ -3,7 +3,7 @@
   "mu": 10.0,
   "block_slots": 1,
   "runtime_limit_s": 600.0,
-  "median_runtime_step1_s": 134.1192717555,
+  "median_runtime_step1_s": 125.34572734600079,
   "scenarios": [
     "Bbnplanet-r0",
     "Bbnplanet-r1",

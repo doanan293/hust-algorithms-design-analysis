@@ -4,7 +4,6 @@ from typing import Mapping
 
 from .channel import ACCESS, BACKHAUL, DOWNLINK, LinkChannel, LinkId
 from .ledger import Ledger
-from .paths import CandidatePath
 from .plan import Plan, StaticSchedule, WeightedBacklogged, chosen_paths
 from .scenario import Scenario
 
@@ -20,7 +19,6 @@ class SimulationOutcome:
 
 def simulate(
     scenario: Scenario,
-    candidates: Mapping[str, tuple[CandidatePath, ...]],
     plan: Plan,
     channels: Mapping[LinkId, LinkChannel],
     realization_id: int | None = None,
@@ -28,7 +26,7 @@ def simulate(
     slot_s = scenario.time.slot_s
     access_s = scenario.time.access_fraction * slot_s
     downlink_s = slot_s - access_s
-    paths = chosen_paths(scenario, candidates, plan)
+    paths = chosen_paths(plan)
     served = [alert for alert in scenario.alerts if paths[alert.id] is not None]
     buffers: dict[tuple[str, int], float] = {}
     delivered = {alert.id: 0.0 for alert in scenario.alerts}

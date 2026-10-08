@@ -25,6 +25,7 @@ ABLATIONS = (
     ("P_fixed_trajectory", "No trajectory block"),
     ("P_equal_bandwidth", "No bandwidth block"),
     ("P_expected_design", "Expected-rate design"),
+    ("P_catalog_trajectory", "Catalogue trajectory block"),
 )
 BUDGETS = (250, 500, 1000, 2000, 4000)
 SENSITIVITY_PANELS = (
@@ -121,8 +122,9 @@ def main(argv: list[str] | None = None) -> int:
                 ("Timely", "timely_ratio_mean", 3), ("TimelyLow", "timely_ratio_ci_low", 3), ("TimelyHigh", "timely_ratio_ci_high", 3),
                 ("Conn", "conn_ratio_mean", 3), ("Gap", "gap_mean", 3), ("UnionGap", "union_gap_mean", 3), ("UnionBound", "union_bound_ratio_mean", 3),
                 ("Planning", "planning_runtime_s_mean", 1), ("Calls", "evaluate_calls_mean", 0),
+                ("Outside", "paths_outside_candidates_mean", 1),
             ):
-                macros.append((macro(metric, set_id, method), number(row[column], digits)))
+                macros.append((macro(metric, set_id, method), number(row.get(column, 0.0), digits)))
         means = {method: scenario_means(rows["main"], set_id, method) for method in MAIN_METHODS}
         for first, second in (("B2", "B0"), ("B2", "B1"), ("P", "B2"), ("B1", "B0")):
             higher, equal, lower = compare_scenarios(means[first], means[second])

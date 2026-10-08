@@ -42,15 +42,15 @@ def _far_source_plan():
     scenario = base_scenario([make_alert("alert-0000", "s01", 0, 20, 1000000)])
     candidates = candidate_paths(scenario)
     plan = B1().plan(scenario, candidates, None)
-    return scenario, candidates, type(plan)(plan.trajectory, {"alert-0000": 0}, plan.bandwidth)
+    return scenario, candidates, type(plan)(plan.trajectory, {"alert-0000": candidates["alert-0000"][0]}, plan.bandwidth)
 
 
 def test_scorer_uses_the_design_namespace():
     scenario, candidates, plan = _far_source_plan()
-    scorer = DesignScorer(scenario, candidates, design_ids=(0, 1, 2, 3, 4), budget=10)
+    scorer = DesignScorer(scenario, design_ids=(0, 1, 2, 3, 4), budget=10)
     key, result = scorer.score_with_ledger(plan)
-    design = evaluate(scenario, plan, REALIZED, (0, 1, 2, 3, 4), candidates=candidates, channel_namespace="design")
-    public = evaluate(scenario, plan, REALIZED, (0, 1, 2, 3, 4), candidates=candidates)
+    design = evaluate(scenario, plan, REALIZED, (0, 1, 2, 3, 4), channel_namespace="design")
+    public = evaluate(scenario, plan, REALIZED, (0, 1, 2, 3, 4))
     assert result.channel_namespace == "design"
     assert all(item.ledger is not None for item in result.realizations)
     assert key == design.key
@@ -60,7 +60,7 @@ def test_scorer_uses_the_design_namespace():
 
 def test_scorer_counts_calls_and_stops_at_the_budget():
     scenario, candidates, plan = _far_source_plan()
-    scorer = DesignScorer(scenario, candidates, design_ids=(0,), budget=2)
+    scorer = DesignScorer(scenario, design_ids=(0,), budget=2)
     scorer.score(plan)
     scorer.score_with_ledger(plan)
     assert (scorer.calls, scorer.remaining) == (2, 0)
@@ -68,16 +68,16 @@ def test_scorer_counts_calls_and_stops_at_the_budget():
         scorer.score(plan)
     assert scorer.calls == 2
     with pytest.raises(ValueError, match="budget"):
-        DesignScorer(scenario, candidates, budget=0)
+        DesignScorer(scenario, budget=0)
 
 
 def test_empty_design_ids_score_expected_rates_and_infeasible_plans_score_lowest():
     scenario, candidates, plan = _far_source_plan()
-    scorer = DesignScorer(scenario, candidates, design_ids=(), budget=5)
+    scorer = DesignScorer(scenario, design_ids=(), budget=5)
     key, result = scorer.score_with_ledger(plan)
     assert result.mode == EXPECTED and len(result.realizations) == 1
-    assert key == evaluate(scenario, plan, EXPECTED, candidates=candidates).key
-    broken = type(plan)(plan.trajectory, {"alert-0000": 7}, plan.bandwidth)
+    assert key == evaluate(scenario, plan, EXPECTED).key
+    broken = type(plan)(plan.trajectory, {}, plan.bandwidth)
     assert scorer.score(broken) == INFEASIBLE_SCORE
 
 
@@ -90,7 +90,7 @@ def test_scorer_skips_the_checker_and_reuses_one_connectivity_cache(monkeypatch)
         return real(*args, **kwargs)
 
     monkeypatch.setattr(scoring, "evaluate", spy)
-    scorer = DesignScorer(scenario, candidates, design_ids=(0, 1), budget=5)
+    scorer = DesignScorer(scenario, design_ids=(0, 1), budget=5)
     first = scorer.score(plan)
     assert scorer.score_with_ledger(plan)[0] == first
     assert [check for check, _ in seen] == [False, False] and len({cache for _, cache in seen}) == 1

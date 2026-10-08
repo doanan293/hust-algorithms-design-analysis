@@ -23,7 +23,7 @@ def test_zone_tour_visits_zones_and_is_feasible(raw_scenario):
     scenario = scenario_from_dict(raw_scenario)
     candidates = candidate_paths(scenario)
     plan = calibrate.zone_tour_plan(scenario, candidates)
-    assert validate_plan(scenario, candidates, plan) == []
+    assert validate_plan(scenario, plan) == []
     for zone in scenario.damage_zones:
         assert np.min(np.linalg.norm(plan.trajectory - [zone.x_m, zone.y_m], axis=1)) < 1e-6
 
@@ -44,7 +44,7 @@ def test_calibration_plans_evaluate_feasibly(raw_scenario):
     scenario = scenario_from_dict(raw_scenario)
     candidates = candidate_paths(scenario)
     for build in calibrate.PLANS.values():
-        result = evaluate(scenario, build(scenario, candidates), REALIZED, (0,), candidates=candidates)
+        result = evaluate(scenario, build(scenario, candidates), REALIZED, (0,))
         assert result.feasible
 
 

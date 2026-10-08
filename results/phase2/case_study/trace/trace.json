@@ -2,19 +2,19 @@
   "anchor": "P",
   "methods": {
     "B1": {
-      "timely_ratio_runner": 0.3925,
-      "timely_ratio_trace": 0.3925
+      "timely_ratio_runner": 0.3375,
+      "timely_ratio_trace": 0.3375
     },
     "P": {
-      "timely_ratio_runner": 0.4408333333333333,
-      "timely_ratio_trace": 0.44083333333333335
+      "timely_ratio_runner": 0.4625,
+      "timely_ratio_trace": 0.4625
     },
     "TRAN": {
-      "timely_ratio_runner": 0.41583333333333333,
-      "timely_ratio_trace": 0.41583333333333333
+      "timely_ratio_runner": 0.445,
+      "timely_ratio_trace": 0.445
     }
   },
   "realizations": 30,
   "rule": "anchor mean timely ratio closest to the median over scenarios; ties go to the smallest scenario_id",
-  "scenario_id": "BtNorthAmerica-r0"
+  "scenario_id": "Garr200404-r0"
 }

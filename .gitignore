@@ -3,7 +3,7 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 data/raw/
-data/processed/
+data/processed
 data/manifests/*.tmp
 data/manifests/*.partial
 results/phase1/shards/

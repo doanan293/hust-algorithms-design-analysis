@@ -22,12 +22,12 @@ def first_index(paths: tuple[CandidatePath, ...], kind: str) -> int | None:
 
 def ground_only_plan(scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> Plan:
     choice = {alert.id: first_index(candidates[alert.id], GROUND) for alert in scenario.alerts}
-    return Plan(stationary_trajectory(scenario), choice, EqualSplitBacklogged())
+    return Plan.from_choice(stationary_trajectory(scenario), candidates, choice, EqualSplitBacklogged())
 
 
 def zone_tour_plan(scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> Plan:
     choice = {alert.id: first_index(candidates[alert.id], VIA_UAV) for alert in scenario.alerts}
-    return Plan(zone_tour_trajectory(scenario), choice, EqualSplitBacklogged())
+    return Plan.from_choice(zone_tour_trajectory(scenario), candidates, choice, EqualSplitBacklogged())
 
 
 PLANS: dict[str, Callable[[Scenario, Mapping[str, tuple[CandidatePath, ...]]], Plan]] = {
@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         scenario = load_scenario(args.scenario_dir / f"{scenario_id}.json")
         candidates = candidate_paths(scenario)
         for name, build in PLANS.items():
-            result = evaluate(scenario, build(scenario, candidates), REALIZED, realization_ids, candidates=candidates)
+            result = evaluate(scenario, build(scenario, candidates), REALIZED, realization_ids)
             feasible[name] = feasible[name] and result.feasible
             ratios[name][scenario_id] = result.timely_ratio
             runtimes[name].append(result.runtime_s)

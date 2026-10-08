@@ -53,8 +53,8 @@ def plan_from_iterate(
                 downlinks.add(link)
     keep_top_downlinks(bandwidth, sorted(downlinks), scenario.uav.max_active_downlinks)
     path_choice = {device.alert_id: device.candidate for device in instance.devices}
-    plan = Plan(expand_trajectory(iterate.trajectory, G), path_choice, StaticSchedule(bandwidth))
-    violations = validate_plan(scenario, candidates, plan)
+    plan = Plan.from_choice(expand_trajectory(iterate.trajectory, G), candidates, path_choice, StaticSchedule(bandwidth))
+    violations = validate_plan(scenario, plan)
     if violations:
         raise ValueError(f"TRAN produced an invalid plan: {violations[:3]}")
     return plan
