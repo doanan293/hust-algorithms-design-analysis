@@ -25,6 +25,7 @@ ABLATIONS = (
     ("P_fixed_trajectory", "No trajectory block"),
     ("P_equal_bandwidth", "No bandwidth block"),
     ("P_expected_design", "Expected-rate design"),
+    ("P_catalog_trajectory", "Catalogue trajectory block"),
 )
 BUDGETS = (250, 500, 1000, 2000, 4000)
 SENSITIVITY_PANELS = (
