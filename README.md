@@ -102,6 +102,7 @@ Chạy các thí nghiệm Pha 2. Kết quả nằm trong `results/phase2/<tên>/
 
 ```bash
 uv run python experiments/run_phase2.py --config configs/experiments/phase2_pilot.yaml        # chạy thử B1, B2, B3, P trên tập phát triển
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_pilot_local.yaml  # pilot tham số local search (M, W, xác suất catalogue, seed) trên tập phát triển
 uv run python experiments/run_phase2.py --config configs/experiments/phase2_main.yaml         # B0, B1, B2, B3, P và bảy biến thể ablation trên v0, v0-bh50
 uv run python experiments/run_phase2.py --config configs/experiments/phase2_budget.yaml       # B2 và P với ngân sách 250 đến 4000 lần đánh giá
 uv run python experiments/run_phase2.py --config configs/experiments/phase2_sensitivity.yaml  # B1, B2, P trên replicate 0 của 15 họ scenario
