@@ -61,36 +61,45 @@ Before any new experiment runs, `reproduce.py --compare` on `results/phase1` and
 
 ### 5.1 Neighbourhood of one alert
 
-Module `src/optimization/path_moves.py`. Input: scenario, alert, incumbent path `p` (or `None`), `BackhaulRoutes` (fewest-hop routes, `paths.py:41-66`), congestion of the incumbent (Section 5.3), parameter `entry_neighbors = M`. Output: an ordered list of distinct paths, each valid under Section 4.2 and different from `p`.
+Module `src/optimization/path_moves.py`. Input: scenario, alert, incumbent path `p` (or `None`), `BackhaulRoutes` (fewest-hop routes, `paths.py:41-66`), the incumbent ledger summary (Section 5.3), the search RNG (Section 7.1), parameter `entry_neighbors = M`. Output: an ordered list of distinct paths, each valid under Section 4.2 and different from `p`.
 
-1. **Kind flip at the same entry.** `GROUND ↔ VIA_UAV` with `entry` unchanged; the ground direction only if the source is within ground range of the entry. Backhaul part unchanged.
-2. **Entry switch.** The `M` entry nodes nearest (Euclidean) to the current entry, excluding it, that are reachable (`routes.hop_count`). Kind unchanged; a ground path to an entry out of range is skipped. Backhaul = fewest-hop route of the new entry (same as `candidate_paths`).
+**Ground feasibility.** A source is *ground-connected* when at least one reachable node (`routes.hop_count`) is within `ground_range_m` of it — the same test B0 uses (`ground_connected_source_fraction`). Ground neighbours are generated only for ground-connected sources; for the others only UAV paths are generated.
+
+1. **Kind flip at the same entry.** `GROUND ↔ VIA_UAV` with `entry` unchanged; the ground direction only if the entry is within ground range of the source. Backhaul part unchanged.
+2. **Entry switch.** Kind unchanged. Every reachable entry node `e ≠ entry(p)` (for a ground path: only nodes within range) gets an *estimated completion time*
+   `T(e) = T_access(e) + Σ_{(u,v) ∈ route(e)} ( size_a / residual(u, v) + slot_s )`,
+   where `route(e)` is the fewest-hop route of `e`, `residual(u, v)` is the residual backhaul capacity of Section 5.3, and `T_access(e)` is `size_a / rate` of the source→`e` ground link (ground path) or the mean over slots `n ∈ [r_a, d_a)` of the UAV→`e` distance divided by `V_max` (UAV path, the same proxy `candidate_paths` uses, taken along the incumbent trajectory instead of from the source). `M` entries are drawn without replacement with probability ∝ `1 / T(e)`; the drawn paths are tried in increasing `T(e)`. Backhaul = fewest-hop route of the new entry.
 3. **Backhaul detour.** Let `(u, v)` be the backhaul link of `p` with the most congested slots inside `[r_a, d_a)` (ties: the earlier link on the path); skip the move when no backhaul link of `p` is congested in that window. Compute the fewest-hop route from `u` to the center in the alive graph without edge `{u, v}` and without the nodes of `p` before `u` (ties broken by Euclidean length then node id, as in `backhaul_routes`). If a route exists and the result differs from `p`, the neighbour is prefix of `p` up to `u` + detour.
 4. **Unserve.** `None`.
 
 If `p is None`, the neighbourhood is the K candidate paths of the alert (restart from the catalogue), then nothing else.
 
-`cost_s` of a generated path uses the same formula as `candidate_paths` (`access time + backhaul delay`), so Operation 2 can still order paths by cost.
+`cost_s` of a generated path uses the same formula as `candidate_paths` (`access time + backhaul delay` with nominal capacities), so Operation 2 can still order paths by cost.
 
 ### 5.2 Block procedure
 
 ```
-path_block(scenario, routes, scorer, state, params):
-    _, result = scorer.score_with_ledger(state.plan())      # 1 evaluation; gives congestion
-    congestion = backhaul_congestion(result)                 # Section 5.3
+path_block(scenario, routes, scorer, state, params, rng):
+    _, result = scorer.score_with_ledger(state.plan())      # 1 evaluation; gives the ledger summary
+    summary = ledger_summary(result)                         # Section 5.3
     accepted = False
-    for alert in alerts sorted by (deadline_slot, id):
-        for q in path_neighbours(alert, state.paths[alert.id], congestion, ...):
+    for alert in rng.permutation(alerts):                    # a fresh random order every pass
+        for q in path_neighbours(alert, state.paths[alert.id], summary, rng, ...):
             if state.try_change(scorer, paths={**state.paths, alert.id: q}, weights=with_unit_weights(q)):
                 accepted = True            # first improvement, continue with the new incumbent
     return accepted
 ```
 
-Acceptance stays "key increases strictly" (`SearchState.try_change`). Each `try_change` is one evaluation under the budget.
+Acceptance stays "key increases strictly" (`SearchState.try_change`). Each `try_change` is one evaluation under the budget. The random alert order and the random entry draw make successive passes explore different neighbours of the same incumbent, instead of repeating the same deterministic sweep.
 
-### 5.3 Congestion from the ledger
+### 5.3 Ledger summary (congestion and residual capacity)
 
-`congested_slots(ledger)` (`repair.py:53-62`) already gives, per link, the slots in which the link carried its whole capacity. For the path block: `congestion[link] = Σ_realizations |congested slots of link ∩ [r_a, d_a)|` computed per alert when ranking the backhaul links of its path. This makes the generated paths depend on the current trajectory and bandwidth (through the ledger).
+From the ledgers of the design realizations of the incumbent evaluation:
+
+- `congested_slots(ledger)` (`repair.py:53-62`) gives, per link, the slots in which the link carried its whole capacity. `congestion[link] = Σ_realizations |congested slots of link ∩ [r_a, d_a)|` is computed per alert when ranking the backhaul links of its path (move 3).
+- `residual(u, v) = max(capacity_bps(u, v) − carried_bps(u, v), ε)` with `carried_bps` the mean over realizations and over the slots of `[r_a, d_a)` of the bits the link carried per second (`ledger.transfers`), and `ε = capacity_bps / 1000`. A link that the incumbent never uses has `residual = capacity_bps`.
+
+Both quantities come from the incumbent plan, so the generated paths depend on the current trajectory and bandwidth.
 
 ### 5.4 Operation 2 of the repair round
 
@@ -102,7 +111,7 @@ When a neighbour introduces a radio link that has no weight vector, `SearchState
 
 ### 5.6 Budget per pass
 
-1 + Σ_alerts |neighbourhood| ≈ 1 + 40 × (1 + 3 + ≤1 + 1) ≈ 240 evaluations with M = 3.
+1 + Σ_alerts |neighbourhood| ≈ 1 + 40 × (≤1 + 3 + ≤1 + 1) ≈ 240 evaluations with M = 3.
 
 ## 6. Trajectory block
 
@@ -117,49 +126,59 @@ When `λ* ≈ 0` (a boundary lies on a cruise segment flown at `V_max`), the seg
 ### 6.2 Segment selection from the ledger
 
 ```
-trajectory_block(scenario, scorer, state, params):
+trajectory_block(scenario, scorer, state, params, rng, family):
     _, result = scorer.score_with_ledger(state.plan())              # 1 evaluation
-    segments = ranked_uav_segments(scenario, state.plan(), result)  # below
+    segments = sample_uav_segments(scenario, state.plan(), result, rng, W)   # below
     accepted = False
-    for (i, j, direction) in segments[:W]:
+    for (i, j, direction) in segments:
         for fraction in (1.0, 0.5):
             t = shift_segment(state.trajectory, i, j, direction, fraction, step_m)
             if t is not None and state.try_change(scorer, trajectory=t):
                 accepted = True
                 break
+    if rng.random() < params.catalog_probability:                   # Section 6.3
+        tour = family[rng.integers(len(family))]
+        accepted |= state.try_change(scorer, trajectory=tour)
     return accepted
 ```
 
-`ranked_uav_segments`:
+`sample_uav_segments`:
 
-1. For each radio link of the plan with the UAV as receiver (uplink `(ACCESS, source, UAV)`) or transmitter (downlink `(DOWNLINK, UAV, node)`), and each slot `n`, `score(link, n) = (number of realizations in which the link is congested at n) × Σ_{alerts a on link, r_a ≤ n < d_a} size_a / (d_a − r_a)`. The second factor favours large and urgent alerts (the reviewer's "size A > size B or deadline A < deadline B" case).
-2. Consecutive slots with `score > 0` on the same link form one segment; slot range `[n1, n2]` maps to points `i = max(n1, 1)`, `j = min(n2 + 1, N−1)`.
-3. Segments are ranked by total score, descending; ties by link id and `n1`. The first `trajectory_segments = W` segments are tried.
+1. For each radio link of the plan with the UAV as receiver (uplink `(ACCESS, source, UAV)`) or transmitter (downlink `(DOWNLINK, UAV, node)`), and each slot `n`, `priority(link, n) = (number of realizations in which the link is congested at n) × Σ_{alerts a on link, r_a ≤ n < d_a} size_a / (d_a − r_a)`. The second factor favours large and urgent alerts (the reviewer's "size A > size B or deadline A < deadline B" case).
+2. Consecutive slots with `priority > 0` on the same link form one segment; slot range `[n1, n2]` maps to points `i = max(n1, 1)`, `j = min(n2 + 1, N−1)`. The segment priority is the sum over its slots.
+3. `trajectory_segments = W` segments are drawn without replacement with probability ∝ priority (fewer when fewer exist). They are tried in decreasing priority.
 4. Direction: unit vector from the centroid of `q[i..j]` to the ground point of the link (source position for an uplink, node position for a downlink). Zero vector → segment skipped.
 
-No congested UAV link → no moves → the block returns `False`.
+No congested UAV link → no segment moves; only the catalogue draw of Section 6.3 can run.
 
-### 6.3 Catalogue initialisation and the catalogue mode
+### 6.3 Catalogue tours as rare candidates; the catalogue mode
 
-- `catalog_init = True` (default): once, before the BCD loop, the old catalogue pass runs (`tour_family`, try every tour, keep the best). Cost ≤ |family| ≈ 90 evaluations. It gives the local moves a good starting tour; it is initialisation, not search.
-- `trajectory_mode = "local"` (default) uses Section 6.2 in every iteration. `trajectory_mode = "catalog"` uses the old catalogue pass in every iteration (today's behaviour); it exists only for the ablation `P_catalog_trajectory`.
-- `trajectory_block = False` disables both the catalogue initialisation and the block, so `P_fixed_trajectory` keeps today's meaning (B1 trajectory throughout).
+- `tour_family(scenario)` is still enumerated once (≤ 90 tours). In every trajectory pass, with probability `catalog_probability` (default 0.1) one tour drawn uniformly from the family is tried as an additional candidate. This keeps the large jumps the catalogue offers (a different zone order) available at a small share of the budget, while the regular moves stay local.
+- `trajectory_mode = "local"` (default) is the procedure above. `trajectory_mode = "catalog"` tries every tour of the family in every pass (today's behaviour) and runs no segment moves; it exists only for the ablation `P_catalog_trajectory`.
+- `trajectory_block = False` disables the block entirely, so `P_fixed_trajectory` keeps today's meaning (B1 trajectory throughout).
 
 ### 6.4 Budget per pass
 
-1 + 2W = 11 evaluations with W = 5.
+1 + 2W + ≤1 ≈ 12 evaluations with W = 5.
 
-## 7. Parameters, methods, configuration
+## 7. Parameters, randomness, methods, configuration
+
+### 7.1 Randomness and reproducibility
+
+Every random choice of the search (alert order, entry draw, segment draw, catalogue draw) uses one `numpy` generator created at the start of `SearchMethod.search` with `named_rng(scenario.scenario_seed, f"search:{self.name}:{params.seed}")` (`models/rng.py`, the mechanism the channel draws already use). The generator is passed to the blocks; nothing reads global random state. The same scenario, method and `seed` therefore give the same plan, which `reproduce.py --level experiments` relies on. Different method ids (B2, P, ablations) get different streams, which is intended: they are different methods.
+
+### 7.2 Parameters
 
 `SearchParams` gains:
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `trajectory_mode` | `"local"` \| `"catalog"` | `"local"` | Section 6.3 |
-| `catalog_init` | bool | `True` | Section 6.3 |
+| `catalog_probability` | float in [0, 1] | 0.1 | Section 6.3 |
 | `entry_neighbors` | int ≥ 1 | 3 | M of Section 5.1 |
 | `trajectory_segments` | int ≥ 1 | 5 | W of Section 6.2 |
 | `max_widening` | int ≥ 0 | 10 | Section 6.1 |
+| `seed` | int ≥ 0 | 0 | Section 7.1 |
 
 `from_mapping` validates them like the existing fields. `budget`, `max_iterations`, the block switches, `operation1/2`, `backlog`, `design_ids`, `objective` are unchanged.
 
@@ -169,7 +188,7 @@ The BCD loop order stays path → bandwidth → trajectory → repair; it stops 
 `{id: P_catalog_trajectory, base: search, params: {operation1: true, operation2: true, trajectory_mode: catalog}}`;
 `experiments/report_tables_phase2.py` `ABLATIONS` adds `("P_catalog_trajectory", "Catalogue trajectory block")`.
 
-A pilot on the development split (`phase2_pilot.yaml`) with M ∈ {2, 3, 5} and W ∈ {3, 5, 10} picks the defaults; the chosen values and the pilot numbers go into Section 12 of this document.
+A pilot on the development split (`phase2_pilot.yaml`) with M ∈ {2, 3, 5}, W ∈ {3, 5, 10} and `catalog_probability` ∈ {0, 0.1, 0.3} picks the defaults (one factor at a time around M = 3, W = 5, 0.1; 7 runs); the chosen values and the pilot numbers go into Section 12 of this document. The pilot also reports the spread over `seed` ∈ {0, 1, 2} for the chosen setting, so the report can say how much of the method's variance is search randomness.
 
 ## 8. Experiments
 
@@ -204,9 +223,9 @@ Slides (`docs/presentation/uav-alert-delivery.pptx`, edited in place with the pp
 ## 10. Tests
 
 - `tests/models/test_plan.py`: `from_choice` equals a plan built from the same paths; validation rejects a broken chain, a repeated node, a dead edge, a ground entry out of range, a wrong first link.
-- `tests/optimization/test_path_moves.py`: every neighbour passes `validate_plan`; kind flip respects ground range; entry switch returns ≤ M distinct entries; detour avoids the congested link and the prefix nodes, and is absent without congestion; `None` incumbent yields the K candidates.
-- `tests/optimization/test_trajectory_moves.py`: `shift_segment` output satisfies `_trajectory_violations` for random segments and directions; returns `None` on a V_max cruise boundary without widening; widening finds a feasible segment; `fraction = 1.0` touches the limit within tolerance.
-- `tests/optimization/test_blocks.py`, `test_search_methods.py`, `test_repair.py`: updated for `paths`, the ledger call, `trajectory_mode`, `catalog_init`; a test that `trajectory_mode="catalog"` reproduces the old block's choice on a small scenario.
+- `tests/optimization/test_path_moves.py`: every neighbour passes `validate_plan`; a source that is not ground-connected gets only UAV neighbours; kind flip respects ground range; entry switch returns ≤ M distinct entries and a lower `T(e)` gets a higher draw probability (checked on a hand-built case with two entries); `residual` falls with carried bits and is floored at ε; detour avoids the congested link and the prefix nodes, and is absent without congestion; `None` incumbent yields the K candidates.
+- `tests/optimization/test_trajectory_moves.py`: `shift_segment` output satisfies `_trajectory_violations` for random segments and directions; returns `None` on a V_max cruise boundary without widening; widening finds a feasible segment; `fraction = 1.0` touches the limit within tolerance; `sample_uav_segments` returns at most W distinct segments and never one with zero priority.
+- `tests/optimization/test_blocks.py`, `test_search_methods.py`, `test_repair.py`: updated for `paths`, the ledger call, `trajectory_mode`, `catalog_probability`, the RNG; a test that `trajectory_mode="catalog"` reproduces the old block's choice on a small scenario; a determinism test (same scenario, method, seed → identical plan; different seed → the RNG stream differs).
 - `tests/runner`: config parsing of the new parameters.
 
 ## 11. Acceptance criteria
