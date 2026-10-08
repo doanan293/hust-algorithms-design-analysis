@@ -93,3 +93,22 @@ def test_methods_without_bounds_are_summarized_without_gaps_or_validity_checks()
     assert math.isnan(row["bound_ratio_mean"]) and math.isnan(row["gap_mean"]) and math.isnan(row["union_gap_mean"])
     assert row["gap_undefined_count"] == 1
     assert validity_violations(method_rows, [], {"P_op1": None}) == []
+
+
+def test_rows_routed_outside_the_candidate_set_are_not_held_to_the_restricted_bound():
+    inside = dict(_method_row("A", "T1", 0, 3), paths_outside_candidates=0)
+    outside = dict(_method_row("A", "T1", 0, 3), paths_outside_candidates=2)
+    from_csv = dict(_method_row("A", "T1", 0, 3), paths_outside_candidates="1")
+    bound = [_bound_row("A", 0, 2.0)]
+    assert "exceed the bound" in validity_violations([inside], bound, OWNERS)[0]
+    assert validity_violations([outside], bound, OWNERS) == []
+    assert validity_violations([from_csv], bound, OWNERS) == []
+    assert "missing ground_only bound" in validity_violations([outside], [], OWNERS)[0]
+
+
+def test_summary_reports_the_mean_number_of_alerts_routed_outside_the_candidates():
+    rows = [dict(_method_row("A", "T1", 0, 2), paths_outside_candidates=3), dict(_method_row("B", "T2", 0, 2), paths_outside_candidates=1)]
+    [row] = summarize(rows, [_bound_row("A", 0, 4.0), _bound_row("B", 0, 4.0)], BootstrapConfig(10, 3, 0.95), OWNERS)
+    assert row["paths_outside_candidates_mean"] == pytest.approx(2.0)
+    [legacy] = summarize([_method_row("A", "T1", 0, 2)], [_bound_row("A", 0, 4.0)], BootstrapConfig(10, 3, 0.95), OWNERS)
+    assert legacy["paths_outside_candidates_mean"] == 0.0

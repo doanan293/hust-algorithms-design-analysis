@@ -84,6 +84,11 @@ def task_hash(task: Task, scenario_sha256: str, source_hash: str) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
+def paths_outside_candidates(plan: Plan, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> int:
+    """Alerts whose path is not one of their candidates; the bound (P2) only covers plans for which this is zero."""
+    return sum(path is not None and path not in candidates[alert_id] for alert_id, path in plan.paths.items())
+
+
 def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Method rows, plus trajectory bound rows for the planned trajectory when the spec asks for bounds."""
     scenario = load_scenario(Path(task.scenario_path))
@@ -97,6 +102,7 @@ def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dic
     if not result.feasible:
         raise ValueError(f"{task.key}: infeasible plan: {list(result.violations[:3])}")
     sources = len(scenario.sources)
+    outside = paths_outside_candidates(plan, candidates)
     without_uav = round(result.connectivity_ratio_without_uav * sources)
     rows = []
     for realization in result.realizations:
@@ -119,6 +125,7 @@ def run_method_task(task: MethodTask) -> tuple[list[dict[str, object]], list[dic
                 "planning_runtime_s": planning_s,
                 "evaluation_runtime_s": result.runtime_s / len(task.realization_ids),
                 "evaluate_calls": counter.calls,
+                "paths_outside_candidates": outside,
             }
         )
     bound_rows = []

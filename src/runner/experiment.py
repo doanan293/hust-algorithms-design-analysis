@@ -21,7 +21,7 @@ from .tasks import CROSSCHECK_TRAJECTORY_METHOD, BoundTask, CrosscheckTask, Meth
 METHOD_COLUMNS = (
     "set_id", "scenario_id", "topology_id", "method", "realization_id", "alert_count", "timely_count",
     "timely_ratio", "source_count", "connected_count", "conn_ratio", "shortfall", "planning_runtime_s",
-    "evaluation_runtime_s", "evaluate_calls",
+    "evaluation_runtime_s", "evaluate_calls", "paths_outside_candidates",
 )
 BOUND_COLUMNS = (
     "set_id", "scenario_id", "topology_id", "variant", "trajectory_method", "realization_id", "value", "ratio",
@@ -36,7 +36,7 @@ SUMMARY_COLUMNS = (
     "set_id", "method", "scenario_count", "timely_ratio_mean", "timely_ratio_ci_low", "timely_ratio_ci_high",
     "conn_ratio_mean", "bound_ratio_mean", "gap_mean", "gap_undefined_count", "shortfall_mean",
     "planning_runtime_s_mean", "evaluation_runtime_s_per_realization_mean", "bound_runtime_s_mean",
-    "union_bound_ratio_mean", "union_gap_mean", "evaluate_calls_mean",
+    "union_bound_ratio_mean", "union_gap_mean", "evaluate_calls_mean", "paths_outside_candidates_mean",
 )
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
