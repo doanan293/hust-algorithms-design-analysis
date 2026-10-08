@@ -167,7 +167,7 @@ No congested UAV link → no segment moves; only the catalogue draw of Section 6
 
 ### 7.1 Randomness and reproducibility
 
-Every random choice of the search (urgency-weighted alert order, entry draw, segment draw, catalogue draw) uses one `numpy` generator created at the start of `SearchMethod.search` with `named_rng(scenario.scenario_seed, f"search:{self.name}:{params.seed}")` (`models/rng.py`, the mechanism the channel draws already use). The generator is passed to the blocks; nothing reads global random state. The same scenario, method and `seed` therefore give the same plan, which `reproduce.py --level experiments` relies on. Different method ids (B2, P, ablations) get different streams, which is intended: they are different methods.
+Every random choice of the search (urgency-weighted alert order, entry draw, segment draw, catalogue draw) uses one `numpy` generator created at the start of `SearchMethod.search` with `named_rng(scenario.scenario_seed, f"search:{params.seed}")` (`models/rng.py`, the mechanism the channel draws already use). The generator is passed to the blocks; nothing reads global random state. The same scenario, method and `seed` therefore give the same plan, which `reproduce.py --level experiments` relies on. Every method id shares the stream for a given `seed`, so B2 and P with both operations off make the same choices and the ablations differ from P only by the block they switch, not by their random draws.
 
 ### 7.2 Parameters
 

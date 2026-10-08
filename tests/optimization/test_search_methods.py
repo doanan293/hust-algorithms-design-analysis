@@ -3,13 +3,16 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
+from baselines.b1 import B1
 from models.evaluate import REALIZED, EvaluationCounter, evaluate
 from models.paths import candidate_paths
+from models.rng import named_rng
 from models.scenario import scenario_from_dict
 from optimization import bcd
 from optimization.bcd import SearchMethod, SearchParams
 from optimization.objectives import lexicographic_key
 from optimization.scoring import DesignScorer
+from optimization.tours import tour_family
 from scenario_builders import make_alert
 from search_builders import three_zone_raw
 
@@ -20,6 +23,8 @@ VARIANTS = {
     "P": SearchParams(operation1=True, operation2=True, **SMALL),
     "P_no_backlog": SearchParams(operation1=True, operation2=True, backlog=False, **SMALL),
     "P_expected_design": SearchParams(operation1=True, operation2=True, **{**SMALL, "design_ids": ()}),
+    "P_catalog_trajectory": SearchParams(operation1=True, operation2=True, trajectory_mode="catalog", **SMALL),
+    "P_seed1": SearchParams(operation1=True, operation2=True, seed=1, **SMALL),
 }
 
 
@@ -85,6 +90,22 @@ def test_plan_reports_calls_and_trajectory_needs_planning():
     assert counter.calls == 1 + method.search(scenario, candidates).calls
     with pytest.raises(NotImplementedError):
         method.trajectory(scenario)
+
+
+def test_catalog_mode_only_visits_catalogue_tours():
+    scenario = _scenario()
+    candidates = candidate_paths(scenario)
+    catalog = SearchMethod("P", replace(VARIANTS["P"], trajectory_mode="catalog", path_block=False, operation1=False, operation2=False, bandwidth_block=False))
+    outcome = catalog.search(scenario, candidates)
+    family = {trajectory.tobytes() for _, trajectory in tour_family(scenario)} | {B1().plan(scenario, candidates, EvaluationCounter()).trajectory.tobytes()}
+    assert outcome.plan.trajectory.tobytes() in family
+
+
+def test_search_streams_are_seeded_per_scenario_and_seed():
+    scenario = _scenario()
+    first = named_rng(scenario.scenario_seed, "search:0")
+    assert first.random() == named_rng(scenario.scenario_seed, "search:0").random()
+    assert first.random() != named_rng(scenario.scenario_seed, "search:1").random()
 
 
 def test_search_params_from_mapping_validates_values():

@@ -7,11 +7,12 @@ import numpy as np
 
 from baselines.b1 import B1
 from models.evaluate import EvaluationCounter
-from models.paths import CandidatePath
+from models.paths import CandidatePath, backhaul_routes
 from models.plan import Plan
+from models.rng import named_rng
 from models.scenario import Scenario
 
-from .blocks import SearchState, bandwidth_block, path_block, trajectory_block, unit_weights
+from .blocks import SearchState, bandwidth_block, catalog_trajectory_block, path_block, trajectory_block, unit_weights
 from .objectives import OBJECTIVES, Key
 from .repair import repair_round
 from .scoring import DEFAULT_BUDGET, DEFAULT_DESIGN_IDS, BudgetExhausted, DesignScorer
@@ -98,7 +99,7 @@ class SearchOutcome:
 
 @dataclass(frozen=True)
 class SearchMethod:
-    """Starts from B1 with unit weights; iterates blocks and repair until an iteration accepts nothing."""
+    """Starts from B1 with unit weights; iterates the path, bandwidth, trajectory blocks and repair until an iteration accepts nothing."""
 
     name: str
     params: SearchParams = field(default_factory=SearchParams)
@@ -120,6 +121,8 @@ class SearchMethod:
     def search(self, scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> SearchOutcome:
         params = self.params
         scorer = DesignScorer(scenario, params.design_ids, params.budget, OBJECTIVES[params.objective])
+        rng = named_rng(scenario.scenario_seed, f"search:{params.seed}")
+        routes = backhaul_routes(scenario)
         initial = B1().plan(scenario, candidates, EvaluationCounter())
         state = SearchState(initial.trajectory, dict(initial.paths), unit_weights(scenario, candidates))
         family = tour_family(scenario) if params.trajectory_block else []
@@ -130,15 +133,15 @@ class SearchMethod:
             for _ in range(params.max_iterations):
                 accepted = False
                 if params.path_block:
-                    accepted |= path_block(scenario, candidates, scorer, state)
+                    accepted |= path_block(scenario, candidates, routes, scorer, state, params, rng)
                 if params.bandwidth_block:
                     accepted |= bandwidth_block(scenario, scorer, state)
-                if params.trajectory_block:
-                    accepted |= trajectory_block(scorer, state, family)
+                if params.trajectory_block and params.trajectory_mode == CATALOG:
+                    accepted |= catalog_trajectory_block(scorer, state, family)
+                elif params.trajectory_block:
+                    accepted |= trajectory_block(scenario, scorer, state, params, rng, family)
                 if params.operation1 or params.operation2:
-                    accepted |= repair_round(
-                        scenario, candidates, scorer, state, params.operation1, params.operation2, params.backlog
-                    )
+                    accepted |= repair_round(scenario, candidates, routes, scorer, state, params, rng)
                 iteration_keys.append(state.key)
                 if not accepted:
                     break
