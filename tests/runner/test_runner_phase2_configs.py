@@ -90,7 +90,7 @@ def test_sensitivity_and_design_configs_use_one_replicate_per_topology():
 
 @pytest.mark.parametrize(
     ("name", "tasks"),
-    [("phase2_main", 60 * (12 + 30 + 30)), ("phase2_budget", 30 * 10), ("phase2_sensitivity", 15 * 10 * (3 + 30)), ("phase2_design", 10 * 3)],
+    [("phase2_main", 60 * (13 + 30 + 30)), ("phase2_budget", 30 * 10), ("phase2_sensitivity", 15 * 10 * (3 + 30)), ("phase2_design", 10 * 3)],
 )
 def test_phase2_configs_expand_to_their_task_counts(name, tasks):
     config = load_experiment_config(Path(f"configs/experiments/{name}.yaml"))
