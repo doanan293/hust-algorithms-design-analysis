@@ -37,7 +37,9 @@ Quy tắc so sánh dòng: `timely_count`, `connected_count` và `evaluate_calls`
 
 ## 4. Nguồn gốc của kết quả
 
-Mỗi script sinh dữ liệu báo cáo chỉ đọc một thí nghiệm khi manifest của nó hoàn tất và mô tả mã hiện tại (`runner.provenance.result_provenance_problem`): hoặc `source_hash` bằng mã hiện tại, hoặc kết quả đến từ một commit sạch là tổ tiên của HEAD và không file nào của `src/models`, `src/baselines`, `src/bounds`, `src/optimization`, `src/literature` bị sửa, xoá hay đổi tên kể từ commit đó. Package `runner` không nằm trong danh sách vì chỉ điều phối task; mức `experiments` kiểm tra nó từ đầu đến cuối. Kết quả `results/phase2/pilot/` của sub-project C là bản ghi lịch sử của lần chạy thử và không được báo cáo dùng.
+Mỗi script sinh dữ liệu báo cáo chỉ đọc một thí nghiệm khi manifest của nó hoàn tất và mô tả mã hiện tại (`runner.provenance.result_provenance_problem`): hoặc `source_hash` bằng mã hiện tại, hoặc kết quả đến từ một commit sạch là tổ tiên của HEAD và không file nào của `src/models`, `src/baselines`, `src/bounds`, `src/optimization`, `src/literature` bị sửa, xoá hay đổi tên kể từ commit đó. Package `runner` không nằm trong danh sách vì chỉ điều phối task; mức `experiments` kiểm tra nó từ đầu đến cuối. Kết quả `results/phase2/pilot/` của sub-project C là bản ghi lịch sử của lần chạy thử và không được báo cáo dùng. `results/phase2/pilot_local/` (cấu hình `configs/experiments/phase2_pilot_local.yaml`) là pilot của sub-project E trên tập phát triển, dùng để chọn tham số local search (số node vào $M_e$, số đoạn quỹ đạo $W$, xác suất thử tour catalogue, seed); quy tắc chọn và kết quả nằm ở spec E Mục 12 (`docs/superpowers/specs/2026-10-08-local-search-blocks-design.md`).
+
+Từ sub-project E, phương pháp tìm kiếm có thể định tuyến alert ra ngoài tập ứng viên $K$ đường, nên cận LP (P2) chỉ là cận của bài toán giới hạn trên tập ứng viên. Mỗi dòng của `method_realizations.csv` ghi `paths_outside_candidates` (số alert có đường nằm ngoài tập ứng viên); bước kiểm tra tính hợp lệ của cận trong runner chỉ áp dụng cho dòng có giá trị bằng 0, và `summary.csv` ghi trung bình của cột này.
 
 ## 5. Bảng, hình và nguồn dữ liệu
 
@@ -60,14 +62,14 @@ Mỗi script sinh dữ liệu báo cáo chỉ đọc một thí nghiệm khi man
 | Bài Huang được dùng đúng vai trò, khác biệt giao thức/mục tiêu được công khai | Báo cáo Mục Nghiên cứu liên quan và Mục phương pháp tìm kiếm (vì sao các khối không lồi, B3) |
 | Dữ liệu có provenance, đơn vị và phép chuyển đổi tái lập | `data/manifests/`, `configs/data/`, `experiments/reproduce.py --level scenarios` |
 | Baseline chạy trên benchmark công khai; thiếu nguồn nào được báo đúng | B0, B1 và TRAN trên kịch bản từ Topology Zoo và SNDlib (`tab:phase2-main`, `tab:literature`); giả định tiêu cự của ảnh FC2103 và thiếu GSD trong bài RescueNet được ghi ở spec D Mục 17 |
-| Có ít nhất một cơ chế cải tiến và ablation chứng minh tác động | P và bảy biến thể ablation (`tab:phase2-ablation`), kết quả âm tính được báo cáo |
+| Có ít nhất một cơ chế cải tiến và ablation chứng minh tác động | P và tám biến thể ablation (`tab:phase2-ablation`), gồm `P_catalog_trajectory` so khối quỹ đạo local search với quét danh mục tour cũ; kết quả âm tính được báo cáo |
 | Flow bảo toàn, buffer không âm, không dùng thông tin tương lai ngoài giả định | Bộ kiểm tra độc lập `src/models/checker.py` chạy ở mọi lần đánh giá cuối; `tests/models/` |
 | Tài nguyên tổng và quỹ đạo khả thi; không tăng công suất ngầm theo quy mô | `validate_plan` trong `src/models/plan.py`; công suất cố định cho mọi phương pháp, kể cả TRAN |
 | Có 20–30 seed, kiểm định, effect size và uncertainty report | 30 realization cho mỗi scenario; `tab:phase2-stats`, `tab:literature-stats` (kiểm định đổi dấu chính xác, Holm, bootstrap, rank-biserial) |
 | Có runtime, robustness, feasibility, scalability và sensitivity | Mục thời gian tính, `fig:sensitivity`, `fig:quality-runtime`, `tab:case-study`, `tab:compute` |
 | Có cận trên LP và gap trên mọi instance; instance nhỏ đối chiếu với MILP chính xác | `bounds.csv` của mọi thí nghiệm, cột gap của các bảng kết quả, `tab:phase1-milp` |
 | Connectivity trên time-expanded graph là mục tiêu phụ từ điển, dùng thống nhất | Khoá từ điển trong `src/models/evaluate.py` dùng cho mọi phương pháp |
-| B2 kế thừa đúng cấu trúc BCD của bài Huang; B3 tách được tác dụng của objective | Báo cáo Mục phương pháp tìm kiếm; so sánh B2 $-$ B3 trong `tab:phase2-stats` |
+| B2 kế thừa đúng cấu trúc BCD của bài Huang; B3 tách được tác dụng của objective | Báo cáo Mục phương pháp tìm kiếm; so sánh B2 $-$ B3 trong `tab:phase2-stats`; khối đường đi và khối quỹ đạo là local search sinh lân cận từ lời giải hiện tại (`src/optimization/path_moves.py`, `src/optimization/trajectory_moves.py`) |
 | Có gói tái lập và báo cáo theo cấu trúc môn học | Tài liệu này, `experiments/reproduce.py`, `results/reproducibility/*.json`; báo cáo có Tóm tắt, Giới thiệu, Nghiên cứu liên quan, Phương pháp, Kết quả, Thảo luận, Kết luận |
 
 ## 7. Chạy lại toàn bộ theo thứ tự
@@ -78,6 +80,7 @@ uv run python -m data.cli all --profile configs/data/paper.yaml
 uv run python -m data.cli rescuenet-targets --config configs/data/rescuenet_targets.yaml
 for config in configs/scenarios/*.yaml; do uv run python -m data.cli scenarios --config "$config"; done
 uv run python experiments/run_phase1.py --config configs/experiments/phase1.yaml
+uv run python experiments/run_phase2.py --config configs/experiments/phase2_pilot_local.yaml  # pilot tham số local search; báo cáo không đọc
 for name in phase2_main phase2_budget phase2_sensitivity phase2_design; do uv run python experiments/run_phase2.py --config configs/experiments/$name.yaml; done
 uv run python experiments/phase2_statistics.py
 systemd-run --user --scope --quiet -p MemoryMax=14G -p MemorySwapMax=0 uv run python experiments/tran_pilot.py
