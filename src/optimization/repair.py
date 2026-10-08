@@ -13,11 +13,11 @@ from models.paths import CandidatePath
 from models.scenario import Alert, Scenario
 
 from .blocks import SearchState
+from .ledger_summary import congested_slots  # noqa: F401 (re-exported for callers and tests)
 from .scoring import DesignScorer
 
 RISK_SLACK_SLOTS = 2
 AT_RISK_LIMIT = 10
-CONGESTION_TOLERANCE = 1e-6
 BUFFER_TOLERANCE_BITS = 1e-6
 
 
@@ -48,18 +48,6 @@ def bottleneck_hop(scenario: Scenario, alert: Alert, path: CandidatePath, transf
     held[0, alert.release_slot:] += alert.size_bits
     window = held[:, alert.release_slot : min(alert.deadline_slot, num_slots)]
     return int(np.argmax((window > BUFFER_TOLERANCE_BITS).sum(axis=1)))
-
-
-def congested_slots(ledger: Ledger) -> dict[LinkId, set[int]]:
-    """Slots in which a link carried its whole recorded capacity (within 1e-6 relative)."""
-    carried: dict[tuple[int, LinkId], float] = defaultdict(float)
-    for slot, link, _, bits in ledger.transfers:
-        carried[(slot, link)] += bits
-    congested: dict[LinkId, set[int]] = defaultdict(set)
-    for slot, link, capacity in ledger.capacity_bits:
-        if carried.get((slot, link), 0.0) >= capacity * (1.0 - CONGESTION_TOLERANCE):
-            congested[link].add(slot)
-    return congested
 
 
 def assess_risk(
