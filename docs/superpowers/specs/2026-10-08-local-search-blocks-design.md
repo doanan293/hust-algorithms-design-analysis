@@ -177,6 +177,7 @@ Every random choice of the search (urgency-weighted alert order, entry draw, seg
 |---|---|---|---|
 | `trajectory_mode` | `"local"` \| `"catalog"` | `"local"` | Section 6.3 |
 | `catalog_probability` | float in [0, 1] | 0.1 | Section 6.3 |
+| `catalog_init` | bool | `False` | one catalogue scan before the first round, as initialisation (added during implementation, see Section 12) |
 | `entry_neighbors` | int ≥ 1 | 3 | M of Section 5.1 |
 | `trajectory_segments` | int ≥ 1 | 5 | W of Section 6.2 |
 | `max_widening` | int ≥ 0 | 10 | Section 6.1 |

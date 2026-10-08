@@ -39,6 +39,7 @@ class SearchParams:
     budget: int = DEFAULT_BUDGET
     max_iterations: int = 10
     trajectory_mode: str = LOCAL
+    catalog_init: bool = False
     catalog_probability: float = 0.1
     entry_neighbors: int = 3
     trajectory_segments: int = 5
@@ -48,7 +49,7 @@ class SearchParams:
     def __post_init__(self) -> None:
         if self.objective not in OBJECTIVES:
             raise ValueError(f"objective: expected one of {sorted(OBJECTIVES)}, got {self.objective!r}")
-        for name in ("path_block", "bandwidth_block", "trajectory_block", "operation1", "operation2", "backlog"):
+        for name in ("path_block", "bandwidth_block", "trajectory_block", "operation1", "operation2", "backlog", "catalog_init"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name}: expected true or false")
         if self.trajectory_mode not in TRAJECTORY_MODES:
@@ -130,6 +131,8 @@ class SearchMethod:
         exhausted = False
         try:
             state.key = scorer.score(state.plan())
+            if params.trajectory_block and params.catalog_init and params.trajectory_mode == LOCAL:
+                catalog_trajectory_block(scorer, state, family)
             for _ in range(params.max_iterations):
                 accepted = False
                 if params.path_block:

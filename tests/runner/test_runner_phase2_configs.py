@@ -38,8 +38,11 @@ PILOT_LOCAL = {
     "P_w10": SearchParams(trajectory_segments=10, **REPAIR),
     "P_cat0": SearchParams(catalog_probability=0.0, **REPAIR),
     "P_cat03": SearchParams(catalog_probability=0.3, **REPAIR),
+    "P_cat1": SearchParams(catalog_probability=1.0, **REPAIR),
     "P_seed1": SearchParams(seed=1, **REPAIR),
     "P_seed2": SearchParams(seed=2, **REPAIR),
+    "P_init": SearchParams(catalog_init=True, **REPAIR),
+    "P_init_w10": SearchParams(catalog_init=True, trajectory_segments=10, **REPAIR),
     "P_catalog_trajectory": SearchParams(trajectory_mode="catalog", **REPAIR),
 }
 

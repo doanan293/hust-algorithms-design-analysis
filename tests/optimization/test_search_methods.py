@@ -25,6 +25,7 @@ VARIANTS = {
     "P_expected_design": SearchParams(operation1=True, operation2=True, **{**SMALL, "design_ids": ()}),
     "P_catalog_trajectory": SearchParams(operation1=True, operation2=True, trajectory_mode="catalog", **SMALL),
     "P_seed1": SearchParams(operation1=True, operation2=True, seed=1, **SMALL),
+    "P_catalog_init": SearchParams(operation1=True, operation2=True, catalog_init=True, **SMALL),
 }
 
 
@@ -101,6 +102,25 @@ def test_catalog_mode_only_visits_catalogue_tours():
     assert outcome.plan.trajectory.tobytes() in family
 
 
+def test_catalog_init_scans_the_family_once_before_the_local_rounds(monkeypatch):
+    scenario = _scenario()
+    candidates = candidate_paths(scenario)
+    calls = []
+    original = bcd.catalog_trajectory_block
+
+    def counting(scorer, state, family):
+        calls.append(len(family))
+        return original(scorer, state, family)
+
+    monkeypatch.setattr(bcd, "catalog_trajectory_block", counting)
+    SearchMethod("P", replace(VARIANTS["P"], catalog_init=True)).search(scenario, candidates)
+    assert calls == [len(tour_family(scenario))]
+    calls.clear()
+    SearchMethod("P", VARIANTS["P"]).search(scenario, candidates)
+    SearchMethod("P", replace(VARIANTS["P"], catalog_init=True, trajectory_block=False)).search(scenario, candidates)
+    assert calls == []
+
+
 def test_search_streams_are_seeded_per_scenario_and_seed():
     scenario = _scenario()
     first = named_rng(scenario.scenario_seed, "search:0")
@@ -132,6 +152,7 @@ def test_search_params_from_mapping_validates_values():
         ({"trajectory_segments": 0}, "trajectory_segments"),
         ({"max_widening": -1}, "max_widening"),
         ({"seed": -1}, "seed"),
+        ({"catalog_init": "yes"}, "catalog_init"),
     ):
         with pytest.raises(ValueError, match=message):
             SearchParams.from_mapping(raw)

@@ -15,8 +15,11 @@ methods:
   - {id: P_w10, base: search, params: {operation1: true, operation2: true, trajectory_segments: 10}}
   - {id: P_cat0, base: search, params: {operation1: true, operation2: true, catalog_probability: 0.0}}
   - {id: P_cat03, base: search, params: {operation1: true, operation2: true, catalog_probability: 0.3}}
+  - {id: P_cat1, base: search, params: {operation1: true, operation2: true, catalog_probability: 1.0}}
   - {id: P_seed1, base: search, params: {operation1: true, operation2: true, seed: 1}}
   - {id: P_seed2, base: search, params: {operation1: true, operation2: true, seed: 2}}
+  - {id: P_init, base: search, params: {operation1: true, operation2: true, catalog_init: true}}
+  - {id: P_init_w10, base: search, params: {operation1: true, operation2: true, catalog_init: true, trajectory_segments: 10}}
   - {id: P_catalog_trajectory, base: search, params: {operation1: true, operation2: true, trajectory_mode: catalog}}
 bounds: {tangents: 10}
 bootstrap: {resamples: 10000, seed: 20260911, confidence: 0.95}
