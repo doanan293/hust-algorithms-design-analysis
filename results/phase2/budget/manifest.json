@@ -7,25 +7,27 @@
   "config_hash": "83a01dfd3c2bb964796fd70d7d9c2fe47f567c2d9164aeb47aecff77be104ef6",
   "config_path": "configs/experiments/phase2_budget.yaml",
   "environment": {
+    "clarabel": "0.11.1",
     "cpu_count": 12,
+    "cvxpy": "1.9.2",
     "highs": "1.12.0",
     "numpy": "2.5.3",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "python": "3.12.3",
     "scipy": "1.18.1"
   },
   "executed_task_count": 300,
   "experiment_id": "phase2-budget",
   "failures": [],
-  "finished_utc": "2026-09-12T03:32:50.714780+00:00",
-  "git_commit": "1d24349595e93102fe4ebe796c120ce5244ad0d3",
+  "finished_utc": "2026-10-08T18:00:12.937512+00:00",
+  "git_commit": "f9adc47243cfe46dee38e27760e0bbf2c53ad783",
   "git_dirty": false,
   "scenario_manifest_sha256": {
     "v0": "7f2325b4e955f3c6265e01c10203a7d90244490446ed22015321e707e818ce17"
   },
   "skipped_task_count": 0,
-  "source_hash": "b61d93a2baf63cdbec0c658db978940eb6419eec24f03d986f158baa7a3b5d74",
-  "started_utc": "2026-09-12T02:56:41.719851+00:00",
+  "source_hash": "71bc6fc77d9440972f73c6487f36b2c80b10880276e8e3ec07625a5859d53751",
+  "started_utc": "2026-10-08T17:11:05.215711+00:00",
   "status": "complete",
   "task_count": 300,
   "workers": 12

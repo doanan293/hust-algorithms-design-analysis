@@ -1,4 +1,4 @@
-set_id,method,scenario_count,timely_ratio_mean,timely_ratio_ci_low,timely_ratio_ci_high,conn_ratio_mean,bound_ratio_mean,gap_mean,gap_undefined_count,shortfall_mean,planning_runtime_s_mean,evaluation_runtime_s_per_realization_mean,bound_runtime_s_mean,union_bound_ratio_mean,union_gap_mean,evaluate_calls_mean
-v0,P_design1,10,0.47591666666666665,0.3865,0.5475,0.9997777777777778,nan,nan,10,17.604045848702743,29.236003329601953,0.042271729159983805,nan,nan,nan,1989.0
-v0,P_design10,10,0.51375,0.4200812500000001,0.5909208333333333,1.0,nan,nan,10,16.738150934999705,236.87762483080442,0.02587621251004748,nan,nan,nan,1981.9
-v0,P_design_expected,10,0.46725000000000005,0.3780791666666667,0.5444166666666667,1.0,nan,nan,10,17.92289487808678,26.556997091302765,0.042845636513278204,nan,nan,nan,1916.2
+set_id,method,scenario_count,timely_ratio_mean,timely_ratio_ci_low,timely_ratio_ci_high,conn_ratio_mean,bound_ratio_mean,gap_mean,gap_undefined_count,shortfall_mean,planning_runtime_s_mean,evaluation_runtime_s_per_realization_mean,bound_runtime_s_mean,union_bound_ratio_mean,union_gap_mean,evaluate_calls_mean,paths_outside_candidates_mean
+v0,P_design1,10,0.48758333333333337,0.3866583333333334,0.57266875,1.0,nan,nan,10,16.891020073940275,35.365370504801106,0.05028991179659594,nan,nan,nan,2001.0,7.1
+v0,P_design10,10,0.52425,0.43883333333333335,0.5971666666666666,1.0,nan,nan,10,15.977960545661517,262.6898549826001,0.029171248029985386,nan,nan,nan,1975.1,7.3
+v0,P_design_expected,10,0.4924166666666666,0.39924583333333336,0.5687520833333335,1.0,nan,nan,10,16.285463669344114,34.068494099300736,0.05041452850006559,nan,nan,nan,2001.0,6.7
