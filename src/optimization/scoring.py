@@ -1,8 +1,7 @@
 import math
-from typing import Mapping, Sequence
+from typing import Sequence
 
 from models.evaluate import EXPECTED, REALIZED, EvaluationResult, evaluate
-from models.paths import CandidatePath
 from models.plan import Plan
 from models.scenario import Scenario
 
@@ -24,7 +23,6 @@ class DesignScorer:
     def __init__(
         self,
         scenario: Scenario,
-        candidates: Mapping[str, tuple[CandidatePath, ...]],
         design_ids: Sequence[int] = DEFAULT_DESIGN_IDS,
         budget: int = DEFAULT_BUDGET,
         objective: Objective = lexicographic_key,
@@ -32,7 +30,6 @@ class DesignScorer:
         if budget < 1:
             raise ValueError("budget must be at least 1")
         self.scenario = scenario
-        self.candidates = candidates
         self.design_ids = tuple(design_ids)
         self.budget = budget
         self.objective = objective
@@ -58,7 +55,6 @@ class DesignScorer:
             plan,
             REALIZED if self.design_ids else EXPECTED,
             self.design_ids,
-            candidates=self.candidates,
             keep_ledger=keep_ledger,
             channel_namespace=DESIGN_NAMESPACE,
             check=False,

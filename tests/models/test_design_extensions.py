@@ -36,9 +36,9 @@ def test_eval_namespace_keeps_previous_draws_and_design_differs():
 def test_evaluate_records_the_channel_namespace():
     scenario = _scenario([make_alert("alert-0000", "s01", 0, 20, 20000)])
     candidates = candidate_paths(scenario)
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0}, EqualSplitBacklogged())
-    assert evaluate(scenario, plan, REALIZED, (0,), candidates=candidates).channel_namespace == "eval"
-    design = evaluate(scenario, plan, REALIZED, (0,), candidates=candidates, channel_namespace="design")
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0}, EqualSplitBacklogged())
+    assert evaluate(scenario, plan, REALIZED, (0,)).channel_namespace == "eval"
+    design = evaluate(scenario, plan, REALIZED, (0,), channel_namespace="design")
     assert design.channel_namespace == "design" and design.feasible
 
 
@@ -48,9 +48,9 @@ def test_weights_split_bandwidth_in_proportion():
     to_n1, to_n0 = candidates["alert-0000"][0].links[0], candidates["alert-0000"][1].links[0]
     assert (to_n1[2], to_n0[2]) == ("n1", "n0")
     weights = {to_n1: np.full(20, 3.0), to_n0: np.full(20, 1.0)}
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0, "alert-0001": 1}, WeightedBacklogged(weights))
-    assert validate_plan(scenario, candidates, plan) == []
-    outcome = simulate(scenario, candidates, plan, constant_channels(scenario, candidates, 1e6))
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0, "alert-0001": 1}, WeightedBacklogged(weights))
+    assert validate_plan(scenario, plan) == []
+    outcome = simulate(scenario, plan, constant_channels(scenario, candidates, 1e6))
     slot_zero = {link: hz for slot, link, hz in outcome.ledger.bandwidth if slot == 0 and link[0] == ACCESS}
     assert slot_zero == {to_n0: 250000.0, to_n1: 750000.0}
 
@@ -64,12 +64,12 @@ def test_unit_weights_reproduce_equal_split_exactly():
     candidates = candidate_paths(scenario)
     choice = {"alert-0000": 0, "alert-0001": 0, "alert-0002": 2}
     channels = constant_channels(scenario, candidates, 1e6)
-    equal = simulate(scenario, candidates, Plan(stationary_trajectory(scenario), choice, EqualSplitBacklogged()), channels)
+    equal = simulate(scenario, Plan.from_choice(stationary_trajectory(scenario), candidates, choice, EqualSplitBacklogged()), channels)
     ones = {link: np.ones(20) for link in radio_links(candidates)}
-    weighted = simulate(scenario, candidates, Plan(stationary_trajectory(scenario), choice, WeightedBacklogged(ones)), channels)
+    weighted = simulate(scenario, Plan.from_choice(stationary_trajectory(scenario), candidates, choice, WeightedBacklogged(ones)), channels)
     assert weighted.ledger == equal.ledger
     zeros = {link: np.zeros(20) for link in radio_links(candidates)}
-    fallback = simulate(scenario, candidates, Plan(stationary_trajectory(scenario), choice, WeightedBacklogged(zeros)), channels)
+    fallback = simulate(scenario, Plan.from_choice(stationary_trajectory(scenario), candidates, choice, WeightedBacklogged(zeros)), channels)
     assert fallback.ledger == equal.ledger
 
 
@@ -82,8 +82,8 @@ def test_malformed_weights_are_rejected():
         ({link: np.ones(19)}, "finite non-negative"),
         ({(ACCESS, "s00", "n9"): np.ones(20)}, "unknown radio link"),
     ):
-        plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0}, WeightedBacklogged(weights))
-        assert any(message in item for item in validate_plan(scenario, candidates, plan))
+        plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0}, WeightedBacklogged(weights))
+        assert any(message in item for item in validate_plan(scenario, plan))
 
 
 def test_random_weighted_plans_pass_the_ledger_checker():
@@ -97,21 +97,21 @@ def test_random_weighted_plans_pass_the_ledger_checker():
     for _ in range(6):
         weights = {link: rng.uniform(0.0, 3.0, size=20) for link in radio_links(candidates)}
         choice = {alert.id: int(rng.integers(0, len(candidates[alert.id]))) for alert in scenario.alerts}
-        plan = Plan(stationary_trajectory(scenario), choice, WeightedBacklogged(weights))
-        result = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, channel_namespace="design")
+        plan = Plan.from_choice(stationary_trajectory(scenario), candidates, choice, WeightedBacklogged(weights))
+        result = evaluate(scenario, plan, REALIZED, (0, 1), channel_namespace="design")
         assert result.feasible
 
 
 def test_unchecked_cached_evaluation_matches_the_checked_result(monkeypatch):
     scenario = _scenario([make_alert("alert-0000", "s00", 0, 12, 400000), make_alert("alert-0001", "s01", 1, 18, 50000)])
     candidates = candidate_paths(scenario)
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0, "alert-0001": 0}, EqualSplitBacklogged())
-    checked = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates)
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0, "alert-0001": 0}, EqualSplitBacklogged())
+    checked = evaluate(scenario, plan, REALIZED, (0, 1))
     real, calls = evaluate_module.connectivity, []
     monkeypatch.setattr(evaluate_module, "connectivity", lambda scenario, channels: calls.append(channels is None) or real(scenario, channels))
     cache = {}
-    first = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, check=False, connectivity_cache=cache)
-    second = evaluate(scenario, plan, REALIZED, (0, 1), candidates=candidates, check=False, connectivity_cache=cache)
+    first = evaluate(scenario, plan, REALIZED, (0, 1), check=False, connectivity_cache=cache)
+    second = evaluate(scenario, plan, REALIZED, (0, 1), check=False, connectivity_cache=cache)
     assert first.key == second.key == checked.key
     assert [item.connected for item in second.realizations] == [item.connected for item in checked.realizations]
     assert [item.delivered_bits for item in second.realizations] == [item.delivered_bits for item in checked.realizations]
@@ -121,8 +121,8 @@ def test_unchecked_cached_evaluation_matches_the_checked_result(monkeypatch):
 def test_check_false_skips_only_the_ledger_checker(monkeypatch):
     scenario = _scenario([make_alert("alert-0000", "s00", 0, 12, 400000)])
     candidates = candidate_paths(scenario)
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0}, EqualSplitBacklogged())
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0}, EqualSplitBacklogged())
     monkeypatch.setattr(evaluate_module, "check_ledger", lambda *args: ["forced problem"])
     with pytest.raises(SimulatorInvariantError, match="forced problem"):
-        evaluate(scenario, plan, REALIZED, (0,), candidates=candidates)
-    assert evaluate(scenario, plan, REALIZED, (0,), candidates=candidates, check=False).feasible
+        evaluate(scenario, plan, REALIZED, (0,))
+    assert evaluate(scenario, plan, REALIZED, (0,), check=False).feasible

@@ -12,9 +12,9 @@ from scenario_builders import make_alert
 def _run(raw_scenario, choice, snr_per_hz=1e6, bandwidth=None, overrides=None):
     scenario = scenario_from_dict(raw_scenario)
     candidates = candidate_paths(scenario)
-    plan = Plan(stationary_trajectory(scenario), choice, bandwidth or EqualSplitBacklogged())
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, choice, bandwidth or EqualSplitBacklogged())
     channels = constant_channels(scenario, candidates, snr_per_hz, overrides)
-    return scenario, candidates, simulate(scenario, candidates, plan, channels)
+    return scenario, candidates, simulate(scenario, plan, channels)
 
 
 def _transfers(outcome, alert_id):

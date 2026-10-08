@@ -16,26 +16,27 @@ SECOND_ACCESS = ("access", "s02", "n2")
 def _start(raw, choice):
     scenario = scenario_from_dict(raw)
     candidates = candidate_paths(scenario)
-    scorer = DesignScorer(scenario, candidates, design_ids=(), budget=500)
-    state = SearchState(stationary_trajectory(scenario), dict(choice), unit_weights(scenario, candidates))
+    scorer = DesignScorer(scenario, design_ids=(), budget=500)
+    paths = {alert_id: None if index is None else candidates[alert_id][index] for alert_id, index in choice.items()}
+    state = SearchState(stationary_trajectory(scenario), paths, unit_weights(scenario, candidates))
     state.key = scorer.score(state.plan())
     return scenario, candidates, scorer, state
 
 
 def test_try_change_adopts_only_strict_improvements():
-    _, _, scorer, state = _start(hopeless_raw(), {"alert-0000": 0, "alert-0001": 0})
+    _, candidates, scorer, state = _start(hopeless_raw(), {"alert-0000": 0, "alert-0001": 0})
     before = state.key
-    assert not state.try_change(scorer, path_choice={"alert-0000": 0, "alert-0001": 0})
+    assert not state.try_change(scorer, paths=dict(state.paths))
     assert state.key == before and scorer.calls == 2
-    assert state.try_change(scorer, path_choice={"alert-0000": None, "alert-0001": 0})
-    assert state.path_choice == {"alert-0000": None, "alert-0001": 0} and state.key > before
+    assert state.try_change(scorer, paths={"alert-0000": None, "alert-0001": candidates["alert-0001"][0]})
+    assert state.paths == {"alert-0000": None, "alert-0001": candidates["alert-0001"][0]} and state.key > before
 
 
 def test_path_block_drops_a_hopeless_alert_that_blocks_another():
     scenario, candidates, scorer, state = _start(hopeless_raw(), {"alert-0000": 0, "alert-0001": 0})
     assert state.key[0] == 0
     assert path_block(scenario, candidates, scorer, state)
-    assert state.path_choice == {"alert-0000": None, "alert-0001": 0}
+    assert state.paths == {"alert-0000": None, "alert-0001": candidates["alert-0001"][0]}
     assert state.key[0] == 1
     assert scorer.calls == 3
 
@@ -49,14 +50,14 @@ def test_trajectory_block_flies_to_a_source_only_the_uav_reaches():
     assert trajectory_block(scorer, state, tour_family(scenario))
     assert state.key[0] == 1
     assert np.min(np.linalg.norm(state.trajectory - [100.0, 100.0], axis=1)) < 1e-6
-    assert validate_plan(scenario, candidates, state.plan()) == []
+    assert validate_plan(scenario, state.plan()) == []
 
 
 def test_bandwidth_block_raises_the_weight_of_the_congested_link():
     scenario, candidates, scorer, state = _start(bandwidth_raw(), {"alert-0000": 0, "alert-0001": 0})
-    assert links_by_load(scenario, candidates, state.path_choice) == [FIRST_ACCESS, SECOND_ACCESS]
+    assert links_by_load(scenario, state.paths) == [FIRST_ACCESS, SECOND_ACCESS]
     assert state.key[0] == 1
-    assert bandwidth_block(scenario, candidates, scorer, state)
+    assert bandwidth_block(scenario, scorer, state)
     assert state.key[0] == 2
     assert np.all(state.weights[FIRST_ACCESS] == 2.0) and np.all(state.weights[SECOND_ACCESS] == 1.0)
 
@@ -66,5 +67,6 @@ def test_links_by_load_breaks_ties_by_link_and_skips_unserved_alerts():
     raw["alerts"][0]["size_bits"] = 4000000
     scenario = scenario_from_dict(raw)
     candidates = candidate_paths(scenario)
-    assert links_by_load(scenario, candidates, {"alert-0000": 0, "alert-0001": 0}) == [FIRST_ACCESS, SECOND_ACCESS]
-    assert links_by_load(scenario, candidates, {"alert-0000": None, "alert-0001": 0}) == [SECOND_ACCESS]
+    paths = {"alert-0000": candidates["alert-0000"][0], "alert-0001": candidates["alert-0001"][0]}
+    assert links_by_load(scenario, paths) == [FIRST_ACCESS, SECOND_ACCESS]
+    assert links_by_load(scenario, {**paths, "alert-0000": None}) == [SECOND_ACCESS]

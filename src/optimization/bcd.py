@@ -101,9 +101,9 @@ class SearchMethod:
 
     def search(self, scenario: Scenario, candidates: Mapping[str, tuple[CandidatePath, ...]]) -> SearchOutcome:
         params = self.params
-        scorer = DesignScorer(scenario, candidates, params.design_ids, params.budget, OBJECTIVES[params.objective])
+        scorer = DesignScorer(scenario, params.design_ids, params.budget, OBJECTIVES[params.objective])
         initial = B1().plan(scenario, candidates, EvaluationCounter())
-        state = SearchState(initial.trajectory, dict(initial.path_choice), unit_weights(scenario, candidates))
+        state = SearchState(initial.trajectory, dict(initial.paths), unit_weights(scenario, candidates))
         family = tour_family(scenario) if params.trajectory_block else []
         iteration_keys: list[Key] = []
         exhausted = False
@@ -114,7 +114,7 @@ class SearchMethod:
                 if params.path_block:
                     accepted |= path_block(scenario, candidates, scorer, state)
                 if params.bandwidth_block:
-                    accepted |= bandwidth_block(scenario, candidates, scorer, state)
+                    accepted |= bandwidth_block(scenario, scorer, state)
                 if params.trajectory_block:
                     accepted |= trajectory_block(scorer, state, family)
                 if params.operation1 or params.operation2:

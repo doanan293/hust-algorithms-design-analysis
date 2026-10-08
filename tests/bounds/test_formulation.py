@@ -83,7 +83,7 @@ def test_bound_is_at_least_every_evaluated_random_plan():
             for link in downlinks[2:]:
                 policy.bandwidth_hz[link][:] = 0.0
         realization = int(rng.integers(0, 5))
-        result = evaluate(scenario, Plan(trajectory, choice, policy), REALIZED, (realization,), candidates=candidates)
+        result = evaluate(scenario, Plan.from_choice(trajectory, candidates, choice, policy), REALIZED, (realization,))
         assert result.feasible, result.violations
         channels = build_link_channels(scenario, links, trajectory, channel_uniforms(scenario, realization))
         bound = solve_lp(build_bound_model(scenario, candidates, channels, tangents=10))

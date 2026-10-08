@@ -64,8 +64,7 @@ def congested_slots(ledger: Ledger) -> dict[LinkId, set[int]]:
 
 def assess_risk(
     scenario: Scenario,
-    candidates: Mapping[str, tuple[CandidatePath, ...]],
-    path_choice: Mapping[str, int | None],
+    paths: Mapping[str, CandidatePath | None],
     result: EvaluationResult,
     backlog: bool = True,
     slack_limit: int = RISK_SLACK_SLOTS,
@@ -75,7 +74,7 @@ def assess_risk(
     realizations = result.realizations
     ranked = []
     for alert in scenario.alerts:
-        if path_choice[alert.id] is None:
+        if paths[alert.id] is None:
             continue
         risky = sum(
             slack_slots(alert, item.delivery_slot[alert.id], item.timely[alert.id]) <= slack_limit for item in realizations
@@ -85,7 +84,7 @@ def assess_risk(
     ranked = sorted(ranked)[:limit]
     if not backlog:
         return [
-            AlertRisk(alert_id, -negative, candidates[alert_id][path_choice[alert_id]].links[0], frozenset())
+            AlertRisk(alert_id, -negative, paths[alert_id].links[0], frozenset())
             for negative, _, alert_id in ranked
         ]
     selected = {alert_id for _, _, alert_id in ranked}
@@ -103,7 +102,7 @@ def assess_risk(
     risks = []
     for negative, _, alert_id in ranked:
         alert = scenario.alert_by_id[alert_id]
-        path = candidates[alert_id][path_choice[alert_id]]
+        path = paths[alert_id]
         hops = Counter(bottleneck_hop(scenario, alert, path, by_alert[alert_id]) for by_alert in transfers)
         hop = min(hops, key=lambda item: (-hops[item], item))
         window = set(range(alert.release_slot, alert.deadline_slot))
@@ -122,8 +121,8 @@ def shift_bandwidth(
 
 
 def path_change_order(
-    candidates: Mapping[str, tuple[CandidatePath, ...]], risk: AlertRisk, current: int | None, backlog: bool = True
-) -> list[int]:
+    candidates: Mapping[str, tuple[CandidatePath, ...]], risk: AlertRisk, current: CandidatePath | None, backlog: bool = True
+) -> list[CandidatePath]:
     """Operation 2: other candidates by (congested links, cost_s, index); without backlog by (cost_s, index)."""
     paths = candidates[risk.alert_id]
 
@@ -131,7 +130,7 @@ def path_change_order(
         congested = sum(link in risk.congested_links for link in paths[index].links) if backlog else 0
         return (congested, paths[index].cost_s, index)
 
-    return sorted((index for index in range(len(paths)) if index != current), key=order)
+    return [paths[index] for index in sorted((index for index in range(len(paths)) if paths[index] != current), key=order)]
 
 
 def repair_round(
@@ -146,14 +145,14 @@ def repair_round(
     """One detection call, then operation 1 and operation 2 per at-risk alert; at most 1 + R*K evaluations."""
     _, result = scorer.score_with_ledger(state.plan())
     accepted = False
-    for risk in assess_risk(scenario, candidates, state.path_choice, result, backlog):
+    for risk in assess_risk(scenario, state.paths, result, backlog):
         alert = scenario.alert_by_id[risk.alert_id]
         if operation1 and risk.bottleneck[0] != BACKHAUL:
             weights = shift_bandwidth(state.weights, risk.bottleneck, alert, scenario.time.num_slots)
             accepted |= state.try_change(scorer, weights=weights)
         if operation2:
-            for index in path_change_order(candidates, risk, state.path_choice[alert.id], backlog):
-                if state.try_change(scorer, path_choice={**state.path_choice, alert.id: index}):
+            for path in path_change_order(candidates, risk, state.paths[alert.id], backlog):
+                if state.try_change(scorer, paths={**state.paths, alert.id: path}):
                     accepted = True
                     break
     return accepted

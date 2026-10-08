@@ -68,7 +68,7 @@ def plan_from_solution(
         active = sorted((bandwidth[link][slot], link) for link in bandwidth if link[0] == DOWNLINK and bandwidth[link][slot] > 0.0)
         for _, link in active[: max(0, len(active) - cap)]:
             bandwidth[link][slot] = 0.0
-    return Plan(trajectory, choice, StaticSchedule(bandwidth))
+    return Plan.from_choice(trajectory, candidates, choice, StaticSchedule(bandwidth))
 
 
 def model_snr_values(model: BoundModel, channels: Mapping[LinkId, LinkChannel]) -> list[float]:

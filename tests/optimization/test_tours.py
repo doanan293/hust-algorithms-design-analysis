@@ -30,8 +30,8 @@ def test_family_skips_tours_that_exceed_the_mission_and_every_tour_is_valid():
     assert {spec.zones for spec, _ in family} == {(0, 1), (1, 0), (0,), (1,)}
     assert tour_trajectory(scenario, TourSpec((2,), "uniform", "zone_center")) is None
     for _, trajectory in family:
-        plan = Plan(trajectory, {alert.id: None for alert in scenario.alerts}, EqualSplitBacklogged())
-        assert validate_plan(scenario, candidates, plan) == []
+        plan = Plan.from_choice(trajectory, candidates, {alert.id: None for alert in scenario.alerts}, EqualSplitBacklogged())
+        assert validate_plan(scenario, plan) == []
     assert len({spec for spec, _ in family}) == len(family) <= 90
 
 

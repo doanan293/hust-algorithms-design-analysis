@@ -20,17 +20,13 @@ class SimulatorInvariantError(RuntimeError):
 
 def check_ledger(
     scenario: Scenario,
-    candidates: Mapping[str, tuple[CandidatePath, ...]],
     plan: Plan,
     channels: Mapping[LinkId, LinkChannel],
     ledger: Ledger,
     delivered_bits: Mapping[str, float] | None = None,
 ) -> list[str]:
     """Replay the ledger without simulator code and list every broken invariant."""
-    paths = {
-        alert.id: None if plan.path_choice[alert.id] is None else candidates[alert.id][plan.path_choice[alert.id]]
-        for alert in scenario.alerts
-    }
+    paths = {alert.id: plan.paths[alert.id] for alert in scenario.alerts}
     violations: list[str] = []
     bandwidth = _check_bandwidth(scenario, plan, ledger, violations)
     capacity = _check_capacity(scenario, channels, ledger, bandwidth, violations)

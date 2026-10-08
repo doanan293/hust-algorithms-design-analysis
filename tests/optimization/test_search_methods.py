@@ -33,7 +33,7 @@ def _same_plan(first, second):
     weights_a, weights_b = first.bandwidth.weights, second.bandwidth.weights
     return (
         np.array_equal(first.trajectory, second.trajectory)
-        and first.path_choice == second.path_choice
+        and first.paths == second.paths
         and weights_a.keys() == weights_b.keys()
         and all(np.array_equal(weights_a[link], weights_b[link]) for link in weights_a)
     )
@@ -50,9 +50,9 @@ def test_search_is_monotone_within_budget_feasible_and_repeatable(name):
     assert 1 <= outcome.calls <= params.budget
     if not outcome.budget_exhausted:
         assert outcome.iteration_keys[-1] == outcome.key
-    rescorer = DesignScorer(scenario, candidates, params.design_ids, 1, bcd.OBJECTIVES[params.objective])
+    rescorer = DesignScorer(scenario, params.design_ids, 1, bcd.OBJECTIVES[params.objective])
     assert rescorer.score(outcome.plan) == outcome.key
-    assert evaluate(scenario, outcome.plan, REALIZED, (0, 1, 2), candidates=candidates).feasible
+    assert evaluate(scenario, outcome.plan, REALIZED, (0, 1, 2)).feasible
     assert _same_plan(outcome.plan, method.search(scenario, candidates).plan)
 
 
@@ -62,7 +62,7 @@ def test_budget_exhaustion_returns_the_feasible_incumbent():
     params = SearchParams(operation1=True, operation2=True, design_ids=(0,), budget=4)
     outcome = SearchMethod("P", params).search(scenario, candidates)
     assert outcome.budget_exhausted and outcome.calls == 4 and outcome.iteration_keys == ()
-    assert evaluate(scenario, outcome.plan, REALIZED, (0,), candidates=candidates).feasible
+    assert evaluate(scenario, outcome.plan, REALIZED, (0,)).feasible
 
 
 def test_p_without_operations_is_b2_and_b3_differs_only_by_its_key(monkeypatch):

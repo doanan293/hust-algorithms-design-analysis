@@ -82,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     checks, trajectories, progress = {}, [], []
     for method_id in args.methods:
         plan = build_method(specs[method_id]).plan(scenario, candidates, EvaluationCounter())
-        result = evaluate(scenario, plan, REALIZED, config.realization_ids, candidates=candidates)
+        result = evaluate(scenario, plan, REALIZED, config.realization_ids)
         checks[method_id] = {"timely_ratio_trace": result.timely_ratio, "timely_ratio_runner": scenario_means(scenario_rows, method_id)[scenario_id]}
         trajectories += [{"method": method_id, "slot": slot, "x_m": float(x), "y_m": float(y)} for slot, (x, y) in enumerate(plan.trajectory)]
         counts = progress_counts(result.realizations, scenario.time.num_slots)

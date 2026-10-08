@@ -12,7 +12,8 @@ from scenario_builders import make_alert
 
 def test_mode_arguments_are_checked(raw_scenario):
     scenario = scenario_from_dict(raw_scenario)
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0}, EqualSplitBacklogged())
+    candidates = candidate_paths(scenario)
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0}, EqualSplitBacklogged())
     with pytest.raises(ValueError):
         evaluate(scenario, plan, EXPECTED, (0,))
     with pytest.raises(ValueError):
@@ -21,8 +22,9 @@ def test_mode_arguments_are_checked(raw_scenario):
 
 def test_invalid_plan_is_infeasible_and_counted(raw_scenario):
     scenario = scenario_from_dict(raw_scenario)
+    candidates = candidate_paths(scenario)
     counter = EvaluationCounter()
-    plan = Plan(stationary_trajectory(scenario), {}, EqualSplitBacklogged())
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {}, EqualSplitBacklogged())
     result = evaluate(scenario, plan, REALIZED, (0, 1, 2), counter=counter)
     assert result.feasible is False
     assert result.key == INFEASIBLE_KEY
@@ -33,7 +35,8 @@ def test_invalid_plan_is_infeasible_and_counted(raw_scenario):
 def test_realized_results_are_reproducible(raw_scenario):
     raw_scenario["alerts"].append(make_alert("alert-0001", "s01", 0, 20, 20000))
     scenario = scenario_from_dict(raw_scenario)
-    plan = Plan(stationary_trajectory(scenario), {"alert-0000": 0, "alert-0001": 0}, EqualSplitBacklogged())
+    candidates = candidate_paths(scenario)
+    plan = Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0000": 0, "alert-0001": 0}, EqualSplitBacklogged())
     counter = EvaluationCounter()
     first = evaluate(scenario, plan, REALIZED, (0, 1), counter=counter, keep_ledger=True)
     second = evaluate(scenario, plan, REALIZED, (0, 1), counter=counter)
@@ -59,11 +62,12 @@ def test_flying_to_far_source_beats_hovering_in_expected_mode(raw_scenario):
     raw_scenario["time"]["num_slots"] = 80
     raw_scenario["alerts"] = [make_alert("alert-0001", "s01", 0, 80, 200000)]
     scenario = scenario_from_dict(raw_scenario)
+    candidates = candidate_paths(scenario)
     trajectory = _out_and_back(scenario, (100.0, 100.0), 54)
     assert trajectory.shape == (81, 2)
-    flying = evaluate(scenario, Plan(trajectory, {"alert-0001": 0}, EqualSplitBacklogged()), EXPECTED)
+    flying = evaluate(scenario, Plan.from_choice(trajectory, candidates, {"alert-0001": 0}, EqualSplitBacklogged()), EXPECTED)
     hovering = evaluate(
-        scenario, Plan(stationary_trajectory(scenario), {"alert-0001": 0}, EqualSplitBacklogged()), EXPECTED
+        scenario, Plan.from_choice(stationary_trajectory(scenario), candidates, {"alert-0001": 0}, EqualSplitBacklogged()), EXPECTED
     )
     assert flying.feasible and hovering.feasible
     assert flying.timely_ratio == 1.0
@@ -107,7 +111,7 @@ def test_random_valid_plans_never_break_invariants(raw_scenario):
                     if index not in keep:
                         values[link][slot] = 0.0
             policy = StaticSchedule(values)
-        result = evaluate(scenario, Plan(trajectory, choice, policy), REALIZED, (0, 1), candidates=candidates)
+        result = evaluate(scenario, Plan.from_choice(trajectory, candidates, choice, policy), REALIZED, (0, 1))
         assert result.feasible, result.violations
         for realization in result.realizations:
             for alert in scenario.alerts:
