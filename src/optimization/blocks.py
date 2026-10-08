@@ -88,7 +88,8 @@ def path_block(
     params: "SearchParams",
     rng: np.random.Generator,
 ) -> bool:
-    """One ledger call, then for each alert in urgency order every neighbour of its current path, first improvement."""
+    """One ledger call, then each alert in urgency order tries every neighbour generated from its path at the start of
+    its turn; each neighbour that strictly improves the key replaces the incumbent, and the remaining ones are still tried."""
     _, result = scorer.score_with_ledger(state.plan())
     summary = LedgerSummary.from_result(result)
     accepted = False
