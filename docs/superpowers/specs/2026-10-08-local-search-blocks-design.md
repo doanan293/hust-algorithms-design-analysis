@@ -269,7 +269,7 @@ Paired per-scenario differences against `P` (mean over the 6 scenarios; wins/los
 **Decision (rule fixed in Plan E.1 Task 10 before the run):** keep a default unless a neighbouring value beats it by more than the half-width of the default's bootstrap CI (≈ 0.20 here). No variant comes close, so the defaults stay: `entry_neighbors = 3`, `trajectory_segments = 5`, `catalog_probability = 0.1`, `catalog_init = False`, `seed = 0`. The largest paired gains (≈ +0.01) are about twice the seed-to-seed spread (0.546–0.553) on six scenarios; choosing them would tune on the development set.
 
 **Findings carried to the report:**
-- The local-search P (0.548) matches the pre-change P (0.542) on the same development scenarios while planning 2.3× faster (195 s vs 456 s per scenario): the local trajectory block costs about 12 evaluations per round instead of up to 90, leaving more budget to the path block.
+- The local-search P (0.548) shows no detectable difference from the pre-change P (0.542) on the same development scenarios. The pilot also recorded 195 s vs 456 s of planning per scenario, but the two pilots ran on different days under different machine load; the main experiment (same conditions for all methods) shows SBS at 172 s vs 150 s before, so no speed-up is claimed. The local trajectory block costs about 12 evaluations per round instead of up to 90, leaving more of the fixed budget to the path block.
 - The local trajectory moves alone do not beat scanning the whole catalogue every round (`P_catalog_trajectory`, +0.011 paired); the main experiment reports this as the `P_catalog_trajectory` ablation.
 - The generated paths matter: with the catalogue trajectory, the new path block raised Bbnplanet-r0 from 0.336 (pre-change P) to 0.403.
 
@@ -280,4 +280,4 @@ Paired per-scenario differences against `P` (mean over the 6 scenarios; wins/los
 - The `P_catalog_trajectory` label in `report_tables_phase2.py` moves to Plan E.2, since the committed results lack the variant until the rerun.
 - Development incident (no effect on results): a worktree symlink for `data/processed` was committed and its merge deleted the generated data; the symlink was removed from history, `.gitignore` now matches `data/processed` as a file too, and the data was rebuilt from `data/raw` with 576/576 scenario hashes matching the committed manifests.
 
-**Planning time for Plan E.2:** about 190 s per search task on the development scenarios (12 workers), versus 450 s before the change.
+**Planning time for Plan E.2:** about 190 s per search task on the development scenarios (12 workers). Plan E.2 outcome: main experiment SBS 0.559 / SBS-R 0.560 on Wide (pre-change 0.551 / 0.553), 0.517 / 0.521 on Narrow (0.509 / 0.507); 5–8 of 40 alerts per scenario routed outside the candidate set; `P_catalog_trajectory` +0.006 / +0.008 with CIs containing zero; B0, B1, TRAN and all Phase 1 rows identical to the pre-change results on the full data.

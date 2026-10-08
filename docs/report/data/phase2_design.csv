@@ -1,5 +1,5 @@
 design;timely;planning;calls
-Expected rate;\num{0.467};\num{26.6};\num{1916}
-1;\num{0.476};\num{29.2};\num{1989}
-5;\num{0.506};\num{146.6};\num{2001}
-10;\num{0.514};\num{236.9};\num{1982}
+Expected rate;\num{0.492};\num{34.1};\num{2001}
+1;\num{0.488};\num{35.4};\num{2001}
+5;\num{0.529};\num{211.6};\num{1992}
+10;\num{0.524};\num{262.7};\num{1975}

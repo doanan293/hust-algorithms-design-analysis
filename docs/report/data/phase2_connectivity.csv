@@ -1,7 +1,7 @@
 set;group;scenarios;conn;b0;b1;b2;gain
-Wide;At most 1/3;10;\num{0.260};\num{0.230};\num{0.276};\num{0.358};\num{0.128}
-Wide;1/3 to 2/3;11;\num{0.527};\num{0.420};\num{0.514};\num{0.557};\num{0.137}
-Wide;Above 2/3;9;\num{0.763};\num{0.608};\num{0.713};\num{0.760};\num{0.152}
-Narrow;At most 1/3;10;\num{0.260};\num{0.210};\num{0.260};\num{0.348};\num{0.138}
-Narrow;1/3 to 2/3;11;\num{0.527};\num{0.398};\num{0.456};\num{0.515};\num{0.117}
-Narrow;Above 2/3;9;\num{0.763};\num{0.514};\num{0.588};\num{0.682};\num{0.168}
+Wide;At most 1/3;10;\num{0.260};\num{0.230};\num{0.276};\num{0.334};\num{0.104}
+Wide;1/3 to 2/3;11;\num{0.527};\num{0.420};\num{0.514};\num{0.583};\num{0.162}
+Wide;Above 2/3;9;\num{0.763};\num{0.608};\num{0.713};\num{0.779};\num{0.170}
+Narrow;At most 1/3;10;\num{0.260};\num{0.210};\num{0.260};\num{0.328};\num{0.118}
+Narrow;1/3 to 2/3;11;\num{0.527};\num{0.398};\num{0.456};\num{0.542};\num{0.144}
+Narrow;Above 2/3;9;\num{0.763};\num{0.514};\num{0.588};\num{0.698};\num{0.184}

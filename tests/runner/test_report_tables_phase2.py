@@ -14,7 +14,8 @@ SPEC.loader.exec_module(report)
 
 TOPOLOGIES = [f"T{index}" for index in range(10)]
 MAIN = {"B0": 0.25, "B1": 0.375, "B2": 0.5, "B3": 0.125, "P": 0.5, "P_op1": 0.5, "P_op2": 0.5, "P_no_backlog": 0.5,
-        "P_fixed_paths": 0.375, "P_fixed_trajectory": 0.375, "P_equal_bandwidth": 0.5, "P_expected_design": 0.4375}
+        "P_fixed_paths": 0.375, "P_fixed_trajectory": 0.375, "P_equal_bandwidth": 0.5, "P_expected_design": 0.4375,
+        "P_catalog_trajectory": 0.5}
 SENSITIVITY_SETS = ["v0", "v0-bh50", "sens-bh100", "sens-lref125k", "sens-lref500k", "sens-lref1m", "sens-physical", "sens-deadline-short",
                     "sens-deadline-long", "sens-btot05", "sens-btot2", "sens-alerts20", "sens-alerts60", "sens-k2", "sens-k5"]
 SUMMARY_COLUMNS = ["set_id", "method", "scenario_count", "timely_ratio_mean", "timely_ratio_ci_low", "timely_ratio_ci_high", "conn_ratio_mean",
@@ -80,7 +81,7 @@ def test_phase2_report_files_follow_the_results(tmp_path: Path):
     assert statistics_rows[1] == ["Wide", "SBS-R $-$ SBS", "\\num{0.125}", "[\\num{0.100}, \\num{0.150}]", "\\num{1.00}", "\\num{0.0020}", "\\num{0.0156}"]
     ablation = _semicolon(output / "phase2_ablation.csv")
     assert [row[0] for row in ablation[1:]] == ["Full SBS-R", "Operator 1 only", "Operator 2 only", "Repair without backlog", "No path block",
-                                                 "No trajectory block", "No bandwidth block", "Expected-rate design"]
+                                                 "No trajectory block", "No bandwidth block", "Expected-rate design", "Catalogue trajectory block"]
     assert ablation[2][2] == "\\num{0.000} [\\num{0.000}, \\num{0.000}]"
     assert ablation[5][1:5] == ["\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]", "\\num{0.375}", "\\num{-0.125} [\\num{-0.125}, \\num{-0.125}]"]
     connectivity = _semicolon(output / "phase2_connectivity.csv")

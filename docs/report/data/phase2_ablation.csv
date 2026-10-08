@@ -1,9 +1,10 @@
 variant;timely;diff;timelybh;diffbh;calls
-Full SBS-R;\num{0.553};---;\num{0.507};---;\num{1973}
-Operator 1 only;\num{0.553};\num{0.000} [\num{-0.006}, \num{0.008}];\num{0.510};\num{0.002} [\num{-0.002}, \num{0.007}];\num{1961}
-Operator 2 only;\num{0.553};\num{0.000} [\num{-0.002}, \num{0.003}];\num{0.508};\num{0.000} [\num{-0.003}, \num{0.002}];\num{1961}
-Repair without backlog;\num{0.553};\num{-0.001} [\num{-0.002}, \num{0.001}];\num{0.509};\num{0.001} [\num{0.000}, \num{0.002}];\num{1982}
-No path block;\num{0.504};\num{-0.050} [\num{-0.072}, \num{-0.032}];\num{0.443};\num{-0.065} [\num{-0.084}, \num{-0.048}];\num{597}
-No trajectory block;\num{0.505};\num{-0.048} [\num{-0.069}, \num{-0.032}];\num{0.459};\num{-0.048} [\num{-0.063}, \num{-0.037}];\num{1648}
-No bandwidth block;\num{0.555};\num{0.001} [\num{-0.007}, \num{0.011}];\num{0.510};\num{0.003} [\num{-0.003}, \num{0.010}];\num{958}
-Expected-rate design;\num{0.518};\num{-0.035} [\num{-0.046}, \num{-0.027}];\num{0.481};\num{-0.027} [\num{-0.031}, \num{-0.022}];\num{1921}
+Full SBS-R;\num{0.560};---;\num{0.521};---;\num{1975}
+Operator 1 only;\num{0.560};\num{-0.001} [\num{-0.014}, \num{0.009}];\num{0.516};\num{-0.005} [\num{-0.012}, \num{0.001}];\num{1929}
+Operator 2 only;\num{0.562};\num{0.001} [\num{-0.008}, \num{0.011}];\num{0.521};\num{0.001} [\num{-0.008}, \num{0.010}];\num{1943}
+Repair without backlog;\num{0.558};\num{-0.002} [\num{-0.007}, \num{0.003}];\num{0.522};\num{0.001} [\num{-0.006}, \num{0.009}];\num{1975}
+No path block;\num{0.515};\num{-0.045} [\num{-0.067}, \num{-0.027}];\num{0.453};\num{-0.068} [\num{-0.091}, \num{-0.048}];\num{259}
+No trajectory block;\num{0.519};\num{-0.041} [\num{-0.055}, \num{-0.029}];\num{0.489};\num{-0.032} [\num{-0.041}, \num{-0.024}];\num{1841}
+No bandwidth block;\num{0.564};\num{0.003} [\num{-0.005}, \num{0.013}];\num{0.518};\num{-0.003} [\num{-0.012}, \num{0.006}];\num{1489}
+Expected-rate design;\num{0.523};\num{-0.038} [\num{-0.053}, \num{-0.024}];\num{0.476};\num{-0.045} [\num{-0.052}, \num{-0.037}];\num{1970}
+Catalogue trajectory block;\num{0.567};\num{0.006} [\num{-0.014}, \num{0.024}];\num{0.528};\num{0.008} [\num{-0.006}, \num{0.022}];\num{1987}
