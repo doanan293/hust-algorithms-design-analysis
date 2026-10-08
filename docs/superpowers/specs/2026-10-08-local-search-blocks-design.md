@@ -242,4 +242,42 @@ Slides (`docs/presentation/uav-alert-delivery.pptx`, edited in place with the pp
 
 ## 12. Pilot results and decisions
 
-To be filled during implementation: chosen M and W, pilot table (development split, B2/P with local vs catalogue trajectory mode), and any deviation from this document with its reason.
+**Run:** `configs/experiments/phase2_pilot_local.yaml`, development split of `v0` (6 scenarios), 30 evaluation realizations, 2026-10-08, results in `results/phase2/pilot_local/`.
+
+| Method | Timely ratio | 95% CI | Planning s | Evaluations |
+|---|---|---|---|---|
+| B2 (pre-change, results/phase2/pilot) | 0.545 | [0.300, 0.762] | 454 | 2001 |
+| P (pre-change, results/phase2/pilot) | 0.542 | [0.300, 0.757] | 456 | 2001 |
+| B1 | 0.461 | [0.221, 0.665] | 0 | 1 |
+| B2 | 0.544 | [0.345, 0.747] | 195 | 1946 |
+| P | 0.548 | [0.353, 0.753] | 195 | 2001 |
+| P_cat0 | 0.548 | [0.353, 0.758] | 189 | 2001 |
+| P_cat03 | 0.550 | [0.353, 0.759] | 200 | 2001 |
+| P_cat1 | 0.558 | [0.351, 0.759] | 192 | 2001 |
+| P_catalog_trajectory | 0.559 | [0.319, 0.755] | 181 | 1991 |
+| P_init | 0.550 | [0.383, 0.748] | 177 | 1944 |
+| P_init_w10 | 0.560 | [0.360, 0.765] | 187 | 2001 |
+| P_m2 | 0.547 | [0.331, 0.761] | 188 | 1990 |
+| P_m5 | 0.537 | [0.338, 0.744] | 184 | 2001 |
+| P_seed1 | 0.546 | [0.361, 0.749] | 189 | 2001 |
+| P_seed2 | 0.553 | [0.338, 0.746] | 193 | 2001 |
+| P_w10 | 0.543 | [0.340, 0.745] | 202 | 2001 |
+| P_w3 | 0.540 | [0.351, 0.750] | 174 | 2001 |
+
+Paired per-scenario differences against `P` (mean over the 6 scenarios; wins/losses): `P_cat1` +0.010 (5/1), `P_catalog_trajectory` +0.011 (4/2), `P_init_w10` +0.012 (4/2), `P_init` +0.002, `P_cat03` +0.002, `P_cat0` +0.000, `P_m2` −0.001, `P_w10` −0.005, `P_w3` −0.008, `P_m5` −0.011; seeds 1 and 2: −0.002 and +0.005.
+
+**Decision (rule fixed in Plan E.1 Task 10 before the run):** keep a default unless a neighbouring value beats it by more than the half-width of the default's bootstrap CI (≈ 0.20 here). No variant comes close, so the defaults stay: `entry_neighbors = 3`, `trajectory_segments = 5`, `catalog_probability = 0.1`, `catalog_init = False`, `seed = 0`. The largest paired gains (≈ +0.01) are about twice the seed-to-seed spread (0.546–0.553) on six scenarios; choosing them would tune on the development set.
+
+**Findings carried to the report:**
+- The local-search P (0.548) matches the pre-change P (0.542) on the same development scenarios while planning 2.3× faster (195 s vs 456 s per scenario): the local trajectory block costs about 12 evaluations per round instead of up to 90, leaving more budget to the path block.
+- The local trajectory moves alone do not beat scanning the whole catalogue every round (`P_catalog_trajectory`, +0.011 paired); the main experiment reports this as the `P_catalog_trajectory` ablation.
+- The generated paths matter: with the catalogue trajectory, the new path block raised Bbnplanet-r0 from 0.336 (pre-change P) to 0.403.
+
+**Deviations from this document during implementation:**
+- RNG namespace `search:<seed>` shared by all method ids (Section 7.1, updated).
+- `catalog_init` parameter added (Section 7.2 table) so the pilot could test catalogue initialisation; off by default.
+- `with_unit_weights` gives new radio links unit weights inside `SearchState.try_change` (Section 5.5).
+- The `P_catalog_trajectory` label in `report_tables_phase2.py` moves to Plan E.2, since the committed results lack the variant until the rerun.
+- Development incident (no effect on results): a worktree symlink for `data/processed` was committed and its merge deleted the generated data; the symlink was removed from history, `.gitignore` now matches `data/processed` as a file too, and the data was rebuilt from `data/raw` with 576/576 scenario hashes matching the committed manifests.
+
+**Planning time for Plan E.2:** about 190 s per search task on the development scenarios (12 workers), versus 450 s before the change.
