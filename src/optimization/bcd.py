@@ -18,6 +18,9 @@ from .scoring import DEFAULT_BUDGET, DEFAULT_DESIGN_IDS, BudgetExhausted, Design
 from .tours import tour_family
 
 EXPECTED_DESIGN = "expected"
+LOCAL = "local"
+CATALOG = "catalog"
+TRAJECTORY_MODES = (LOCAL, CATALOG)
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,12 @@ class SearchParams:
     design_ids: tuple[int, ...] = DEFAULT_DESIGN_IDS
     budget: int = DEFAULT_BUDGET
     max_iterations: int = 10
+    trajectory_mode: str = LOCAL
+    catalog_probability: float = 0.1
+    entry_neighbors: int = 3
+    trajectory_segments: int = 5
+    max_widening: int = 10
+    seed: int = 0
 
     def __post_init__(self) -> None:
         if self.objective not in OBJECTIVES:
@@ -41,10 +50,19 @@ class SearchParams:
         for name in ("path_block", "bandwidth_block", "trajectory_block", "operation1", "operation2", "backlog"):
             if not isinstance(getattr(self, name), bool):
                 raise ValueError(f"{name}: expected true or false")
-        for name in ("budget", "max_iterations"):
+        if self.trajectory_mode not in TRAJECTORY_MODES:
+            raise ValueError(f"trajectory_mode: expected one of {TRAJECTORY_MODES}, got {self.trajectory_mode!r}")
+        probability = self.catalog_probability
+        if isinstance(probability, bool) or not isinstance(probability, (int, float)) or not 0.0 <= probability <= 1.0:
+            raise ValueError("catalog_probability: expected a number in [0, 1]")
+        for name in ("budget", "max_iterations", "entry_neighbors", "trajectory_segments"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name}: expected an integer of at least 1")
+        for name in ("max_widening", "seed"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name}: expected a non-negative integer")
         ids = self.design_ids
         if not isinstance(ids, tuple) or len(set(ids)) != len(ids) or any(
             isinstance(item, bool) or not isinstance(item, int) or item < 0 for item in ids

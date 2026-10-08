@@ -91,6 +91,12 @@ def test_search_params_from_mapping_validates_values():
     assert SearchParams.from_mapping({}) == SearchParams()
     assert SearchParams.from_mapping({"design_ids": "expected", "operation1": True}).design_ids == ()
     assert SearchParams.from_mapping({"design_ids": [3, 4]}).design_ids == (3, 4)
+    params = SearchParams.from_mapping(
+        {"trajectory_mode": "catalog", "catalog_probability": 0.0, "entry_neighbors": 5, "trajectory_segments": 10, "max_widening": 0, "seed": 2}
+    )
+    assert (params.trajectory_mode, params.catalog_probability, params.entry_neighbors) == ("catalog", 0.0, 5)
+    assert (params.trajectory_segments, params.max_widening, params.seed) == (10, 0, 2)
+    assert (SearchParams().trajectory_mode, SearchParams().catalog_probability, SearchParams().seed) == ("local", 0.1, 0)
     for raw, message in (
         ({"repair": True}, "unknown search parameters"),
         ({"objective": "maxmin"}, "objective"),
@@ -98,6 +104,13 @@ def test_search_params_from_mapping_validates_values():
         ({"operation1": "yes"}, "operation1"),
         ({"design_ids": []}, "design_ids"),
         ({"design_ids": [1, 1]}, "design_ids"),
+        ({"trajectory_mode": "random"}, "trajectory_mode"),
+        ({"catalog_probability": 1.5}, "catalog_probability"),
+        ({"catalog_probability": True}, "catalog_probability"),
+        ({"entry_neighbors": 0}, "entry_neighbors"),
+        ({"trajectory_segments": 0}, "trajectory_segments"),
+        ({"max_widening": -1}, "max_widening"),
+        ({"seed": -1}, "seed"),
     ):
         with pytest.raises(ValueError, match=message):
             SearchParams.from_mapping(raw)
