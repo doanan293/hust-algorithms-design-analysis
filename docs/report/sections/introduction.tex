@@ -15,6 +15,6 @@ The main contributions of this paper are summarized as follows:
 \begin{itemize}
 \item We formulate the joint trajectory, relay-path, and bandwidth problem with per-alert release times, deadlines, and sizes, a ground relay network with finite backhaul, the PrLoS channel, and slot-level causality, and we prove that the problem is NP-hard even when the trajectory is fixed.
 \item We derive a per-realization LP upper bound, prove its validity, and quantify its tightness against a mixed-integer linear program (MILP) on reduced instances.
-\item We propose a sample-scored block search over paths, bandwidth weights, and feasible tours, together with a risk-driven repair variant and a leximin variant that isolates the effect of the objective.
+\item We propose a sample-scored block search whose path and trajectory blocks are local searches around the current plan: paths are rerouted around the links that the current plan congests, and trajectory segments are shifted toward saturated UAV links within the speed limit. A risk-driven repair variant and a leximin variant isolate the effects of repair and of the objective.
 \item We evaluate all methods on two scenario families with topology-level paired tests, ablations, budget and sensitivity studies, a comparison with an adapted state-of-the-art method, and a case study based on real post-disaster imagery.
 \end{itemize}

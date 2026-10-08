@@ -15,7 +15,7 @@ As illustrated in \cref{fig:system}, we consider a post-disaster network in whic
 
 The post-disaster ground relay network is represented by a graph $G=(V,E)$ taken from Topology Zoo~\cite{knight2011zoo} and normalized into a square region of side $L_{\mathrm{box}}$ with the same scaling factor on both axes. Node $c\in V$ is the rescue center and all other nodes are relays. A surviving edge $e\in E$ has backhaul capacity $C_e$, and a failed edge has capacity $0$. Alerts are raised at a set of sources $S$, which do not belong to $G$ and can transmit only over radio links. Each alert $a\in A$ has a source $s_a\in S$, a release slot $r_a$, a deadline $d_a$, and a size of $L_a$ bits. The mission consists of $N$ slots of length $\Delta$, and each slot is split into an access phase of length $\tau\Delta$, in which sources transmit to relays or to the UAV, and a downlink phase of length $(1-\tau)\Delta$, in which the UAV transmits to nodes of $G$.
 
-Each alert has at most $K$ candidate paths of two types: a ground path $s_a\to v\leadsto c$ through a relay $v$ in range, and a UAV path $s_a\to\text{UAV}\to u\leadsto c$ with drop node $u\in V$. The segment $v\leadsto c$ is a minimum-hop backhaul path over the surviving edges. The candidate set consists of at most two ground paths with the lowest estimated cost, complemented by the UAV paths with the lowest cost; it is fixed before planning and shared by all methods.
+Each alert has at most $K$ candidate paths of two types: a ground path $s_a\to v\leadsto c$ through a relay $v$ in range, and a UAV path $s_a\to\text{UAV}\to u\leadsto c$ with drop node $u\in V$. The segment $v\leadsto c$ is a minimum-hop backhaul path over the surviving edges. The candidate set consists of at most two ground paths with the lowest estimated cost, complemented by the UAV paths with the lowest cost; it is fixed before planning and shared by the baselines, the bound of \cref{sec:analysis}, and the initial plan of the proposed search. A plan assigns each alert a path $\pi_a$ or leaves it unserved; the proposed search may assign any loop-free route of either type over surviving edges, including routes outside the candidate set.
 
 \begin{table}[htbp]
 \centering
@@ -34,7 +34,7 @@ $N$, $\Delta$, $\tau$ & Number of slots, slot length, and access-phase fraction 
 $q[n]$, $H$, $V_{\max}$ & UAV horizontal position, altitude, and maximum speed \\
 $P_k^{L}[n]$ & LoS probability between the UAV and ground point $k$ in slot $n$ \\
 $R(b,s)$, $B_{\mathrm{tot}}$ & Rate with bandwidth $b$ and SNR coefficient $s$; bandwidth per phase \\
-$K$, $x_{a,p}$ & Maximum number of candidate paths; path selection of alert $a$ \\
+$K$, $x_{a,p}$, $\pi_a$ & Maximum number of candidate paths; candidate selection and path of alert $a$ \\
 $b_{e,n}$, $w_{e,n}$ & Bandwidth and bandwidth weight of radio link $e$ in slot $n$ \\
 $\omega$, $M$, $M_d$ & Channel realization; numbers of evaluation and design realizations \\
 $z_{a,\omega}$, $\hat P_{\mathrm{timely}}$ & Timely indicator of alert $a$ in realization $\omega$; timely-delivery ratio \\
